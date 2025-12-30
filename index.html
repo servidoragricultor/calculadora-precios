@@ -135,6 +135,11 @@
     #volScaleTable td {
       text-align: center;
     }
+
+    /* Nuevo: estilos para panel "Nivel siguiente" */
+    .upgrade-card { border:1px dashed #e6e6e6; background:#fff; padding:12px; border-radius:8px; }
+    .status-ok { color: #065f46; }
+    .status-err { color: #9f1239; }
   </style>
 </head>
 <body onload="initializeCalculator()">
@@ -494,6 +499,66 @@
             </div>
           </div>
 
+          <!-- ======= NUEVO: Nivel siguiente (opcional) ======= -->
+          <div class="mb-6 upgrade-card">
+            <div class="flex items-start gap-3">
+              <i data-lucide="lock" class="w-5 h-5 text-yellow-600 mt-1"></i>
+              <div class="flex-1">
+                <div class="font-semibold text-sm">Nivel siguiente (opcional, cuando tú quieras)</div>
+                <p class="text-xs text-gray-600 mt-1">
+                  Si quieres que:
+                </p>
+                <ul class="text-xs text-gray-700 list-disc list-inside mt-2">
+                  <li>todos tus empleados vean los mismos valores</li>
+                  <li>puedas cambiar algo una vez y se refleje en todos</li>
+                  <li>haya usuarios y contraseñas</li>
+                  <li>quede historial</li>
+                </ul>
+
+                <p class="text-xs text-gray-600 mt-2">entonces hay que agregar <strong>una base de datos</strong> (Firebase / Supabase).</p>
+                <p class="text-xs text-gray-500 mt-1">Eso <strong>NO</strong> es obligatorio ahora, pero es el siguiente paso profesional.</p>
+
+                <!-- Formulario de sincronización remota -->
+                <div class="mt-3 border-t pt-3">
+                  <label class="flex items-center gap-2 text-sm">
+                    <input id="enableRemoteSync" type="checkbox" class="h-4 w-4 text-green-600 border-gray-300 rounded" onchange="onRemoteToggleChange()">
+                    <span>Habilitar sincronización remota</span>
+                  </label>
+
+                  <div id="remoteCfgPanel" class="mt-3 hidden">
+                    <label class="text-xs text-gray-600">Proveedor</label>
+                    <select id="remoteProvider" class="form-select mt-1">
+                      <option value="none">— Ninguno —</option>
+                      <option value="firebase">Firebase (Realtime / Firestore)</option>
+                      <option value="supabase">Supabase</option>
+                    </select>
+
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <label class="text-xs text-gray-600">Project URL / Endpoint</label>
+                        <input id="remoteUrl" class="input w-full mt-1" placeholder="https://..." />
+                      </div>
+                      <div>
+                        <label class="text-xs text-gray-600">API Key / anon key</label>
+                        <input id="remoteKey" class="input w-full mt-1" placeholder="Clave (opcional para pruebas)" />
+                      </div>
+                    </div>
+
+                    <div class="flex gap-2 mt-3">
+                      <button class="btn bg-green-600 text-white px-3 py-1 rounded" onclick="testRemoteConnection()">Probar conexión</button>
+                      <button class="btn bg-gray-100 text-gray-700 px-3 py-1 rounded" onclick="pushConfigToRemote()">Guardar en la nube</button>
+                      <div id="remoteStatus" class="text-xs mt-1 ml-2"></div>
+                    </div>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                      Nota: la prueba de conexión hace una verificación básica (CORS puede bloquear). Para sincronización completa, sigue la guía en los comentarios del código (Firebase / Supabase).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="flex gap-3">
             <button id="btnSaveCfg" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Guardar</button>
             <button id="btnResetCfg" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Restablecer</button>
@@ -594,7 +659,8 @@
           discountBuckets: deepClone(DEFAULTS.discountBuckets),
           volumeTiers: deepClone(DEFAULTS.volumeTiers),
           volumeScales: deepClone(DEFAULTS.volumeScales),
-          oportunidadList: deepClone(DEFAULTS.oportunidadList) // por categoría
+          oportunidadList: deepClone(DEFAULTS.oportunidadList), // por categoría
+          remoteCfg: { enabled:false, provider:'none', url:'', key:'' } // nueva configuración remota
         };
       }else{
         try{ RAW = JSON.parse(s); }
@@ -607,6 +673,7 @@
           RAW.oportunidadList = tmp;
         }
 
+        // Asegurar claves por categoría
         CATEGORIES.forEach(cat=>{
           if(!RAW.marginProfiles?.[cat]) RAW.marginProfiles[cat] = deepClone(DEFAULTS.marginProfiles[cat]);
           if(!RAW.discountBuckets?.[cat]) RAW.discountBuckets[cat] = deepClone(DEFAULTS.discountBuckets[cat]);
@@ -614,6 +681,9 @@
           if(!RAW.volumeScales?.[cat]) RAW.volumeScales[cat] = DEFAULTS.volumeScales[cat];
           if(!RAW.oportunidadList?.[cat]) RAW.oportunidadList[cat] = [];
         });
+
+        // Asegurar remoteCfg
+        if(!RAW.remoteCfg) RAW.remoteCfg = { enabled:false, provider:'none', url:'', key:'' };
       }
       expandAll();
     }
@@ -1384,6 +1454,9 @@
       renderVolTiersUI();
       renderVolumeScalesUI();
       renderOportunidadTable();
+
+      // Render remote config UI
+      renderRemoteCfgUI();
     }
 
     function onConfigCategoryChange(){ hydrateConfigUI(); }
@@ -1401,6 +1474,14 @@
       RAW.volumeScales[cat] = readVolumeScalesFromUI();
 
       RAW.oportunidadList[cat] = readOportunidadFromUI();
+
+      // Leer configuración remota desde UI
+      const remoteEnabled = !!document.getElementById('enableRemoteSync').checked;
+      RAW.remoteCfg = RAW.remoteCfg || { enabled:false, provider:'none', url:'', key:'' };
+      RAW.remoteCfg.enabled = remoteEnabled;
+      RAW.remoteCfg.provider = document.getElementById('remoteProvider').value || 'none';
+      RAW.remoteCfg.url = document.getElementById('remoteUrl').value || '';
+      RAW.remoteCfg.key = document.getElementById('remoteKey').value || '';
 
       persist();
 
@@ -1434,6 +1515,98 @@
         calcVolumeScales();
       }
     }
+
+    /* =================== NUEVO: UI + helpers para sincronización remota =================== */
+    function renderRemoteCfgUI(){
+      const cfg = RAW.remoteCfg || { enabled:false, provider:'none', url:'', key:'' };
+      const chk = document.getElementById('enableRemoteSync');
+      const panel = document.getElementById('remoteCfgPanel');
+      const prov = document.getElementById('remoteProvider');
+      const url  = document.getElementById('remoteUrl');
+      const key  = document.getElementById('remoteKey');
+
+      if(chk) chk.checked = !!cfg.enabled;
+      if(prov) prov.value = cfg.provider || 'none';
+      if(url) url.value = cfg.url || '';
+      if(key) key.value = cfg.key || '';
+
+      if(panel) panel.classList.toggle('hidden', !cfg.enabled);
+    }
+
+    function onRemoteToggleChange(){
+      const panel = document.getElementById('remoteCfgPanel');
+      const enabled = !!document.getElementById('enableRemoteSync').checked;
+      if(panel) panel.classList.toggle('hidden', !enabled);
+    }
+
+    async function testRemoteConnection(){
+      const provider = document.getElementById('remoteProvider').value;
+      const url = (document.getElementById('remoteUrl').value || '').trim();
+      const key = (document.getElementById('remoteKey').value || '').trim();
+      const status = document.getElementById('remoteStatus');
+
+      status.textContent = 'Probando...';
+      status.className = 'text-xs';
+
+      if(!url){
+        status.textContent = 'URL vacía';
+        status.classList.add('status-err');
+        return;
+      }
+
+      // Intento básico: un fetch GET para comprobar reachability (CORS puede bloquear)
+      try{
+        const resp = await fetch(url, { method:'GET' });
+        if(resp && (resp.ok || resp.status === 0)){
+          status.textContent = 'Conexión OK (respuesta recibida)';
+          status.className = 'text-xs status-ok';
+        }else{
+          status.textContent = `Conectado pero respuesta: ${resp.status}`;
+          status.className = 'text-xs status-err';
+        }
+      }catch(err){
+        // Si fetch falla por CORS, lo avisamos; aún así, la configuración queda validada localmente
+        console.warn('testRemoteConnection error', err);
+        status.textContent = 'Error: no se pudo conectar (CORS o URL inválida). Revisa consola.';
+        status.className = 'text-xs status-err';
+      }
+    }
+
+    async function pushConfigToRemote(){
+      // Esta función NO IMPLEMENTA la sincronización real.
+      // Aquí sólo se muestra cómo podrías llamar a tu backend o usar SDKs.
+      const provider = document.getElementById('remoteProvider').value;
+      const url = (document.getElementById('remoteUrl').value || '').trim();
+      const key = (document.getElementById('remoteKey').value || '').trim();
+      const status = document.getElementById('remoteStatus');
+      status.textContent = 'Guardando...';
+
+      if(!url || provider === 'none'){
+        status.textContent = 'Proveedor o URL no configurada';
+        status.className = 'text-xs status-err';
+        return;
+      }
+
+      // Guardamos la configuración localmente (persist)
+      RAW.remoteCfg = { enabled: true, provider, url, key };
+      persist();
+
+      // TODO: Aquí van las llamadas reales según provider:
+      // - Firebase: usar firebase SDK (import <script src="https://www.gstatic.com/firebasejs/...">) y firebase.firestore().doc('...').set(RAW)
+      // - Supabase: usar @supabase/supabase-js y supabase.from('settings').upsert({ id:'cfg', data: RAW })
+      //
+      // Ejemplo conceptual (no activo):
+      // if(provider === 'firebase'){ /* inicializar Firebase con key/url y subir RAW */ }
+      // if(provider === 'supabase'){ /* inicializar supabase client y upsert */ }
+
+      // Por ahora informamos que se guardó localmente y simular éxito
+      status.textContent = 'Configuración guardada localmente. Implementa push real según provider.';
+      status.className = 'text-xs status-ok';
+    }
+
+    // Si deseas sincronizar al iniciar desde un remote real, puedes implementar una función `pullConfigFromRemote`
+    // que use Firebase / Supabase SDK para leer y reemplazar RAW, luego persist().
+    // Ten en cuenta: manejo de usuarios/contraseñas y seguridad requiere configuración del servicio.
 
     /* =================== Tabs & boot =================== */
     function switchTab(which){
@@ -1472,6 +1645,9 @@
       calculatePrice();
       syncVolumeScalesUI();
       calcVolumeScales();
+
+      // Inicializar UI de remote
+      renderRemoteCfgUI();
     }
   </script>
 
