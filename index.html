@@ -1699,6 +1699,180 @@
       }
     });
   </script>
+<script>
+(() => {
+  // =========================
+  // Config
+  // =========================
+  const KEY = (window.LS_KEY || "calc_cfg_per_cat_v3_mrules"); // tu localStorage key
+  const DOC_PATH = { col: "appConfig", doc: "global" };
+
+  // Debe existir firebase + auth + db (ya los pusiste arriba)
+  if (!window.firebase || !window.auth || !window.db) {
+    console.warn("Firebase/auth/db no están listos todavía.");
+    return;
+  }
+
+  // =========================
+  // UI flotante (login + sync)
+  // =========================
+  const panel = document.createElement("div");
+  panel.style.cssText = `
+    position:fixed; right:14px; bottom:14px; z-index:999999;
+    width:320px; padding:12px; border-radius:12px;
+    background:#ffffff; box-shadow:0 10px 35px rgba(0,0,0,.18);
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    border:1px solid rgba(0,0,0,.08);
+  `;
+  panel.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+      <div style="font-weight:700; font-size:14px;">☁️ Nube (Configuración)</div>
+      <button id="cfgClose" style="border:none;background:transparent;cursor:pointer;font-size:16px;">✕</button>
+    </div>
+
+    <div id="cfgState" style="margin-top:8px; font-size:12px; color:#333;">Estado: verificando…</div>
+
+    <div id="cfgAuthBox" style="margin-top:10px; display:grid; gap:8px;">
+      <input id="cfgEmail" type="email" placeholder="Correo" style="padding:9px;border:1px solid #ddd;border-radius:10px;">
+      <input id="cfgPass" type="password" placeholder="Contraseña" style="padding:9px;border:1px solid #ddd;border-radius:10px;">
+      <div style="display:flex; gap:8px;">
+        <button id="cfgLogin" style="flex:1; padding:9px; border-radius:10px; border:1px solid #0ea5e9; background:#0ea5e9; color:#fff; cursor:pointer;">Entrar</button>
+        <button id="cfgGoogle" style="flex:1; padding:9px; border-radius:10px; border:1px solid #111827; background:#111827; color:#fff; cursor:pointer;">Google</button>
+      </div>
+    </div>
+
+    <div id="cfgActions" style="margin-top:10px; display:none; gap:8px;">
+      <button id="cfgLoad" style="width:100%; padding:10px; border-radius:10px; border:1px solid #16a34a; background:#16a34a; color:#fff; cursor:pointer;">⬇️ Cargar de la nube</button>
+      <button id="cfgSave" style="width:100%; padding:10px; border-radius:10px; border:1px solid #2563eb; background:#2563eb; color:#fff; cursor:pointer;">⬆️ Guardar en la nube</button>
+      <button id="cfgLogout" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ef4444; background:#ef4444; color:#fff; cursor:pointer;">Salir</button>
+      <div style="font-size:11px; color:#555; line-height:1.35;">
+        Nota: “Cargar” reemplaza tus ajustes locales por los de la nube (y recarga la página).
+      </div>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  const $ = (id) => panel.querySelector(id);
+
+  $("#cfgClose").onclick = () => panel.remove();
+
+  // =========================
+  // Firestore helpers
+  // =========================
+  const docRef = db.collection(DOC_PATH.col).doc(DOC_PATH.doc);
+
+  function getLocalRaw() {
+    return localStorage.getItem(KEY) || "";
+  }
+  function setLocalRaw(raw) {
+    localStorage.setItem(KEY, raw);
+  }
+
+  async function saveToCloud(reason = "manual") {
+    const raw = getLocalRaw();
+    if (!raw) throw new Error("No hay configuración local para guardar.");
+    await docRef.set(
+      {
+        raw,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedReason: reason,
+        updatedBy: auth.currentUser ? auth.currentUser.uid : null,
+      },
+      { merge: true }
+    );
+    $("#cfgState").textContent = "Estado: ✅ Guardado en la nube";
+  }
+
+  async function loadFromCloud() {
+    const snap = await docRef.get();
+    if (!snap.exists) throw new Error("No existe config en nube todavía.");
+    const data = snap.data() || {};
+    if (!data.raw) throw new Error("La nube no trae 'raw'.");
+    setLocalRaw(data.raw);
+    $("#cfgState").textContent = "Estado: ✅ Cargado. Recargando…";
+    setTimeout(() => location.reload(), 600);
+  }
+
+  // =========================
+  // Auto-guardado: detecta cuando tu app guarda en localStorage
+  // =========================
+  let t = null;
+  const originalSetItem = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function (k, v) {
+    originalSetItem(k, v);
+
+    // Si tu app actualiza la configuración (KEY), disparar autoguardado (si hay sesión)
+    if (k === KEY && auth.currentUser) {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        saveToCloud("auto").catch((e) => console.warn("Auto-save falló:", e));
+      }, 900);
+      $("#cfgState").textContent = "Estado: ✍️ Cambio detectado… (auto-guardado)";
+    }
+  };
+
+  // =========================
+  // Auth (correo/pass + Google)
+  // =========================
+  $("#cfgLogin").onclick = async () => {
+    try {
+      const email = $("#cfgEmail").value.trim();
+      const pass = $("#cfgPass").value;
+      await auth.signInWithEmailAndPassword(email, pass);
+    } catch (e) {
+      alert("Error al entrar: " + (e.message || e));
+    }
+  };
+
+  $("#cfgGoogle").onclick = async () => {
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    } catch (e) {
+      alert("Error Google: " + (e.message || e));
+    }
+  };
+
+  $("#cfgLogout").onclick = async () => {
+    try {
+      await auth.signOut();
+    } catch (e) {
+      alert("Error al salir: " + (e.message || e));
+    }
+  };
+
+  $("#cfgSave").onclick = async () => {
+    try {
+      $("#cfgState").textContent = "Estado: guardando…";
+      await saveToCloud("manual");
+    } catch (e) {
+      alert("No se pudo guardar: " + (e.message || e));
+    }
+  };
+
+  $("#cfgLoad").onclick = async () => {
+    if (!confirm("Esto va a reemplazar tus ajustes locales por los de la nube. ¿Continuar?")) return;
+    try {
+      $("#cfgState").textContent = "Estado: cargando…";
+      await loadFromCloud();
+    } catch (e) {
+      alert("No se pudo cargar: " + (e.message || e));
+    }
+  };
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      $("#cfgAuthBox").style.display = "none";
+      $("#cfgActions").style.display = "grid";
+      $("#cfgState").textContent = "Estado: ✅ Sesión iniciada (" + user.email + ")";
+    } else {
+      $("#cfgAuthBox").style.display = "grid";
+      $("#cfgActions").style.display = "none";
+      $("#cfgState").textContent = "Estado: 🔒 Inicia sesión para sincronizar";
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
