@@ -6,6 +6,27 @@
   <title>Calculadora de Precios y Márgenes</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyBGElKYV8MiA8LN3LteHaE1XkYD4GRxug",
+    authDomain: "calculadora-esquina.firebaseapp.com",
+    projectId: "calculadora-esquina",
+    storageBucket: "calculadora-esquina.appspot.com",
+    messagingSenderId: "721368379664",
+    appId: "1:721368379664:web:7dd83fad394c3d909b3595",
+    measurementId: "G-MV6X87D4J3"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+
   <style>
     /* ====== SELECTS: más espacio y capitalización ====== */
     .form-select{
@@ -135,6 +156,11 @@
     #volScaleTable td {
       text-align: center;
     }
+
+    /* Nuevo: estilos para panel "Nivel siguiente" */
+    .upgrade-card { border:1px dashed #e6e6e6; background:#fff; padding:12px; border-radius:8px; }
+    .status-ok { color: #065f46; }
+    .status-err { color: #9f1239; }
   </style>
 </head>
 <body onload="initializeCalculator()">
@@ -494,6 +520,66 @@
             </div>
           </div>
 
+          <!-- ======= NUEVO: Nivel siguiente (opcional) ======= -->
+          <div class="mb-6 upgrade-card">
+            <div class="flex items-start gap-3">
+              <i data-lucide="lock" class="w-5 h-5 text-yellow-600 mt-1"></i>
+              <div class="flex-1">
+                <div class="font-semibold text-sm">Nivel siguiente (opcional, cuando tú quieras)</div>
+                <p class="text-xs text-gray-600 mt-1">
+                  Si quieres que:
+                </p>
+                <ul class="text-xs text-gray-700 list-disc list-inside mt-2">
+                  <li>todos tus empleados vean los mismos valores</li>
+                  <li>puedas cambiar algo una vez y se refleje en todos</li>
+                  <li>haya usuarios y contraseñas</li>
+                  <li>quede historial</li>
+                </ul>
+
+                <p class="text-xs text-gray-600 mt-2">entonces hay que agregar <strong>una base de datos</strong> (Firebase / Supabase).</p>
+                <p class="text-xs text-gray-500 mt-1">Eso <strong>NO</strong> es obligatorio ahora, pero es el siguiente paso profesional.</p>
+
+                <!-- Formulario de sincronización remota -->
+                <div class="mt-3 border-t pt-3">
+                  <label class="flex items-center gap-2 text-sm">
+                    <input id="enableRemoteSync" type="checkbox" class="h-4 w-4 text-green-600 border-gray-300 rounded" onchange="onRemoteToggleChange()">
+                    <span>Habilitar sincronización remota</span>
+                  </label>
+
+                  <div id="remoteCfgPanel" class="mt-3 hidden">
+                    <label class="text-xs text-gray-600">Proveedor</label>
+                    <select id="remoteProvider" class="form-select mt-1">
+                      <option value="none">— Ninguno —</option>
+                      <option value="firebase">Firebase (Realtime / Firestore)</option>
+                      <option value="supabase">Supabase</option>
+                    </select>
+
+                    <div class="grid grid-cols-2 gap-2 mt-2">
+                      <div>
+                        <label class="text-xs text-gray-600">Project URL / Endpoint</label>
+                        <input id="remoteUrl" class="input w-full mt-1" placeholder="https://..." />
+                      </div>
+                      <div>
+                        <label class="text-xs text-gray-600">API Key / anon key</label>
+                        <input id="remoteKey" class="input w-full mt-1" placeholder="Clave (opcional para pruebas)" />
+                      </div>
+                    </div>
+
+                    <div class="flex gap-2 mt-3">
+                      <button class="btn bg-green-600 text-white px-3 py-1 rounded" onclick="testRemoteConnection()">Probar conexión</button>
+                      <button class="btn bg-gray-100 text-gray-700 px-3 py-1 rounded" onclick="pushConfigToRemote()">Guardar en la nube</button>
+                      <div id="remoteStatus" class="text-xs mt-1 ml-2"></div>
+                    </div>
+
+                    <p class="text-xs text-gray-500 mt-2">
+                      Nota: la prueba de conexión hace una verificación básica (CORS puede bloquear). Para sincronización completa, sigue la guía en los comentarios del código (Firebase / Supabase).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="flex gap-3">
             <button id="btnSaveCfg" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Guardar</button>
             <button id="btnResetCfg" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Restablecer</button>
@@ -594,7 +680,8 @@
           discountBuckets: deepClone(DEFAULTS.discountBuckets),
           volumeTiers: deepClone(DEFAULTS.volumeTiers),
           volumeScales: deepClone(DEFAULTS.volumeScales),
-          oportunidadList: deepClone(DEFAULTS.oportunidadList) // por categoría
+          oportunidadList: deepClone(DEFAULTS.oportunidadList), // por categoría
+          remoteCfg: { enabled:false, provider:'none', url:'', key:'' } // nueva configuración remota
         };
       }else{
         try{ RAW = JSON.parse(s); }
@@ -607,6 +694,7 @@
           RAW.oportunidadList = tmp;
         }
 
+        // Asegurar claves por categoría
         CATEGORIES.forEach(cat=>{
           if(!RAW.marginProfiles?.[cat]) RAW.marginProfiles[cat] = deepClone(DEFAULTS.marginProfiles[cat]);
           if(!RAW.discountBuckets?.[cat]) RAW.discountBuckets[cat] = deepClone(DEFAULTS.discountBuckets[cat]);
@@ -614,6 +702,9 @@
           if(!RAW.volumeScales?.[cat]) RAW.volumeScales[cat] = DEFAULTS.volumeScales[cat];
           if(!RAW.oportunidadList?.[cat]) RAW.oportunidadList[cat] = [];
         });
+
+        // Asegurar remoteCfg
+        if(!RAW.remoteCfg) RAW.remoteCfg = { enabled:false, provider:'none', url:'', key:'' };
       }
       expandAll();
     }
@@ -1384,6 +1475,9 @@
       renderVolTiersUI();
       renderVolumeScalesUI();
       renderOportunidadTable();
+
+      // Render remote config UI
+      renderRemoteCfgUI();
     }
 
     function onConfigCategoryChange(){ hydrateConfigUI(); }
@@ -1401,6 +1495,14 @@
       RAW.volumeScales[cat] = readVolumeScalesFromUI();
 
       RAW.oportunidadList[cat] = readOportunidadFromUI();
+
+      // Leer configuración remota desde UI
+      const remoteEnabled = !!document.getElementById('enableRemoteSync').checked;
+      RAW.remoteCfg = RAW.remoteCfg || { enabled:false, provider:'none', url:'', key:'' };
+      RAW.remoteCfg.enabled = remoteEnabled;
+      RAW.remoteCfg.provider = document.getElementById('remoteProvider').value || 'none';
+      RAW.remoteCfg.url = document.getElementById('remoteUrl').value || '';
+      RAW.remoteCfg.key = document.getElementById('remoteKey').value || '';
 
       persist();
 
@@ -1434,6 +1536,98 @@
         calcVolumeScales();
       }
     }
+
+    /* =================== NUEVO: UI + helpers para sincronización remota =================== */
+    function renderRemoteCfgUI(){
+      const cfg = RAW.remoteCfg || { enabled:false, provider:'none', url:'', key:'' };
+      const chk = document.getElementById('enableRemoteSync');
+      const panel = document.getElementById('remoteCfgPanel');
+      const prov = document.getElementById('remoteProvider');
+      const url  = document.getElementById('remoteUrl');
+      const key  = document.getElementById('remoteKey');
+
+      if(chk) chk.checked = !!cfg.enabled;
+      if(prov) prov.value = cfg.provider || 'none';
+      if(url) url.value = cfg.url || '';
+      if(key) key.value = cfg.key || '';
+
+      if(panel) panel.classList.toggle('hidden', !cfg.enabled);
+    }
+
+    function onRemoteToggleChange(){
+      const panel = document.getElementById('remoteCfgPanel');
+      const enabled = !!document.getElementById('enableRemoteSync').checked;
+      if(panel) panel.classList.toggle('hidden', !enabled);
+    }
+
+    async function testRemoteConnection(){
+      const provider = document.getElementById('remoteProvider').value;
+      const url = (document.getElementById('remoteUrl').value || '').trim();
+      const key = (document.getElementById('remoteKey').value || '').trim();
+      const status = document.getElementById('remoteStatus');
+
+      status.textContent = 'Probando...';
+      status.className = 'text-xs';
+
+      if(!url){
+        status.textContent = 'URL vacía';
+        status.classList.add('status-err');
+        return;
+      }
+
+      // Intento básico: un fetch GET para comprobar reachability (CORS puede bloquear)
+      try{
+        const resp = await fetch(url, { method:'GET' });
+        if(resp && (resp.ok || resp.status === 0)){
+          status.textContent = 'Conexión OK (respuesta recibida)';
+          status.className = 'text-xs status-ok';
+        }else{
+          status.textContent = `Conectado pero respuesta: ${resp.status}`;
+          status.className = 'text-xs status-err';
+        }
+      }catch(err){
+        // Si fetch falla por CORS, lo avisamos; aún así, la configuración queda validada localmente
+        console.warn('testRemoteConnection error', err);
+        status.textContent = 'Error: no se pudo conectar (CORS o URL inválida). Revisa consola.';
+        status.className = 'text-xs status-err';
+      }
+    }
+
+    async function pushConfigToRemote(){
+      // Esta función NO IMPLEMENTA la sincronización real.
+      // Aquí sólo se muestra cómo podrías llamar a tu backend o usar SDKs.
+      const provider = document.getElementById('remoteProvider').value;
+      const url = (document.getElementById('remoteUrl').value || '').trim();
+      const key = (document.getElementById('remoteKey').value || '').trim();
+      const status = document.getElementById('remoteStatus');
+      status.textContent = 'Guardando...';
+
+      if(!url || provider === 'none'){
+        status.textContent = 'Proveedor o URL no configurada';
+        status.className = 'text-xs status-err';
+        return;
+      }
+
+      // Guardamos la configuración localmente (persist)
+      RAW.remoteCfg = { enabled: true, provider, url, key };
+      persist();
+
+      // TODO: Aquí van las llamadas reales según provider:
+      // - Firebase: usar firebase SDK (import <script src="https://www.gstatic.com/firebasejs/...">) y firebase.firestore().doc('...').set(RAW)
+      // - Supabase: usar @supabase/supabase-js y supabase.from('settings').upsert({ id:'cfg', data: RAW })
+      //
+      // Ejemplo conceptual (no activo):
+      // if(provider === 'firebase'){ /* inicializar Firebase con key/url y subir RAW */ }
+      // if(provider === 'supabase'){ /* inicializar supabase client y upsert */ }
+
+      // Por ahora informamos que se guardó localmente y simular éxito
+      status.textContent = 'Configuración guardada localmente. Implementa push real según provider.';
+      status.className = 'text-xs status-ok';
+    }
+
+    // Si deseas sincronizar al iniciar desde un remote real, puedes implementar una función `pullConfigFromRemote`
+    // que use Firebase / Supabase SDK para leer y reemplazar RAW, luego persist().
+    // Ten en cuenta: manejo de usuarios/contraseñas y seguridad requiere configuración del servicio.
 
     /* =================== Tabs & boot =================== */
     function switchTab(which){
@@ -1472,6 +1666,9 @@
       calculatePrice();
       syncVolumeScalesUI();
       calcVolumeScales();
+
+      // Inicializar UI de remote
+      renderRemoteCfgUI();
     }
   </script>
 
@@ -1502,6 +1699,180 @@
       }
     });
   </script>
+<script>
+(() => {
+  // =========================
+  // Config
+  // =========================
+  const KEY = (window.LS_KEY || "calc_cfg_per_cat_v3_mrules"); // tu localStorage key
+  const DOC_PATH = { col: "appConfig", doc: "global" };
+
+  // Debe existir firebase + auth + db (ya los pusiste arriba)
+  if (!window.firebase || !window.auth || !window.db) {
+    console.warn("Firebase/auth/db no están listos todavía.");
+    return;
+  }
+
+  // =========================
+  // UI flotante (login + sync)
+  // =========================
+  const panel = document.createElement("div");
+  panel.style.cssText = `
+    position:fixed; right:14px; bottom:14px; z-index:999999;
+    width:320px; padding:12px; border-radius:12px;
+    background:#ffffff; box-shadow:0 10px 35px rgba(0,0,0,.18);
+    font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    border:1px solid rgba(0,0,0,.08);
+  `;
+  panel.innerHTML = `
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+      <div style="font-weight:700; font-size:14px;">☁️ Nube (Configuración)</div>
+      <button id="cfgClose" style="border:none;background:transparent;cursor:pointer;font-size:16px;">✕</button>
+    </div>
+
+    <div id="cfgState" style="margin-top:8px; font-size:12px; color:#333;">Estado: verificando…</div>
+
+    <div id="cfgAuthBox" style="margin-top:10px; display:grid; gap:8px;">
+      <input id="cfgEmail" type="email" placeholder="Correo" style="padding:9px;border:1px solid #ddd;border-radius:10px;">
+      <input id="cfgPass" type="password" placeholder="Contraseña" style="padding:9px;border:1px solid #ddd;border-radius:10px;">
+      <div style="display:flex; gap:8px;">
+        <button id="cfgLogin" style="flex:1; padding:9px; border-radius:10px; border:1px solid #0ea5e9; background:#0ea5e9; color:#fff; cursor:pointer;">Entrar</button>
+        <button id="cfgGoogle" style="flex:1; padding:9px; border-radius:10px; border:1px solid #111827; background:#111827; color:#fff; cursor:pointer;">Google</button>
+      </div>
+    </div>
+
+    <div id="cfgActions" style="margin-top:10px; display:none; gap:8px;">
+      <button id="cfgLoad" style="width:100%; padding:10px; border-radius:10px; border:1px solid #16a34a; background:#16a34a; color:#fff; cursor:pointer;">⬇️ Cargar de la nube</button>
+      <button id="cfgSave" style="width:100%; padding:10px; border-radius:10px; border:1px solid #2563eb; background:#2563eb; color:#fff; cursor:pointer;">⬆️ Guardar en la nube</button>
+      <button id="cfgLogout" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ef4444; background:#ef4444; color:#fff; cursor:pointer;">Salir</button>
+      <div style="font-size:11px; color:#555; line-height:1.35;">
+        Nota: “Cargar” reemplaza tus ajustes locales por los de la nube (y recarga la página).
+      </div>
+    </div>
+  `;
+  document.body.appendChild(panel);
+
+  const $ = (id) => panel.querySelector(id);
+
+  $("#cfgClose").onclick = () => panel.remove();
+
+  // =========================
+  // Firestore helpers
+  // =========================
+  const docRef = db.collection(DOC_PATH.col).doc(DOC_PATH.doc);
+
+  function getLocalRaw() {
+    return localStorage.getItem(KEY) || "";
+  }
+  function setLocalRaw(raw) {
+    localStorage.setItem(KEY, raw);
+  }
+
+  async function saveToCloud(reason = "manual") {
+    const raw = getLocalRaw();
+    if (!raw) throw new Error("No hay configuración local para guardar.");
+    await docRef.set(
+      {
+        raw,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedReason: reason,
+        updatedBy: auth.currentUser ? auth.currentUser.uid : null,
+      },
+      { merge: true }
+    );
+    $("#cfgState").textContent = "Estado: ✅ Guardado en la nube";
+  }
+
+  async function loadFromCloud() {
+    const snap = await docRef.get();
+    if (!snap.exists) throw new Error("No existe config en nube todavía.");
+    const data = snap.data() || {};
+    if (!data.raw) throw new Error("La nube no trae 'raw'.");
+    setLocalRaw(data.raw);
+    $("#cfgState").textContent = "Estado: ✅ Cargado. Recargando…";
+    setTimeout(() => location.reload(), 600);
+  }
+
+  // =========================
+  // Auto-guardado: detecta cuando tu app guarda en localStorage
+  // =========================
+  let t = null;
+  const originalSetItem = localStorage.setItem.bind(localStorage);
+  localStorage.setItem = function (k, v) {
+    originalSetItem(k, v);
+
+    // Si tu app actualiza la configuración (KEY), disparar autoguardado (si hay sesión)
+    if (k === KEY && auth.currentUser) {
+      clearTimeout(t);
+      t = setTimeout(() => {
+        saveToCloud("auto").catch((e) => console.warn("Auto-save falló:", e));
+      }, 900);
+      $("#cfgState").textContent = "Estado: ✍️ Cambio detectado… (auto-guardado)";
+    }
+  };
+
+  // =========================
+  // Auth (correo/pass + Google)
+  // =========================
+  $("#cfgLogin").onclick = async () => {
+    try {
+      const email = $("#cfgEmail").value.trim();
+      const pass = $("#cfgPass").value;
+      await auth.signInWithEmailAndPassword(email, pass);
+    } catch (e) {
+      alert("Error al entrar: " + (e.message || e));
+    }
+  };
+
+  $("#cfgGoogle").onclick = async () => {
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await auth.signInWithPopup(provider);
+    } catch (e) {
+      alert("Error Google: " + (e.message || e));
+    }
+  };
+
+  $("#cfgLogout").onclick = async () => {
+    try {
+      await auth.signOut();
+    } catch (e) {
+      alert("Error al salir: " + (e.message || e));
+    }
+  };
+
+  $("#cfgSave").onclick = async () => {
+    try {
+      $("#cfgState").textContent = "Estado: guardando…";
+      await saveToCloud("manual");
+    } catch (e) {
+      alert("No se pudo guardar: " + (e.message || e));
+    }
+  };
+
+  $("#cfgLoad").onclick = async () => {
+    if (!confirm("Esto va a reemplazar tus ajustes locales por los de la nube. ¿Continuar?")) return;
+    try {
+      $("#cfgState").textContent = "Estado: cargando…";
+      await loadFromCloud();
+    } catch (e) {
+      alert("No se pudo cargar: " + (e.message || e));
+    }
+  };
+
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      $("#cfgAuthBox").style.display = "none";
+      $("#cfgActions").style.display = "grid";
+      $("#cfgState").textContent = "Estado: ✅ Sesión iniciada (" + user.email + ")";
+    } else {
+      $("#cfgAuthBox").style.display = "grid";
+      $("#cfgActions").style.display = "none";
+      $("#cfgState").textContent = "Estado: 🔒 Inicia sesión para sincronizar";
+    }
+  });
+})();
+</script>
 
 </body>
 </html>
