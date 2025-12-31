@@ -7,6 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
+<!-- Firebase SDKs (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -18,17 +19,20 @@
     projectId: "calculadora-esquina",
     storageBucket: "calculadora-esquina.appspot.com",
     messagingSenderId: "721368379664",
-    appId: "1:721368379664:web:7dd83fad39c4d3099b3595",
+    appId: "1:721368379664:web:7dd83fad394c3d909b3595",
     measurementId: "G-MV6X87D4J3"
   };
 
-  // Inicializar Firebase
-  firebase.initializeApp(firebaseConfig);
+  // Inicializar Firebase SOLO UNA VEZ
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
 
-  // 🔑 EXPONER VARIABLES GLOBALES
+  // Exponer globales
   window.auth = firebase.auth();
   window.db = firebase.firestore();
 </script>
+
 
 
 
