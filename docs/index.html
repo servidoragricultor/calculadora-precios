@@ -6,7 +6,8 @@
   <title>Calculadora de Precios y Márgenes</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
@@ -23,9 +24,12 @@
 
   firebase.initializeApp(firebaseConfig);
 
-  const auth = firebase.auth();
-  const db = firebase.firestore();
+  // ✅ Hazlos globales (para que tu módulo los vea)
+  window.firebase = firebase;
+  window.auth = firebase.auth();
+  window.db = firebase.firestore();
 </script>
+
 
   <style>
     /* ====== SELECTS: más espacio y capitalización ====== */
