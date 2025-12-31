@@ -24,11 +24,14 @@
     measurementId: "G-MV6X87D4J3"
   };
 
-  firebase.initializeApp(firebaseConfig);
+ <script>
+  const firebaseConfig = { ... };
 
-  // 🌍 Variables globales (para que las uses en tu JS)
+  firebase.initializeApp(firebaseConfig);
   window.auth = firebase.auth();
   window.db   = firebase.firestore();
+</script>
+
 </script>
 
   
