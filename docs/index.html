@@ -15,6 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
+    // CONFIGURACIÓN DE FIREBASE (Clave confirmada)
     const firebaseConfig = {
       apiKey: "AIzaSyBGEiIKYV8MiA8lN3lteHaE1XkYD4GRxug",
       authDomain: "calculadora-esquina.firebaseapp.com",
@@ -24,6 +25,7 @@
       appId: "1:721368379664:web:7dd83fad394c3d909b3595",
       measurementId: "G-MV6X87D4J3"
     };
+
     firebase.initializeApp(firebaseConfig);
     window.auth = firebase.auth();
     window.db   = firebase.firestore();
@@ -37,11 +39,12 @@
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
       background-repeat: no-repeat; background-position: right .75rem center; background-size: 1.25rem;
     }
-    .tab-btn { border-bottom: 3px solid transparent; transition: all 0.3s; color: #6b7280; font-size: 0.875rem; font-weight: 600; }
+    .tab-btn { border-bottom: 3px solid transparent; transition: all 0.3s; color: #6b7280; font-size: 0.875rem; font-weight: 700; }
     .tab-btn.active { border-color: #22c55e; color: #16a34a; }
     .input-field { border: 1px solid #d1d5db; border-radius: .5rem; padding: 0.5rem 0.75rem; width: 100%; }
     .animate-fade-in { animation: fadeIn 0.3s ease-in; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    #resFinalPrice { letter-spacing: -2px; }
     #cloud-panel { position: fixed; right: 20px; bottom: 20px; z-index: 50; width: 300px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
   </style>
 </head>
@@ -54,27 +57,26 @@
         <h1 class="text-2xl font-extrabold text-green-700 flex items-center gap-2">
           <i data-lucide="leaf" class="text-green-500"></i> Calculadora La Esquina
         </h1>
-        <p class="text-xs text-gray-500 font-medium">SISTEMA DINÁMICO DE PRECIOS</p>
+        <p class="text-xs text-gray-500 font-medium tracking-widest uppercase">Sistema Profesional de Precios</p>
       </div>
     </header>
 
-    <nav class="flex gap-6 mb-8 border-b">
-      <button onclick="switchTab('calc')" id="btnTabCalc" class="tab-btn active px-2 py-3 uppercase tracking-wider">Calculadora</button>
-      <button onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-2 py-3 uppercase tracking-wider">Configuración</button>
+    <nav class="flex gap-8 mb-8 border-b">
+      <button onclick="switchTab('calc')" id="btnTabCalc" class="tab-btn active px-2 py-3 uppercase">Calculadora</button>
+      <button onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-2 py-3 uppercase">Configuración</button>
     </nav>
 
     <!-- ======= VISTA CALCULADORA ======= -->
     <main id="viewCalc" class="grid lg:grid-cols-3 gap-8 animate-fade-in">
       <section class="lg:col-span-2 space-y-6">
-        <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-100">
+        <div class="bg-white shadow-sm rounded-3xl p-8 border border-gray-100">
           <div class="grid md:grid-cols-2 gap-6">
             <div>
-              <label class="text-xs font-bold text-gray-500 uppercase">Categoría</label>
-              <!-- SELECT DINÁMICO -->
+              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Categoría</label>
               <select id="calcCategory" onchange="handleCategoryChange()" class="form-select mt-1 font-bold text-gray-700"></select>
             </div>
             <div>
-              <label class="text-xs font-bold text-gray-500 uppercase">Costo Base</label>
+              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Costo Base</label>
               <div class="relative mt-1">
                 <span class="absolute left-3 top-2 text-gray-400 font-bold">$</span>
                 <input type="number" id="calcBaseCost" value="0.00" step="0.01" class="input-field pl-8 text-lg font-bold text-gray-800" oninput="runCalculations()">
@@ -84,16 +86,16 @@
 
           <div class="grid md:grid-cols-2 gap-6 mt-6">
             <div>
-              <label class="text-xs font-bold text-gray-500 uppercase">Etiqueta IEPS</label>
+              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Etiqueta IEPS</label>
               <select id="calcIeps" onchange="runCalculations()" class="form-select mt-1"></select>
             </div>
             <div>
-              <label class="text-xs font-bold text-gray-500 uppercase">Producto Especial</label>
+              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Producto Especial</label>
               <select id="calcOportunidad" onchange="runCalculations()" class="form-select mt-1"></select>
             </div>
           </div>
 
-          <div class="mt-8 p-4 bg-green-50 rounded-xl space-y-4 border border-green-100">
+          <div class="mt-8 p-4 bg-green-50 rounded-2xl space-y-4 border border-green-100">
             <label class="flex items-center gap-3 cursor-pointer">
               <input type="checkbox" id="calcManualToggle" onchange="toggleManualMargin()" class="w-4 h-4 rounded text-green-600">
               <span class="text-sm font-bold text-green-800">MARGEN MANUAL</span>
@@ -111,38 +113,81 @@
           </div>
         </div>
 
-        <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-100">
+        <!-- Tabla Escalas -->
+        <div class="bg-white shadow-sm rounded-3xl p-8 border border-gray-100">
           <div class="flex justify-between items-center mb-6">
-            <h3 class="font-extrabold text-gray-800 flex items-center gap-2 italic text-sm uppercase">Escalas de Volumen</h3>
+            <h3 class="font-black text-gray-800 uppercase text-xs tracking-widest">Escalas de Volumen</h3>
             <input type="text" id="calcScaleQty" value="1, 10, 50, 100" class="text-xs border rounded-lg px-3 py-1 w-40 font-bold text-green-700" oninput="runCalculations()">
           </div>
           <table class="w-full text-sm">
             <thead>
-              <tr class="text-gray-400 border-b uppercase text-[10px] text-left">
+              <tr class="text-gray-400 border-b uppercase text-[10px] text-left font-black">
                 <th class="pb-3">Cant.</th>
                 <th class="pb-3">Unitario</th>
                 <th class="pb-3 text-right">Margen %</th>
               </tr>
             </thead>
-            <tbody id="scaleTableBody"></tbody>
+            <tbody id="scaleTableBody" class="font-bold text-gray-700"></tbody>
           </table>
         </div>
       </section>
 
-      <aside class="space-y-4">
-        <div class="bg-green-600 rounded-3xl p-8 text-white shadow-xl">
-          <p class="text-green-100 text-[10px] font-black uppercase tracking-widest">Precio Sugerido</p>
-          <div id="resFinalPrice" class="text-5xl font-black mt-2 tracking-tighter">$0.00</div>
-          <p id="resIvaNote" class="text-green-200 text-[10px] mt-4 font-bold uppercase"></p>
-        </div>
-        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-5">
-          <div class="flex justify-between items-end">
-            <span class="text-gray-400 text-[10px] font-black uppercase">Margen Real</span>
-            <span id="resMarginPct" class="font-black text-2xl text-gray-800">0%</span>
+      <!-- ======= PANEL RESUMEN (ESTÉTICA NUEVA) ======= -->
+      <aside class="space-y-4 animate-fade-in">
+        <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
+          <div class="flex justify-between items-center mb-4">
+            <span class="text-gray-400 font-black text-[10px] uppercase tracking-widest">Resumen</span>
+            <span id="resBadge" class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Margen saludable</span>
           </div>
-          <div class="flex justify-between items-end">
-            <span class="text-gray-400 text-[10px] font-black uppercase">Utilidad</span>
-            <span id="resProfit" class="font-black text-2xl text-green-600">$0.00</span>
+
+          <div class="bg-[#22c55e] rounded-3xl p-6 text-white text-center shadow-lg shadow-green-100 mb-4">
+            <p class="text-[10px] font-bold uppercase tracking-widest opacity-90">Precio de Venta Final</p>
+            <div class="flex justify-center items-start gap-1 mt-1">
+              <span id="resFinalPrice" class="text-5xl font-black tracking-tighter">$0.00</span>
+              <span class="text-sm font-bold mt-2">MXN</span>
+            </div>
+            <p id="resIvaNote" class="text-[10px] mt-2 opacity-80 italic">(Sin IVA en costo)</p>
+          </div>
+
+          <div class="bg-white border border-gray-50 rounded-2xl p-4 flex items-center gap-4 shadow-sm mb-4">
+            <div id="resCatIcon" class="text-3xl">🌿</div>
+            <div>
+              <h4 id="resCatTitle" class="font-bold text-gray-800 text-sm italic">Agroquímicos</h4>
+              <p id="resCatDesc" class="text-[10px] text-gray-500 leading-tight">Productos para proteger y fortalecer tus cultivos.</p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 mb-6">
+            <img id="resImg1" src="" class="w-full h-20 object-cover rounded-xl border border-gray-50 bg-gray-50">
+            <img id="resImg2" src="" class="w-full h-20 object-cover rounded-xl border border-gray-50 bg-gray-50">
+          </div>
+
+          <div class="space-y-3 text-xs font-bold">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-400 font-medium">Subtotal (antes de IVA)</span>
+              <span id="resSubtotal" class="text-gray-800">$0.00</span>
+            </div>
+            <div class="flex justify-between items-center text-orange-500">
+              <span class="font-medium">Descuento aplicado</span>
+              <span id="resDiscount">-0.00</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-gray-400 font-medium">IVA sobre costo base (16%)</span>
+              <span id="resIvaCost">$0.00</span>
+            </div>
+            <hr class="border-gray-50 my-2">
+            <div class="flex justify-between items-center">
+              <span class="text-gray-400 font-medium">Costo total (IEPS + IVA)</span>
+              <span id="resTotalCost" class="text-gray-800">$0.00</span>
+            </div>
+            <div class="flex justify-between items-center">
+              <div class="flex items-center gap-2"><i data-lucide="trending-up" class="w-3 h-3 text-gray-300"></i><span class="text-gray-400 font-medium">Ganancia</span></div>
+              <span id="resProfit" class="text-gray-800">$0.00</span>
+            </div>
+            <div class="flex justify-between items-center pt-1">
+              <div class="flex items-center gap-2"><i data-lucide="gauge" class="w-3 h-3 text-gray-300"></i><span class="text-gray-400 font-medium">Margen bruto</span></div>
+              <span id="resMarginPct" class="text-gray-800 font-black text-lg">0.00%</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -150,31 +195,20 @@
 
     <!-- ======= VISTA CONFIGURACIÓN ======= -->
     <div id="viewConfig" class="hidden animate-fade-in space-y-10">
-      
-      <!-- GESTIÓN DE CATEGORÍAS -->
-      <div class="bg-white rounded-2xl p-8 border shadow-sm">
+      <div class="bg-white rounded-3xl p-8 border-2 border-green-50 shadow-sm">
         <h2 class="text-xl font-black text-gray-800 uppercase italic mb-6 flex items-center gap-2">
            <i data-lucide="folder-edit" class="text-green-600"></i> Gestión de Categorías
         </h2>
-        <div id="categoryManager" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <!-- Se cargan aquí -->
-        </div>
-        <button onclick="addNewCategory()" class="bg-gray-800 text-white px-4 py-2 rounded-lg text-xs font-bold uppercase hover:bg-black transition">
-          + Agregar Nueva Categoría
-        </button>
+        <div id="categoryManager" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
+        <button onclick="addNewCategory()" class="bg-gray-800 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-black transition shadow-lg">+ Agregar Categoría</button>
       </div>
 
-      <!-- EDITOR DE MÁRGENES -->
-      <div class="bg-white rounded-2xl p-8 border shadow-sm">
+      <div class="bg-white rounded-3xl p-8 border shadow-sm">
         <div class="flex justify-between items-center mb-8">
-          <div>
-            <h2 class="text-xl font-black text-gray-800 uppercase italic tracking-tight">Editor de Márgenes Automáticos</h2>
-          </div>
+          <h2 class="text-xl font-black text-gray-800 uppercase italic">Editor de Márgenes</h2>
           <div class="flex gap-3">
-            <button onclick="saveAllConfig()" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg">
-              <i data-lucide="save" class="w-4 h-4"></i> Guardar Todo
-            </button>
-            <button onclick="resetToDefaults()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold border border-red-100">Restablecer</button>
+            <button onclick="saveAllConfig()" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg"><i data-lucide="save" class="w-4 h-4"></i> Guardar Todo</button>
+            <button onclick="resetToDefaults()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold border border-red-100 text-xs">Restablecer</button>
           </div>
         </div>
         <div id="configContainer" class="grid md:grid-cols-2 gap-8"></div>
@@ -183,157 +217,45 @@
   </div>
 
   <div id="cloud-panel" class="p-5">
-    <div class="flex items-center gap-2 mb-4 border-b pb-2">
-      <div class="w-2.5 h-2.5 rounded-full bg-gray-300" id="auth-status-dot"></div>
-      <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest" id="auth-status-text">Desconectado</span>
-    </div>
+    <div class="flex items-center gap-2 mb-4 border-b pb-2"><div class="w-2.5 h-2.5 rounded-full bg-gray-300" id="auth-status-dot"></div><span class="text-[10px] font-black text-gray-400 uppercase tracking-widest" id="auth-status-text">Offline</span></div>
     <div id="auth-form" class="space-y-3">
       <input type="email" id="fb-email" placeholder="Email" class="text-xs border w-full p-2.5 rounded-lg">
       <input type="password" id="fb-pass" placeholder="Password" class="text-xs border w-full p-2.5 rounded-lg">
-      <button onclick="handleLogin()" class="w-full bg-blue-600 text-white text-xs py-2.5 rounded-lg font-black uppercase">ENTRAR</button>
+      <button onclick="handleLogin()" class="w-full bg-blue-600 text-white text-xs py-2.5 rounded-lg font-black uppercase shadow-lg shadow-blue-50">Entrar</button>
     </div>
     <div id="cloud-actions" class="hidden space-y-3">
-      <button onclick="syncToCloud()" class="w-full bg-green-600 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2 italic">
-        <i data-lucide="upload-cloud" class="w-4 h-4"></i> Guardar Nube
-      </button>
-      <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2 italic">
-        <i data-lucide="download-cloud" class="w-4 h-4"></i> Bajar Nube
-      </button>
-      <button onclick="auth.signOut()" class="w-full text-red-500 text-[10px] font-black mt-4 uppercase">Cerrar Sesión</button>
+      <button onclick="syncToCloud()" class="w-full bg-green-600 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Guardar en Nube</button>
+      <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2"><i data-lucide="download-cloud" class="w-4 h-4"></i> Bajar de Nube</button>
+      <button onclick="auth.signOut()" class="w-full text-red-500 text-[10px] font-black mt-4 uppercase">Salir</button>
     </div>
   </div>
 
   <script>
     const CONFIG = {
       IVA_RATE: 0.16,
-      LS_KEY: 'esquina_agricola_v7',
-      DEFAULT_CATEGORIES: ["Agroquimicos", "Granel", "KG-LT", "FERTILIZANTES", "INOCUIDAD", "MAQUINARIA"]
+      LS_KEY: 'esquina_agricola_v8_final',
+      IEPS: { none: 0, azul: 0.06, amarilla: 0.07, roja: 0.09 },
+      DEFAULT_CATS: ["Agroquimicos", "Granel", "KG-LT", "FERTILIZANTES", "INOCUIDAD", "MAQUINARIA"]
     };
 
-    // Estado inicial
+    const CATEGORY_INFO = {
+      "Agroquimicos": { icon: "🌿", desc: "Productos para proteger y fortalecer tus cultivos.", imgs: ["https://elciudadanovoces.com/wp-content/uploads/2024/06/6-720x406.jpg", "https://datos-bo.com/wp-content/uploads/2021/04/agroqumicos_mujer_fumigando_cbba_DANIEL_JAMES_LOS_TIEMPOS.jpg"] },
+      "Granel": { icon: "🧪", desc: "Insumos vendidos por Mililitro o Gramo.", imgs: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW2oljMgSWqHmnrNObMtJb6sh8nWUovf_Zg&s", "https://www.clikisalud.net/wp-content/uploads/2023/12/productos-biologicos-psoriasis-debes-saber.jpg"] },
+      "KG-LT": { icon: "⚖️", desc: "Presentaciones de venta minorista.", imgs: ["https://media.istockphoto.com/id/1283025593/es/foto/se-est%C3%A1-pesando-az%C3%BAcar-de-la-elaboraci%C3%B3n.jpg?s=170667a&w=0&k=20&c=bJiO4FyI8I-fF3dX7aoJEZaInIjNRThws_6ikzPQSuM=", "https://lamarinamx.vtexassets.com/arquivos/ids/651528-800-800?v=638095861978300000&width=800&height=800&aspect=true"] },
+      "FERTILIZANTES": { icon: "🌱", desc: "Nutrición para suelo y planta.", imgs: ["https://eos.com/wp-content/uploads/2023/11/components-of-different-types-of-fertilizers.jpg.webp", "https://bloglatam.jacto.com/wp-content/uploads/2022/09/jacto_jactomexico_image_563.jpeg"] },
+      "INOCUIDAD": { icon: "🧴", desc: "Seguridad alimentaria.", imgs: ["https://www.senasa.gob.pe/senasacontigo/wp-content/uploads/2019/11/inocuidad2.jpg", "https://www.gob.mx/cms/uploads/press/main_image/262283/post_230927_AGRICULTURA_FRUTILLAS-3.JPG"] },
+      "MAQUINARIA": { icon: "🚜", desc: "Equipos y herramientas.", imgs: ["https://www.defrentealcampo.com.ar/wp-content/uploads/2018/09/drone-pulverizador.jpg", "https://images.pexels.com/photos/2889440/pexels-photo-2889440.jpeg?auto=compress&cs=tinysrgb&w=600"] }
+    };
+
     let appState = {
-      categories: [...CONFIG.DEFAULT_CATEGORIES],
-      margins: {
-        Agroquimicos: [{max: 400, m: 27}, {max: Infinity, m: 17}],
-        Granel: [{max: Infinity, m: 40}],
-        "KG-LT": [{max: Infinity, m: 20}],
-        FERTILIZANTES: [{max: Infinity, m: 15}],
-        INOCUIDAD: [{max: Infinity, m: 20}],
-        MAQUINARIA: [{max: Infinity, m: 10}]
-      },
+      categories: [...CONFIG.DEFAULT_CATS],
+      margins: { Agroquimicos: [{max: 400, m: 27}, {max: Infinity, m: 17}], Granel: [{max: Infinity, m: 40}], "KG-LT": [{max: Infinity, m: 20}], FERTILIZANTES: [{max: Infinity, m: 15}], INOCUIDAD: [{max: Infinity, m: 20}], MAQUINARIA: [{max: Infinity, m: 10}] },
       oportunidades: { Agroquimicos: [], Granel: [], "KG-LT": [], FERTILIZANTES: [], INOCUIDAD: [], MAQUINARIA: [] }
     };
 
-    // --- GESTIÓN DINÁMICA DE CATEGORÍAS ---
-    function renderCategoryManager() {
-      const container = document.getElementById('categoryManager');
-      container.innerHTML = '';
-      appState.categories.forEach((cat, index) => {
-        container.innerHTML += `
-          <div class="flex items-center gap-2 bg-gray-50 p-2 rounded-lg border">
-            <input type="text" value="${cat}" onchange="renameCategory(${index}, this.value)" 
-              class="bg-transparent font-bold text-sm w-full outline-none focus:text-green-600">
-            <button onclick="removeCategory(${index})" class="text-red-400 hover:text-red-600 p-1">
-              <i data-lucide="trash-2" class="w-4 h-4"></i>
-            </button>
-          </div>
-        `;
-      });
-      lucide.createIcons();
-      updateCategoryDropdowns();
-    }
-
-    function addNewCategory() {
-      const name = prompt("Nombre de la nueva categoría:");
-      if (name && !appState.categories.includes(name)) {
-        appState.categories.push(name);
-        appState.margins[name] = [{max: Infinity, m: 20}];
-        appState.oportunidades[name] = [];
-        renderCategoryManager();
-        renderConfigTables();
-        saveLocal();
-      }
-    }
-
-    function renameCategory(index, newName) {
-      const oldName = appState.categories[index];
-      if (newName && oldName !== newName) {
-        appState.categories[index] = newName;
-        // Mover los datos de margen y oportunidad a la nueva clave
-        appState.margins[newName] = appState.margins[oldName];
-        delete appState.margins[oldName];
-        appState.oportunidades[newName] = appState.oportunidades[oldName];
-        delete appState.oportunidades[oldName];
-        
-        updateCategoryDropdowns();
-        renderConfigTables();
-        saveLocal();
-      }
-    }
-
-    function removeCategory(index) {
-      if (confirm("¿Seguro? Se borrarán también sus márgenes configurados.")) {
-        const name = appState.categories[index];
-        appState.categories.splice(index, 1);
-        delete appState.margins[name];
-        delete appState.oportunidades[name];
-        renderCategoryManager();
-        renderConfigTables();
-        saveLocal();
-      }
-    }
-
-    function updateCategoryDropdowns() {
-      const select = document.getElementById('calcCategory');
-      const currentVal = select.value;
-      select.innerHTML = '';
-      appState.categories.forEach(cat => {
-        select.innerHTML += `<option value="${cat}">${cat}</option>`;
-      });
-      if (appState.categories.includes(currentVal)) select.value = currentVal;
-    }
-
-    // --- MÁRGENES ---
-    function renderConfigTables() {
-      const container = document.getElementById('configContainer');
-      container.innerHTML = '';
-      appState.categories.forEach(cat => {
-        let html = `
-          <div class="border rounded-2xl p-6 bg-white shadow-sm border-gray-100">
-            <h3 class="font-black text-green-700 mb-4 uppercase text-[10px] tracking-widest flex items-center gap-2 italic">
-              <i data-lucide="tag" class="w-4 h-4"></i> ${cat}
-            </h3>
-            <div class="space-y-3 mb-4">`;
-        
-        (appState.margins[cat] || []).forEach((rule, idx) => {
-          html += `
-            <div class="flex items-center gap-2">
-              <input type="number" value="${rule.max === Infinity ? '' : rule.max}" placeholder="Infinito"
-                oninput="updateMarginRule('${cat}', ${idx}, 'max', this.value)"
-                class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50">
-              <input type="number" value="${rule.m}" oninput="updateMarginRule('${cat}', ${idx}, 'm', this.value)"
-                class="w-full p-2 border rounded-lg font-bold text-xs text-green-600 bg-gray-50">
-              <button onclick="removeMarginRow('${cat}', ${idx})" class="text-red-300 hover:text-red-500">
-                <i data-lucide="x-circle" class="w-4 h-4"></i>
-              </button>
-            </div>`;
-        });
-
-        html += `</div>
-            <button onclick="addMarginRow('${cat}')" class="w-full border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-green-500 transition-all">+ Añadir Rango</button>
-          </div>`;
-        container.innerHTML += html;
-      });
-      lucide.createIcons();
-    }
-
-    function addMarginRow(cat) { appState.margins[cat].push({max: 2000, m: 15}); renderConfigTables(); }
-    function removeMarginRow(cat, idx) { appState.margins[cat].splice(idx, 1); renderConfigTables(); }
-    function updateMarginRule(cat, idx, field, val) { appState.margins[cat][idx][field] = val === '' ? Infinity : parseFloat(val); }
-
     // --- CÁLCULOS ---
     function runCalculations() {
-      const category = document.getElementById('calcCategory').value;
+      const cat = document.getElementById('calcCategory').value;
       const baseCost = parseFloat(document.getElementById('calcBaseCost').value) || 0;
       const iepsKey = document.getElementById('calcIeps').value;
       const opName = document.getElementById('calcOportunidad').value;
@@ -346,18 +268,44 @@
 
       let m = 0;
       if(isManual) m = parseFloat(document.getElementById('calcManualMargin').value) || 0;
-      else if(opName) m = (appState.oportunidades[category]?.find(o => o.name === opName))?.m || 20;
+      else if(opName) m = (appState.oportunidades[cat]?.find(o => o.name === opName))?.m || 20;
       else {
-        const rules = appState.margins[category] || [{max: Infinity, m: 20}];
+        const rules = appState.margins[cat] || [{max: Infinity, m: 20}];
         m = (rules.find(r => totalCost < r.max) || rules[rules.length-1]).m;
       }
 
-      const finalPrice = totalCost / (1 - (Math.min(m/100, 0.99)));
-      document.getElementById('resFinalPrice').textContent = fmt$(finalPrice);
-      document.getElementById('resProfit').textContent = fmt$(finalPrice - totalCost);
-      document.getElementById('resMarginPct').textContent = m.toFixed(1) + '%';
+      const ratio = Math.min(m/100, 0.99);
+      const finalPrice = totalCost / (1 - ratio);
+      
+      updateMainUI({ finalPrice, profit: finalPrice - totalCost, marginPct: m, totalCost, baseCost, iepsAmt, ivaAmt, includeIva });
       updateScales(totalCost, finalPrice);
       saveLocal();
+    }
+
+    function updateMainUI(d) {
+      const cat = document.getElementById('calcCategory').value;
+      const info = CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: ["",""] };
+
+      document.getElementById('resCatTitle').textContent = cat;
+      document.getElementById('resCatIcon').textContent = info.icon;
+      document.getElementById('resCatDesc').textContent = info.desc;
+      document.getElementById('resImg1').src = info.imgs[0];
+      document.getElementById('resImg2').src = info.imgs[1];
+
+      document.getElementById('resFinalPrice').textContent = fmt$(d.finalPrice).replace('$', '');
+      document.getElementById('resIvaNote').textContent = d.includeIva ? "(IVA incluido en costo)" : "(Sin IVA en costo)";
+
+      const badge = document.getElementById('resBadge');
+      if (d.marginPct >= 25) { badge.className = "bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen saludable"; }
+      else if (d.marginPct >= 15) { badge.className = "bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen moderado"; }
+      else { badge.className = "bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen bajo"; }
+
+      document.getElementById('resSubtotal').textContent = fmt$(d.finalPrice);
+      document.getElementById('resIvaCost').textContent = fmt$(d.ivaAmt);
+      document.getElementById('resTotalCost').textContent = fmt$(d.totalCost);
+      document.getElementById('resProfit').textContent = fmt$(d.profit);
+      document.getElementById('resMarginPct').textContent = d.marginPct.toFixed(2) + '%';
+      lucide.createIcons();
     }
 
     function updateScales(cost, basePVP) {
@@ -367,11 +315,53 @@
       qtys.forEach(q => {
         let disc = q >= 100 ? 8 : (q >= 50 ? 5 : (q >= 10 ? 3 : 0));
         let p = basePVP * (1 - disc/100);
-        container.innerHTML += `<tr><td class="py-2 text-gray-400 font-bold">${q}</td><td class="font-black">${fmt$(p)}</td><td class="text-right text-gray-700">${p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0}%</td></tr>`;
+        container.innerHTML += `<tr><td class="py-2 text-gray-400">${q}</td><td class="font-black">${fmt$(p)}</td><td class="text-right text-gray-700 font-bold">${p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0}%</td></tr>`;
       });
     }
 
-    // --- GENERAL ---
+    // --- CONFIGURACIÓN ---
+    function renderCategoryManager() {
+      const container = document.getElementById('categoryManager');
+      container.innerHTML = '';
+      appState.categories.forEach((cat, index) => {
+        container.innerHTML += `<div class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm"><input type="text" value="${cat}" onchange="renameCategory(${index}, this.value)" class="bg-transparent font-black text-sm w-full outline-none text-gray-700 focus:text-green-600"><button onclick="removeCategory(${index})" class="text-red-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
+      });
+      lucide.createIcons();
+      updateCategoryDropdowns();
+    }
+
+    function addNewCategory() {
+      const name = prompt("Nombre:");
+      if (name && !appState.categories.includes(name)) { appState.categories.push(name); appState.margins[name] = [{max: Infinity, m: 20}]; appState.oportunidades[name] = []; renderCategoryManager(); renderConfigTables(); saveLocal(); }
+    }
+
+    function renameCategory(index, newName) {
+      const old = appState.categories[index];
+      if (newName && old !== newName) { appState.categories[index] = newName; appState.margins[newName] = appState.margins[old]; delete appState.margins[old]; appState.oportunidades[newName] = appState.oportunidades[old]; delete appState.oportunidades[old]; updateCategoryDropdowns(); renderConfigTables(); saveLocal(); }
+    }
+
+    function removeCategory(index) {
+      if (confirm("¿Borrar?")) { const name = appState.categories[index]; appState.categories.splice(index, 1); delete appState.margins[name]; delete appState.oportunidades[name]; renderCategoryManager(); renderConfigTables(); saveLocal(); }
+    }
+
+    function renderConfigTables() {
+      const container = document.getElementById('configContainer');
+      container.innerHTML = '';
+      appState.categories.forEach(cat => {
+        let html = `<div class="border rounded-2xl p-6 bg-white shadow-sm border-gray-50"><h3 class="font-black text-green-700 mb-4 uppercase text-[10px] tracking-widest flex items-center gap-2 italic"><i data-lucide="tag" class="w-4 h-4"></i> ${cat}</h3><div class="space-y-3 mb-4">`;
+        (appState.margins[cat] || []).forEach((rule, idx) => {
+          html += `<div class="flex items-center gap-2"><input type="number" value="${rule.max === Infinity ? '' : rule.max}" placeholder="Infinito" oninput="updateMarginRule('${cat}', ${idx}, 'max', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner"><input type="number" value="${rule.m}" oninput="updateMarginRule('${cat}', ${idx}, 'm', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs text-green-600 bg-gray-50 shadow-inner"><button onclick="removeMarginRow('${cat}', ${idx})" class="text-red-200 hover:text-red-500"><i data-lucide="x-circle" class="w-4 h-4"></i></button></div>`;
+        });
+        html += `</div><button onclick="addMarginRow('${cat}')" class="w-full border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-green-500">+ Añadir Rango</button></div>`;
+        container.innerHTML += html;
+      });
+      lucide.createIcons();
+    }
+
+    function addMarginRow(cat) { appState.margins[cat].push({max: 2000, m: 15}); renderConfigTables(); }
+    function removeMarginRow(cat, idx) { appState.margins[cat].splice(idx, 1); renderConfigTables(); }
+    function updateMarginRule(cat, idx, field, val) { appState.margins[cat][idx][field] = val === '' ? Infinity : parseFloat(val); }
+
     function switchTab(view) {
       document.getElementById('viewCalc').classList.toggle('hidden', view !== 'calc');
       document.getElementById('viewConfig').classList.toggle('hidden', view !== 'config');
@@ -382,59 +372,39 @@
 
     const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
     function saveLocal() { localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState)); }
-    function saveAllConfig() { 
-      for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max);
-      saveLocal(); alert("Guardado."); renderConfigTables(); runCalculations(); 
-    }
-    
+    function saveAllConfig() { for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max); saveLocal(); runCalculations(); alert("Guardado."); }
+    function updateCategoryDropdowns() { const select = document.getElementById('calcCategory'); select.innerHTML = ''; appState.categories.forEach(cat => { select.innerHTML += `<option value="${cat}">${cat}</option>`; }); }
+    function handleCategoryChange() { const cat = document.getElementById('calcCategory').value; const opSel = document.getElementById('calcOportunidad'); opSel.innerHTML = '<option value="">— Ninguno —</option>'; (appState.oportunidades[cat] || []).forEach(o => { opSel.innerHTML += `<option value="${o.name}">${o.name} (${o.m}%)</option>`; }); runCalculations(); }
     function toggleManualMargin() { document.getElementById('manualMarginWrap').classList.toggle('hidden'); runCalculations(); }
-    function handleCategoryChange() {
-      const cat = document.getElementById('calcCategory').value;
-      const opSel = document.getElementById('calcOportunidad');
-      opSel.innerHTML = '<option value="">— Ninguno —</option>';
-      (appState.oportunidades[cat] || []).forEach(o => { opSel.innerHTML += `<option value="${o.name}">${o.name} (${o.m}%)</option>`; });
-      runCalculations();
-    }
 
     // --- FIREBASE ---
     auth.onAuthStateChanged(user => {
       const actions = document.getElementById('cloud-actions');
       const form = document.getElementById('auth-form');
       const dot = document.getElementById('auth-status-dot');
-      if (user) {
-        dot.className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-md";
-        document.getElementById('auth-status-text').textContent = user.email;
-        form.classList.add('hidden'); actions.classList.remove('hidden');
-      } else {
-        dot.className = "w-2.5 h-2.5 rounded-full bg-gray-300";
-        document.getElementById('auth-status-text').textContent = "Offline";
-        form.classList.remove('hidden'); actions.classList.add('hidden');
-      }
+      if (user) { dot.className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-md"; document.getElementById('auth-status-text').textContent = user.email; form.classList.add('hidden'); actions.classList.remove('hidden'); }
+      else { dot.className = "w-2.5 h-2.5 rounded-full bg-gray-300"; document.getElementById('auth-status-text').textContent = "Offline"; form.classList.remove('hidden'); actions.classList.add('hidden'); }
     });
 
-    async function handleLogin() {
-      try { await auth.signInWithEmailAndPassword(document.getElementById('fb-email').value, document.getElementById('fb-pass').value); } 
-      catch (e) { alert(e.message); }
-    }
-    async function syncToCloud() {
-      try { await db.collection('configs').doc('global').set({ data: JSON.stringify(appState), updatedAt: new Date() }); alert("Nube OK"); }
-      catch (e) { alert(e.message); }
-    }
-    async function pullFromCloud() {
-      try {
-        const doc = await db.collection('configs').doc('global').get();
-        if(doc.exists) { appState = JSON.parse(doc.data().data); saveLocal(); renderCategoryManager(); handleCategoryChange(); alert("Bajado."); }
-      } catch (e) { alert(e.message); }
-    }
+    async function handleLogin() { try { await auth.signInWithEmailAndPassword(document.getElementById('fb-email').value, document.getElementById('fb-pass').value); } catch (e) { alert(e.message); } }
+    async function syncToCloud() { try { await db.collection('configs').doc('global').set({ data: JSON.stringify(appState), updatedAt: new Date() }); alert("Nube OK"); } catch (e) { alert(e.message); } }
+    async function pullFromCloud() { try { const doc = await db.collection('configs').doc('global').get(); if(doc.exists) { appState = JSON.parse(doc.data().data); saveLocal(); renderCategoryManager(); handleCategoryChange(); alert("Bajado."); } } catch (e) { alert(e.message); } }
 
     window.onload = () => {
       const local = localStorage.getItem(CONFIG.LS_KEY);
-      if(local) appState = JSON.parse(local);
+      if (local) {
+        try {
+          const p = JSON.parse(local);
+          if (!p.categories) p.categories = [...CONFIG.DEFAULT_CATS];
+          if (!p.margins) p.margins = {};
+          if (!p.oportunidades) p.oportunidades = {};
+          appState = p;
+        } catch (e) { console.error(e); }
+      }
       document.getElementById('calcIeps').innerHTML = `<option value="none">Sin IEPS</option><option value="azul">Azul (6%)</option><option value="amarilla">Amarilla (7%)</option><option value="roja">Roja (9%)</option>`;
-      CONFIG.IEPS = { none:0, azul:0.06, amarilla:0.07, roja:0.09 };
-      lucide.createIcons();
       updateCategoryDropdowns();
       handleCategoryChange();
+      lucide.createIcons();
     };
   </script>
 </body>
