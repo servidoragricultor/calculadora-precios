@@ -15,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // CONFIGURACIÓN DE FIREBASE (Clave confirmada: ...GRxug)
+    // CONFIGURACIÓN DE FIREBASE (Clave corregida)
     const firebaseConfig = {
       apiKey: "AIzaSyBGEiIKYV8MiA8lN3lteHaE1XkYD4GRxug",
       authDomain: "calculadora-esquina.firebaseapp.com",
@@ -61,7 +61,7 @@
       </div>
     </header>
 
-    <!-- Tabs -->
+    <!-- Navegación de Pestañas -->
     <nav class="flex gap-6 mb-8 border-b">
       <button onclick="switchTab('calc')" id="btnTabCalc" class="tab-btn active px-2 py-3 text-sm uppercase tracking-wider">Calculadora</button>
       <button onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-2 py-3 text-sm uppercase tracking-wider">Configuración de Márgenes</button>
@@ -73,7 +73,7 @@
         <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-100">
           <div class="grid md:grid-cols-2 gap-6">
             <div>
-              <label class="text-xs font-bold text-gray-500 uppercase">Categoría de Producto</label>
+              <label class="text-xs font-bold text-gray-500 uppercase">Categoría</label>
               <select id="calcCategory" onchange="handleCategoryChange()" class="form-select mt-1">
                 <option value="Agroquimicos">Agroquímicos</option>
                 <option value="Granel">Granel</option>
@@ -84,7 +84,7 @@
               </select>
             </div>
             <div>
-              <label class="text-xs font-bold text-gray-500 uppercase">Costo Base (Sin IVA)</label>
+              <label class="text-xs font-bold text-gray-500 uppercase">Costo Base</label>
               <div class="relative mt-1">
                 <span class="absolute left-3 top-2 text-gray-400 font-bold">$</span>
                 <input type="number" id="calcBaseCost" value="0.00" step="0.01" class="input-field pl-8 text-lg font-bold text-gray-800" oninput="runCalculations()">
@@ -94,11 +94,11 @@
 
           <div class="grid md:grid-cols-2 gap-6 mt-6">
             <div>
-              <label class="text-xs font-bold text-gray-500 uppercase">Impuesto IEPS</label>
+              <label class="text-xs font-bold text-gray-500 uppercase">Etiqueta IEPS</label>
               <select id="calcIeps" onchange="runCalculations()" class="form-select mt-1"></select>
             </div>
             <div>
-              <label class="text-xs font-bold text-gray-500 uppercase">Producto Especial (Oportunidad)</label>
+              <label class="text-xs font-bold text-gray-500 uppercase">Producto Especial</label>
               <select id="calcOportunidad" onchange="runCalculations()" class="form-select mt-1"></select>
             </div>
           </div>
@@ -106,7 +106,7 @@
           <div class="mt-8 p-4 bg-green-50 rounded-xl space-y-4 border border-green-100">
             <label class="flex items-center gap-3 cursor-pointer">
               <input type="checkbox" id="calcManualToggle" onchange="toggleManualMargin()" class="w-4 h-4 rounded text-green-600 focus:ring-green-500">
-              <span class="text-sm font-bold text-green-800">EDITAR MARGEN MANUALMENTE</span>
+              <span class="text-sm font-bold text-green-800">MARGEN MANUAL</span>
             </label>
             <div id="manualMarginWrap" class="hidden animate-fade-in pl-7">
               <div class="flex items-center gap-3">
@@ -114,121 +114,94 @@
                 <span class="text-sm font-bold text-green-700">% de Ganancia</span>
               </div>
             </div>
-            <label class="flex items-center gap-3 cursor-pointer pl-0">
+            <label class="flex items-center gap-3 cursor-pointer">
               <input type="checkbox" id="calcIvaToggle" onchange="runCalculations()" class="w-4 h-4 rounded text-green-600 focus:ring-green-500">
               <span class="text-sm font-bold text-green-800">INCLUIR IVA EN COSTO (16%)</span>
             </label>
           </div>
         </div>
 
-        <!-- Tabla Escalas -->
         <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-100">
           <div class="flex justify-between items-center mb-6">
-            <h3 class="font-extrabold text-gray-800 flex items-center gap-2 italic">
-              <i data-lucide="layers" class="w-5 h-5 text-green-600"></i> ESCALAS DE VOLUMEN
-            </h3>
-            <div class="flex items-center gap-2">
-              <span class="text-[10px] font-bold text-gray-400">PIEZAS:</span>
-              <input type="text" id="calcScaleQty" value="1, 10, 50, 100" class="text-xs border rounded-lg px-3 py-1 w-40 font-bold text-green-700" oninput="runCalculations()">
-            </div>
+            <h3 class="font-extrabold text-gray-800 flex items-center gap-2 italic">ESCALAS</h3>
+            <input type="text" id="calcScaleQty" value="1, 10, 50, 100" class="text-xs border rounded-lg px-3 py-1 w-40 font-bold text-green-700" oninput="runCalculations()">
           </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead>
-                <tr class="text-gray-400 border-b uppercase text-[10px] tracking-widest">
-                  <th class="pb-3 text-left">Cant.</th>
-                  <th class="pb-3 text-left">P. Unitario</th>
-                  <th class="pb-3 text-left">Venta Total</th>
-                  <th class="pb-3 text-left">Utilidad</th>
-                  <th class="pb-3 text-right">Margen</th>
-                </tr>
-              </thead>
-              <tbody id="scaleTableBody" class="divide-y divide-gray-50 font-medium"></tbody>
-            </table>
-          </div>
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="text-gray-400 border-b uppercase text-[10px]">
+                <th class="pb-3 text-left">Cant.</th>
+                <th class="pb-3 text-left">Unitario</th>
+                <th class="pb-3 text-left">Venta Total</th>
+                <th class="pb-3 text-right">Margen %</th>
+              </tr>
+            </thead>
+            <tbody id="scaleTableBody"></tbody>
+          </table>
         </div>
       </section>
 
-      <!-- Sidebar Resumen -->
+      <!-- Resumen Lateral -->
       <aside class="space-y-4">
-        <div class="bg-green-600 rounded-3xl p-8 text-white shadow-xl shadow-green-100 relative overflow-hidden">
-          <i data-lucide="trending-up" class="absolute -right-4 -bottom-4 w-32 h-32 opacity-10"></i>
-          <p class="text-green-100 text-[10px] font-black uppercase tracking-widest">Precio Sugerido de Venta</p>
+        <div class="bg-green-600 rounded-3xl p-8 text-white shadow-xl shadow-green-100">
+          <p class="text-green-100 text-[10px] font-black uppercase tracking-widest">Precio Final</p>
           <div id="resFinalPrice" class="text-5xl font-black mt-2 tracking-tighter">$0.00</div>
           <p id="resIvaNote" class="text-green-200 text-[10px] mt-4 font-bold uppercase"></p>
         </div>
 
         <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-5">
-          <div class="flex justify-between items-end">
+          <div class="flex justify-between items-end border-b pb-4">
             <span class="text-gray-400 text-[10px] font-black uppercase">Margen Real</span>
             <span id="resMarginPct" class="font-black text-2xl text-gray-800 leading-none">0%</span>
           </div>
           <div class="flex justify-between items-end">
-            <span class="text-gray-400 text-[10px] font-black uppercase">Utilidad Neta</span>
+            <span class="text-gray-400 text-[10px] font-black uppercase">Utilidad</span>
             <span id="resProfit" class="font-black text-2xl text-green-600 leading-none">$0.00</span>
-          </div>
-          <div class="pt-4 border-t space-y-3">
-            <div class="flex justify-between text-[11px] font-bold">
-              <span class="text-gray-400">COSTO BASE</span><span id="resBaseCost" class="text-gray-600">$0.00</span>
-            </div>
-            <div class="flex justify-between text-[11px] font-bold">
-              <span class="text-gray-400">IEPS APLICADO</span><span id="resIeps" class="text-gray-600">$0.00</span>
-            </div>
-            <div class="flex justify-between text-[11px] font-bold">
-              <span class="text-gray-400">IVA S/ COSTO</span><span id="resIva" class="text-gray-600">$0.00</span>
-            </div>
           </div>
         </div>
       </aside>
     </main>
 
-    <!-- ======= VISTA CONFIGURACIÓN ======= -->
+    <!-- ======= VISTA CONFIGURACIÓN (RESTAURADA) ======= -->
     <div id="viewConfig" class="hidden animate-fade-in space-y-6">
       <div class="bg-white rounded-2xl p-8 border shadow-sm">
         <div class="flex justify-between items-center mb-8">
           <div>
-            <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tight">Editor de Márgenes Automáticos</h2>
-            <p class="text-sm text-gray-500">Define cuánto quieres ganar según el costo del producto por cada categoría.</p>
+            <h2 class="text-2xl font-black text-gray-800 uppercase tracking-tight">Editor de Márgenes</h2>
+            <p class="text-sm text-gray-500">Ajusta los porcentajes de ganancia por cada categoría.</p>
           </div>
           <div class="flex gap-3">
-            <button onclick="saveAllConfig()" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold shadow-lg hover:bg-green-700 transition flex items-center gap-2">
-              <i data-lucide="save" class="w-4 h-4"></i> Guardar Cambios
+            <button onclick="saveAllConfig()" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2">
+              <i data-lucide="save" class="w-4 h-4"></i> Guardar Todo
             </button>
-            <button onclick="resetToDefaults()" class="bg-red-50 text-red-600 px-6 py-2 rounded-xl font-bold border border-red-100">Restablecer Todo</button>
+            <button onclick="resetToDefaults()" class="bg-red-50 text-red-600 px-6 py-2 rounded-xl font-bold border border-red-100">Restablecer</button>
           </div>
         </div>
         
-        <div id="configContainer" class="grid md:grid-cols-2 gap-8">
-          <!-- Las tablas de edición se generan aquí con JavaScript -->
-        </div>
+        <!-- LAS TABLAS SE GENERAN AQUÍ -->
+        <div id="configContainer" class="grid md:grid-cols-2 gap-8"></div>
       </div>
     </div>
   </div>
 
-  <!-- Panel Firebase Flotante -->
+  <!-- Panel Firebase -->
   <div id="cloud-panel" class="p-5">
     <div class="flex items-center gap-2 mb-4 border-b pb-2">
       <div class="w-2.5 h-2.5 rounded-full bg-gray-300" id="auth-status-dot"></div>
       <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest" id="auth-status-text">Sin conexión</span>
     </div>
     <div id="auth-form" class="space-y-3">
-      <input type="email" id="fb-email" placeholder="Correo electrónico" class="text-xs border w-full p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-      <input type="password" id="fb-pass" placeholder="Contraseña" class="text-xs border w-full p-2.5 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
-      <button onclick="handleLogin()" class="w-full bg-blue-600 text-white text-xs py-2.5 rounded-lg font-black uppercase tracking-widest shadow-lg shadow-blue-100">Iniciar Sesión</button>
+      <input type="email" id="fb-email" placeholder="Email" class="text-xs border w-full p-2.5 rounded-lg">
+      <input type="password" id="fb-pass" placeholder="Password" class="text-xs border w-full p-2.5 rounded-lg">
+      <button onclick="handleLogin()" class="w-full bg-blue-600 text-white text-xs py-2.5 rounded-lg font-black uppercase">Entrar</button>
     </div>
     <div id="cloud-actions" class="hidden space-y-3">
-      <button onclick="syncToCloud()" class="w-full bg-green-600 text-white text-xs py-3 rounded-lg flex items-center justify-center gap-2 font-black uppercase tracking-widest shadow-lg shadow-green-100">
-        <i data-lucide="upload-cloud" class="w-4 h-4"></i> Guardar en Nube
-      </button>
-      <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-3 rounded-lg flex items-center justify-center gap-2 font-black uppercase tracking-widest shadow-lg shadow-amber-100">
-        <i data-lucide="download-cloud" class="w-4 h-4"></i> Cargar de Nube
-      </button>
-      <button onclick="auth.signOut()" class="w-full text-red-500 text-[10px] font-black uppercase tracking-widest mt-4 hover:underline">Cerrar Sesión</button>
+      <button onclick="syncToCloud()" class="w-full bg-green-600 text-white text-xs py-3 rounded-lg font-black uppercase">Subir a Nube</button>
+      <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-3 rounded-lg font-black uppercase">Bajar de Nube</button>
+      <button onclick="auth.signOut()" class="w-full text-red-500 text-[10px] font-black mt-4 uppercase">Cerrar Sesión</button>
     </div>
   </div>
 
   <script>
-    // --- DATOS INICIALES ---
     const CONFIG = {
       IVA_RATE: 0.16,
       LS_KEY: 'esquina_agricola_v4',
@@ -241,7 +214,7 @@
         MAQUINARIA: [ {max: Infinity, m: 15} ]
       },
       OPORTUNIDADES: {
-        Agroquimicos: [{ name: "Herbicida Premium", m: 35 }, { name: "Fungicida Especial", m: 40 }],
+        Agroquimicos: [{ name: "Herbicida Premium", m: 35 }],
         Granel: [{ name: "Semilla Especial", m: 60 }],
         "KG-LT": [], "FERTILIZANTES": [], "INOCUIDAD": [], "MAQUINARIA": []
       },
@@ -253,7 +226,6 @@
       oportunidades: JSON.parse(JSON.stringify(CONFIG.OPORTUNIDADES))
     };
 
-    // --- LÓGICA DE CÁLCULO ---
     function runCalculations() {
       const category = document.getElementById('calcCategory').value;
       const baseCost = parseFloat(document.getElementById('calcBaseCost').value) || 0;
@@ -283,19 +255,12 @@
       const finalPrice = totalCost / (1 - ratio);
       const profit = finalPrice - totalCost;
 
-      updateMainUI({ finalPrice, profit, marginPct, totalCost, baseCost, iepsAmt, ivaAmt, includeIva });
+      document.getElementById('resFinalPrice').textContent = fmt$(finalPrice);
+      document.getElementById('resProfit').textContent = fmt$(profit);
+      document.getElementById('resMarginPct').textContent = marginPct.toFixed(1) + '%';
+      
       updateScales(totalCost, finalPrice);
       saveLocal(); 
-    }
-
-    function updateMainUI(d) {
-      document.getElementById('resFinalPrice').textContent = fmt$(d.finalPrice);
-      document.getElementById('resProfit').textContent = fmt$(d.profit);
-      document.getElementById('resMarginPct').textContent = d.marginPct.toFixed(1) + '%';
-      document.getElementById('resBaseCost').textContent = fmt$(d.baseCost);
-      document.getElementById('resIeps').textContent = fmt$(d.iepsAmt);
-      document.getElementById('resIva').textContent = fmt$(d.ivaAmt);
-      document.getElementById('resIvaNote').textContent = d.includeIva ? "IVA INCLUIDO EN COSTO" : "SIN IVA EN COSTO";
     }
 
     function updateScales(cost, basePVP) {
@@ -305,20 +270,12 @@
       qtys.forEach(q => {
         let disc = q >= 100 ? 8 : (q >= 50 ? 5 : (q >= 10 ? 3 : 0));
         let unitP = basePVP * (1 - disc/100);
-        let profit = (unitP - cost) * q;
         let margin = unitP > 0 ? ((unitP - cost) / unitP) * 100 : 0;
-        container.innerHTML += `
-          <tr class="hover:bg-gray-50 transition">
-            <td class="py-4 text-gray-400 font-bold">${q}</td>
-            <td class="py-4 font-black text-gray-800">${fmt$(unitP)}</td>
-            <td class="py-4 text-gray-600">${fmt$(unitP * q)}</td>
-            <td class="py-4 text-green-600 font-bold">${fmt$(profit)}</td>
-            <td class="py-4 text-right font-black text-gray-700">${margin.toFixed(1)}%</td>
-          </tr>`;
+        container.innerHTML += `<tr><td class="py-2">${q}</td><td class="font-bold">${fmt$(unitP)}</td><td>${fmt$(unitP * q)}</td><td class="text-right">${margin.toFixed(1)}%</td></tr>`;
       });
     }
 
-    // --- LÓGICA DE CONFIGURACIÓN ---
+    // --- CONFIGURACIÓN DINÁMICA ---
     function renderConfigTables() {
       const container = document.getElementById('configContainer');
       container.innerHTML = '';
@@ -335,19 +292,17 @@
                   <th class="pb-3">Ganancia (%)</th>
                 </tr>
               </thead>
-              <tbody class="space-y-2">`;
+              <tbody>`;
         appState.margins[cat].forEach((rule, index) => {
           html += `
             <tr>
               <td class="pr-3 pb-2">
-                <input type="number" value="${rule.max === Infinity ? '' : rule.max}" 
-                  placeholder="Infinito"
-                  onchange="updateMarginRule('${cat}', ${index}, 'max', this.value)"
+                <input type="number" value="${rule.max === Infinity ? '' : rule.max}" placeholder="Infinito"
+                  oninput="updateMarginRule('${cat}', ${index}, 'max', this.value)"
                   class="w-full p-2 border rounded-lg font-bold">
               </td>
               <td class="pb-2">
-                <input type="number" value="${rule.m}" 
-                  onchange="updateMarginRule('${cat}', ${index}, 'm', this.value)"
+                <input type="number" value="${rule.m}" oninput="updateMarginRule('${cat}', ${index}, 'm', this.value)"
                   class="w-full p-2 border rounded-lg font-bold text-green-600">
               </td>
             </tr>`;
@@ -366,10 +321,10 @@
     function saveAllConfig() {
       saveLocal();
       runCalculations();
-      alert("¡Configuración guardada en este navegador!");
+      alert("Guardado localmente. No olvides subir a la nube para que sea permanente.");
     }
 
-    // --- FIREBASE & TABS ---
+    // --- SISTEMA DE PESTAÑAS ---
     function switchTab(view) {
       document.getElementById('viewCalc').classList.toggle('hidden', view !== 'calc');
       document.getElementById('viewConfig').classList.toggle('hidden', view !== 'config');
@@ -378,19 +333,20 @@
       if(view === 'config') renderConfigTables();
     }
 
+    // --- FIREBASE ---
     auth.onAuthStateChanged(user => {
       const dot = document.getElementById('auth-status-dot');
       const text = document.getElementById('auth-status-text');
       const form = document.getElementById('auth-form');
       const actions = document.getElementById('cloud-actions');
       if (user) {
-        dot.className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]";
-        text.textContent = "Conectado: " + user.email;
+        dot.className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-md";
+        text.textContent = user.email;
         form.classList.add('hidden');
         actions.classList.remove('hidden');
       } else {
         dot.className = "w-2.5 h-2.5 rounded-full bg-gray-300";
-        text.textContent = "Sin conexión a nube";
+        text.textContent = "Sin conexión";
         form.classList.remove('hidden');
         actions.classList.add('hidden');
       }
@@ -399,14 +355,14 @@
     async function handleLogin() {
       const email = document.getElementById('fb-email').value;
       const pass = document.getElementById('fb-pass').value;
-      try { await auth.signInWithEmailAndPassword(email, pass); } catch (e) { alert("Error: " + e.message); }
+      try { await auth.signInWithEmailAndPassword(email, pass); } catch (e) { alert(e.message); }
     }
 
     async function syncToCloud() {
       if(!auth.currentUser) return;
       try {
         await db.collection('configs').doc('global').set({ data: JSON.stringify(appState), updatedAt: new Date() });
-        alert("¡Datos guardados en la nube con éxito!");
+        alert("¡Guardado en la nube!");
       } catch (e) { alert(e.message); }
     }
 
@@ -418,7 +374,7 @@
           appState = JSON.parse(doc.data().data);
           saveLocal();
           handleCategoryChange();
-          alert("Configuración descargada de la nube.");
+          alert("Sincronizado desde la nube.");
         }
       } catch (e) { alert(e.message); }
     }
@@ -435,7 +391,7 @@
       runCalculations();
     }
     function resetToDefaults() {
-      if(confirm("¿Quieres borrar todos tus cambios y volver a los valores originales?")) {
+      if(confirm("¿Restablecer valores originales?")) {
         appState = { margins: JSON.parse(JSON.stringify(CONFIG.DEFAULT_MARGINS)), oportunidades: JSON.parse(JSON.stringify(CONFIG.OPORTUNIDADES)) };
         saveLocal(); location.reload();
       }
@@ -444,7 +400,7 @@
     window.onload = () => {
       const local = localStorage.getItem(CONFIG.LS_KEY);
       if(local) appState = JSON.parse(local);
-      document.getElementById('calcIeps').innerHTML = `<option value="none">Sin IEPS (0%)</option><option value="azul" style="color:#2563eb">Etiqueta Azul (6%)</option><option value="amarilla" style="color:#d97706">Etiqueta Amarilla (7%)</option><option value="roja" style="color:#dc2626">Etiqueta Roja (9%)</option>`;
+      document.getElementById('calcIeps').innerHTML = `<option value="none">Sin IEPS (0%)</option><option value="azul" style="color:blue">Azul (6%)</option><option value="amarilla" style="color:orange">Amarilla (7%)</option><option value="roja" style="color:red">Roja (9%)</option>`;
       lucide.createIcons();
       handleCategoryChange();
     };
