@@ -15,7 +15,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // CONFIGURACIÓN DE FIREBASE (Clave confirmada)
+    // CONFIGURACIÓN DE FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyBGEiIKYV8MiA8lN3lteHaE1XkYD4GRxug",
       authDomain: "calculadora-esquina.firebaseapp.com",
@@ -84,15 +84,9 @@
             </div>
           </div>
 
-          <div class="grid md:grid-cols-2 gap-6 mt-6">
-            <div>
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Etiqueta IEPS</label>
-              <select id="calcIeps" onchange="runCalculations()" class="form-select mt-1"></select>
-            </div>
-            <div>
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Producto Especial</label>
-              <select id="calcOportunidad" onchange="runCalculations()" class="form-select mt-1"></select>
-            </div>
+          <div class="mt-6">
+            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Etiqueta IEPS</label>
+            <select id="calcIeps" onchange="runCalculations()" class="form-select mt-1 font-bold text-gray-700"></select>
           </div>
 
           <div class="mt-8 p-4 bg-green-50 rounded-2xl space-y-4 border border-green-100">
@@ -132,7 +126,7 @@
         </div>
       </section>
 
-      <!-- ======= PANEL RESUMEN (ESTÉTICA NUEVA) ======= -->
+      <!-- ======= PANEL RESUMEN ======= -->
       <aside class="space-y-4 animate-fade-in">
         <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
           <div class="flex justify-between items-center mb-4">
@@ -249,16 +243,13 @@
 
     let appState = {
       categories: [...CONFIG.DEFAULT_CATS],
-      margins: { Agroquimicos: [{max: 400, m: 27}, {max: Infinity, m: 17}], Granel: [{max: Infinity, m: 40}], "KG-LT": [{max: Infinity, m: 20}], FERTILIZANTES: [{max: Infinity, m: 15}], INOCUIDAD: [{max: Infinity, m: 20}], MAQUINARIA: [{max: Infinity, m: 10}] },
-      oportunidades: { Agroquimicos: [], Granel: [], "KG-LT": [], FERTILIZANTES: [], INOCUIDAD: [], MAQUINARIA: [] }
+      margins: { Agroquimicos: [{max: 400, m: 27}, {max: Infinity, m: 17}], Granel: [{max: Infinity, m: 40}], "KG-LT": [{max: Infinity, m: 20}], FERTILIZANTES: [{max: Infinity, m: 15}], INOCUIDAD: [{max: Infinity, m: 20}], MAQUINARIA: [{max: Infinity, m: 10}] }
     };
 
-    // --- CÁLCULOS ---
     function runCalculations() {
       const cat = document.getElementById('calcCategory').value;
       const baseCost = parseFloat(document.getElementById('calcBaseCost').value) || 0;
       const iepsKey = document.getElementById('calcIeps').value;
-      const opName = document.getElementById('calcOportunidad').value;
       const isManual = document.getElementById('calcManualToggle').checked;
       const includeIva = document.getElementById('calcIvaToggle').checked;
 
@@ -268,7 +259,6 @@
 
       let m = 0;
       if(isManual) m = parseFloat(document.getElementById('calcManualMargin').value) || 0;
-      else if(opName) m = (appState.oportunidades[cat]?.find(o => o.name === opName))?.m || 20;
       else {
         const rules = appState.margins[cat] || [{max: Infinity, m: 20}];
         m = (rules.find(r => totalCost < r.max) || rules[rules.length-1]).m;
@@ -315,11 +305,10 @@
       qtys.forEach(q => {
         let disc = q >= 100 ? 8 : (q >= 50 ? 5 : (q >= 10 ? 3 : 0));
         let p = basePVP * (1 - disc/100);
-        container.innerHTML += `<tr><td class="py-2 text-gray-400">${q}</td><td class="font-black">${fmt$(p)}</td><td class="text-right text-gray-700 font-bold">${p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0}%</td></tr>`;
+        container.innerHTML += `<tr><td class="py-2 text-gray-400 font-bold">${q}</td><td class="font-black text-gray-800">${fmt$(p)}</td><td class="text-right text-gray-700 font-bold">${p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0}%</td></tr>`;
       });
     }
 
-    // --- CONFIGURACIÓN ---
     function renderCategoryManager() {
       const container = document.getElementById('categoryManager');
       container.innerHTML = '';
@@ -332,16 +321,16 @@
 
     function addNewCategory() {
       const name = prompt("Nombre:");
-      if (name && !appState.categories.includes(name)) { appState.categories.push(name); appState.margins[name] = [{max: Infinity, m: 20}]; appState.oportunidades[name] = []; renderCategoryManager(); renderConfigTables(); saveLocal(); }
+      if (name && !appState.categories.includes(name)) { appState.categories.push(name); appState.margins[name] = [{max: Infinity, m: 20}]; renderCategoryManager(); renderConfigTables(); saveLocal(); }
     }
 
     function renameCategory(index, newName) {
       const old = appState.categories[index];
-      if (newName && old !== newName) { appState.categories[index] = newName; appState.margins[newName] = appState.margins[old]; delete appState.margins[old]; appState.oportunidades[newName] = appState.oportunidades[old]; delete appState.oportunidades[old]; updateCategoryDropdowns(); renderConfigTables(); saveLocal(); }
+      if (newName && old !== newName) { appState.categories[index] = newName; appState.margins[newName] = appState.margins[old]; delete appState.margins[old]; updateCategoryDropdowns(); renderConfigTables(); saveLocal(); }
     }
 
     function removeCategory(index) {
-      if (confirm("¿Borrar?")) { const name = appState.categories[index]; appState.categories.splice(index, 1); delete appState.margins[name]; delete appState.oportunidades[name]; renderCategoryManager(); renderConfigTables(); saveLocal(); }
+      if (confirm("¿Borrar?")) { const name = appState.categories[index]; appState.categories.splice(index, 1); delete appState.margins[name]; renderCategoryManager(); renderConfigTables(); saveLocal(); }
     }
 
     function renderConfigTables() {
@@ -374,10 +363,9 @@
     function saveLocal() { localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState)); }
     function saveAllConfig() { for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max); saveLocal(); runCalculations(); alert("Guardado."); }
     function updateCategoryDropdowns() { const select = document.getElementById('calcCategory'); select.innerHTML = ''; appState.categories.forEach(cat => { select.innerHTML += `<option value="${cat}">${cat}</option>`; }); }
-    function handleCategoryChange() { const cat = document.getElementById('calcCategory').value; const opSel = document.getElementById('calcOportunidad'); opSel.innerHTML = '<option value="">— Ninguno —</option>'; (appState.oportunidades[cat] || []).forEach(o => { opSel.innerHTML += `<option value="${o.name}">${o.name} (${o.m}%)</option>`; }); runCalculations(); }
+    function handleCategoryChange() { runCalculations(); }
     function toggleManualMargin() { document.getElementById('manualMarginWrap').classList.toggle('hidden'); runCalculations(); }
 
-    // --- FIREBASE ---
     auth.onAuthStateChanged(user => {
       const actions = document.getElementById('cloud-actions');
       const form = document.getElementById('auth-form');
@@ -397,11 +385,10 @@
           const p = JSON.parse(local);
           if (!p.categories) p.categories = [...CONFIG.DEFAULT_CATS];
           if (!p.margins) p.margins = {};
-          if (!p.oportunidades) p.oportunidades = {};
           appState = p;
         } catch (e) { console.error(e); }
       }
-      document.getElementById('calcIeps').innerHTML = `<option value="none">Sin IEPS</option><option value="azul">Azul (6%)</option><option value="amarilla">Amarilla (7%)</option><option value="roja">Roja (9%)</option>`;
+      document.getElementById('calcIeps').innerHTML = `<option value="none">Sin IEPS (0%)</option><option value="azul" style="color:#2563eb">Etiqueta Azul (6%)</option><option value="amarilla" style="color:#d97706">Etiqueta Amarilla (7%)</option><option value="roja" style="color:#dc2626">Etiqueta Roja (9%)</option>`;
       updateCategoryDropdowns();
       handleCategoryChange();
       lucide.createIcons();
