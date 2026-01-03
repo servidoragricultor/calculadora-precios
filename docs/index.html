@@ -3,1884 +3,380 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Calculadora de Precios y Márgenes</title>
+  <title>Calculadora de Precios y Márgenes | La Esquina</title>
+  
+  <!-- Frameworks -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- 🔥 Firebase (Auth + Firestore) - PÉGALO EN <head> (ANTES de tu <script> principal) -->
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+  <!-- Firebase SDK (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
-<script>
-  // ✅ OJO: NO le pongas comillas extra, ni espacios, ni lo recortes.
-  const firebaseConfig = {
-    apiKey: "AIzaSyBGE1KYV8MiA8LN3LteHaE1XkYD4GRxug",
-    authDomain: "calculadora-esquina.firebaseapp.com",
-    projectId: "calculadora-esquina",
-    storageBucket: "calculadora-esquina.appspot.com",
-    messagingSenderId: "721368379664",
-    appId: "1:721368379664:web:7dd83fad394c3d909b3595",
-    measurementId: "G-MV6X87D4J3"
-  };
+  <script>
+    // CONFIGURACIÓN ÚNICA DE FIREBASE (Datos de tu imagen)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBGEiIKYV8MiA8lN3LteHaE1XkYD4GRxug",
+      authDomain: "calculadora-esquina.firebaseapp.com",
+      projectId: "calculadora-esquina",
+      storageBucket: "calculadora-esquina.firebasestorage.app",
+      messagingSenderId: "721368379664",
+      appId: "1:721368379664:web:7dd83fad394c3d909b3595",
+      measurementId: "G-MV6X87D4J3"
+    };
 
- <script>
-  const firebaseConfig = { ... };
+    firebase.initializeApp(firebaseConfig);
+    window.auth = firebase.auth();
+    window.db   = firebase.firestore();
+  </script>
 
-  firebase.initializeApp(firebaseConfig);
-  window.auth = firebase.auth();
-  window.db   = firebase.firestore();
-</script>
-
-</script>
-
-  
   <style>
-    /* ====== SELECTS: más espacio y capitalización ====== */
-    .form-select{
-      appearance:none;-webkit-appearance:none;-moz-appearance:none;
-      min-width:240px; width:100%;
-      padding:0.5rem 2.75rem 0.5rem 0.75rem; /* extra para la flecha */
-      border:1px solid #d1d5db; border-radius:.5rem; font-size:1rem; color:#1f2937;
-      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
-      background-repeat:no-repeat; background-position:right .75rem center; background-size:1.25rem;
-      text-transform:capitalize;
+    .form-select {
+      appearance: none; min-width: 240px; width: 100%;
+      padding: 0.5rem 2.75rem 0.5rem 0.75rem;
+      border: 1px solid #d1d5db; border-radius: .5rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right .75rem center; background-size: 1.25rem;
+      text-transform: capitalize;
     }
-    .form-select option{ text-transform:capitalize; }
-    .form-select:focus{ outline:none; border-color:#22c55e; box-shadow:0 0 0 1px #22c55e; }
+    .tab-btn { border-bottom: 2px solid transparent; transition: all 0.3s; }
+    .tab-btn.active { border-color: #22c55e; color: #16a34a; font-weight: bold; }
+    .input-field { border: 1px solid #d1d5db; border-radius: .5rem; padding: .5rem .75rem; width: 100%; }
+    
+    /* Animación */
+    .animate-fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-    /* ====== Estilos generales ====== */
-    .flip{transition:all .25s ease}
-    .tab-btn{border-bottom-width:2px;border-color:transparent}
-    .tab-btn.active{border-color:#22c55e;color:#16a34a}
-    .input{border:1px solid #d1d5db;border-radius:.5rem;padding:.5rem .75rem}
-    .small{font-size:12px}
-    .btn{border-radius:.5rem;padding:.5rem .75rem}
-    #automaticRulesInfo{display:none!important}
-
-    /* Compactar filas de reglas de margen automático */
-    #marginRulesContainer td { padding-top: 0.15rem; padding-bottom: 0.15rem; }
-    #marginRulesContainer .input { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
-
-    #marginRulesTable {
-        width: auto;
-        border-collapse: collapse;
-        border-spacing: 0;
+    #cloud-panel {
+      position: fixed; right: 20px; bottom: 20px; z-index: 50;
+      width: 300px; background: white; border-radius: 12px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e5e7eb;
     }
-    #marginRulesTable th {
-        padding-left: 0.25rem;
-        padding-right: 0.75rem;
-    }
-    #marginRulesContainer td {
-        padding-top: 0.15rem;
-        padding-bottom: 0.15rem;
-        padding-left: 0.25rem;
-        padding-right: 0.5rem;
-    }
-    #marginRulesContainer input {
-        width: 90px;
-        padding: 0.2rem 0.35rem;
-        font-size: 0.8rem;
-    }
-    #marginRulesTable th:last-child,
-    #marginRulesTable td:last-child {
-        white-space: nowrap;
-        width: 1%;
-    }
-    #marginRulesTable tr {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-    }
-    #marginRulesTable td, 
-    #marginRulesTable th {
-        width: auto !important;
-        padding: 0.1rem 0.2rem !important;
-    }
-    #marginRulesTable input {
-        width: 70px !important;
-        padding: 0.15rem 0.2rem !important;
-        font-size: 0.75rem !important;
-    }
-    #marginRulesTable td:last-child {
-        margin-left: auto;
-    }
-    #marginRulesContainer {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.25rem 1rem;
-    }
-    #marginRulesContainer .mr-row {
-        width: 260px;
-        border-right: 1px solid #e0e0e0;
-        padding-right: 8px;
-        margin-right: 8px;
-    }
-
-    .bucket-card {
-      border-right:1px solid #e0e0e0;
-      padding-right:10px;
-      margin-right:10px;
-    }
-    .tier-row {
-      display:flex;
-      gap:0.5rem;
-      border-right:1px solid #e0e0e0;
-      padding-right:10px;
-      margin-right:10px;
-    }
-
-    #bucketRulesTable {
-      width: auto;
-      border-collapse: collapse;
-      border-spacing: 0;
-    }
-    #bucketRulesTable th,
-    #bucketRulesTable td {
-      padding: 0.2rem 0.3rem;
-    }
-    #bucketRulesTable input {
-      padding: 0.15rem 0.25rem;
-      font-size: 0.8rem;
-    }
-
-    #volTiersTable {
-      width: auto;
-      border-collapse: collapse;
-      border-spacing: 0;
-    }
-    #volTiersTable th,
-    #volTiersTable td {
-      padding: 0.2rem 0.3rem;
-    }
-    #volTiersContainer input {
-      padding: 0.15rem 0.25rem;
-      font-size: 0.8rem;
-    }
-
-    #discountBlock{display:none !important;}
-
-    #volScaleTable th,
-    #volScaleTable td {
-      text-align: center;
-    }
-
-    /* Nuevo: estilos para panel "Nivel siguiente" */
-    .upgrade-card { border:1px dashed #e6e6e6; background:#fff; padding:12px; border-radius:8px; }
-    .status-ok { color: #065f46; }
-    .status-err { color: #9f1239; }
   </style>
 </head>
-<body onload="initializeCalculator()">
-  <div class="min-h-screen bg-gray-50 py-8">
-    <div class="mx-auto w-full max-w-6xl px-4">
-      <!-- Header -->
-      <div class="flex items-center justify-between pb-4 mb-6 border-b">
+
+<body class="bg-gray-50 min-h-screen pb-20">
+  <div class="mx-auto w-full max-w-6xl px-4 py-8">
+    
+    <header class="flex items-center justify-between pb-4 mb-6 border-b">
+      <div>
         <h1 class="text-2xl font-extrabold text-green-700 flex items-center gap-2">
-          <i data-lucide="leaf" class="w-6 h-6 text-green-500"></i>
-          Calculadora de Precios y Márgenes
+          <i data-lucide="leaf" class="text-green-500"></i>
+          Calculadora de Precios
         </h1>
-        <p class="text-xs text-gray-500">La Esquina del Agricultor</p>
+        <p class="text-sm text-gray-500">La Esquina del Agricultor</p>
       </div>
+    </header>
 
-      <!-- Tabs -->
-      <div class="flex gap-4 mb-6">
-        <button id="tabCalc" class="tab-btn active px-3 py-2 rounded-md">Calculadora</button>
-        <button id="tabConfig" class="tab-btn px-3 py-2 rounded-md">Configuración avanzada</button>
-      </div>
+    <nav class="flex gap-4 mb-6">
+      <button onclick="switchTab('calc')" id="btnTabCalc" class="tab-btn active px-4 py-2">Calculadora</button>
+      <button onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-4 py-2">Configuración</button>
+    </nav>
 
-      <!-- ======= CALCULADORA ======= -->
-      <div id="tabCalcContent">
-        <div class="grid lg:grid-cols-3 gap-6">
-          <!-- Columna izquierda: formulario -->
-          <div class="lg:col-span-2">
-            <div class="w-full bg-white shadow-xl rounded-2xl p-6">
-              <div class="space-y-6" id="calculatorForm">
-                <!-- Categoría -->
-                <div class="flex flex-col space-y-1">
-                  <label for="categorySelect" class="text-sm font-medium text-gray-600">Categoría de Producto</label>
-                  <select id="categorySelect" onchange="onCalcCategoryChange()" class="form-select">
-                    <option value="Agroquimicos">Agroquímicos</option>
-                    <option value="Granel">Granel</option>
-                    <option value="KG-LT">Kg-lt</option>
-                    <option value="FERTILIZANTES">Fertilizantes</option>
-                    <option value="INOCUIDAD">Inocuidad</option>
-                    <option value="MAQUINARIA">Maquinaria</option>
-                  </select>
-                </div>
-
-                <!-- Costo base -->
-                <div class="flex flex-col space-y-1">
-                  <label for="baseCost" class="text-sm font-medium text-gray-600">Costo Base del Producto</label>
-                  <div class="relative">
-                    <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">$</span>
-                    <input type="number" id="baseCost" value="0.00" onfocus="if(this.value=='0.00'||this.value=='0')this.value='';" onblur="if(this.value=='')this.value='0.00';" oninput="calculatePrice();calcVolumeScales()"
-                      class="w-full pl-8 pr-10 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-gray-800 font-semibold text-lg"
-                      step="0.01" min="0">
-                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-sm text-gray-500">MXN</span>
-                  </div>
-                </div>
-
-                <!-- PRODUCTO DE OPORTUNIDAD -->
-                <div class="flex flex-col space-y-1">
-                  <label class="text-sm font-medium text-gray-600">Producto de oportunidad</label>
-                  <select id="oportunidadSelect" class="form-select" onchange="onOportunidadChange()">
-                    <option value="">— Ninguno —</option>
-                  </select>
-                  <span class="text-xs text-gray-400">Si seleccionas uno, se aplicará su margen especial por encima del margen normal.</span>
-                </div>
-
-                <!-- IEPS -->
-                <div class="flex flex-col space-y-1">
-                  <label for="iepsSelect" class="text-sm font-medium text-gray-600">Tipo de Etiqueta (Impuesto IEPS)</label>
-                  <select id="iepsSelect" onchange="calculatePrice();calcVolumeScales()" class="form-select"></select>
-                </div>
-
-                <!-- Monto IEPS (solo si aplica) -->
-                <div id="iepsAmountDisplay" class="hidden pt-2 border-t border-gray-100">
-                  <div class="flex justify-between items-center">
-                    <span class="text-sm text-gray-500">Monto de IEPS Agregado</span>
-                    <span id="iepsAmount" class="text-base font-semibold text-gray-800 flip">$0.00</span>
-                  </div>
-                </div>
-
-                <!-- Toggle margen manual -->
-                <div class="flex items-center gap-3 pt-2">
-                  <input id="toggleManualMargin" type="checkbox" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500"
-                         onchange="toggleManualBlock();calculatePrice();calcVolumeScales()">
-                  <label for="toggleManualMargin" class="text-sm font-medium text-gray-700 select-none">
-                    Editar margen bruto manual
-                  </label>
-                </div>
-
-                <!-- Bloque de margen manual -->
-                <div class="flex flex-col space-y-1 hidden" id="manualMarginBlock">
-                  <label for="desiredGrossMargin" class="text-sm font-medium text-gray-600">MARGEN BRUTO DESEADO (%)</label>
-                  <div class="relative">
-                    <input type="number" id="desiredGrossMargin" value="0"
-                      class="w-full pr-10 py-2 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500 text-gray-800 font-semibold text-lg"
-                      step="1" min="0" max="99" oninput="calculatePrice();calcVolumeScales()">
-                    <span class="absolute inset-y-0 right-0 flex items-center pr-3 text-sm text-gray-500">%</span>
-                  </div>
-                </div>
-
-                <!-- Descuento por bucket (individual) -->
-                <div id="discountBlock" class="flex flex-col space-y-1 hidden">
-                  <label for="discountSelect" class="text-sm font-medium text-gray-600">Descuento</label>
-                  <select id="discountSelect" onchange="calculatePrice();calcVolumeScales()" class="form-select"></select>
-                  <div class="flex justify-between items-center pt-2 border-t border-gray-100">
-                    <span class="text-sm text-gray-500">Monto de Descuento</span>
-                    <span id="discountAmount" class="text-base font-semibold text-gray-800 flip">$0.00</span>
-                  </div>
-                </div>
-
-                <!-- IVA -->
-                <div class="flex items-center gap-3 pt-4 border-gray-100">
-                  <input id="includeIVA" type="checkbox" onchange="calculatePrice();calcVolumeScales()" class="h-4 w-4 text-green-600 border-gray-300 rounded focus:ring-green-500">
-                  <label for="includeIVA" class="text-sm font-medium text-gray-700 select-none">Incluir IVA en costo (16%)</label>
-                </div>
-              </div>
+    <main id="viewCalc" class="grid lg:grid-cols-3 gap-6">
+      <section class="lg:col-span-2 space-y-6">
+        <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-100">
+          <div class="grid md:grid-cols-2 gap-6">
+            <div class="space-y-1">
+              <label class="text-sm font-medium text-gray-600">Categoría</label>
+              <select id="calcCategory" onchange="handleCategoryChange()" class="form-select">
+                <option value="Agroquimicos">Agroquímicos</option>
+                <option value="Granel">Granel</option>
+                <option value="KG-LT">Kg-Lt</option>
+                <option value="FERTILIZANTES">Fertilizantes</option>
+                <option value="INOCUIDAD">Inocuidad</option>
+                <option value="MAQUINARIA">Maquinaria</option>
+              </select>
             </div>
 
-            <!-- ===== Simulador de escalas de volumen ===== -->
-            <div class="w-full bg-white shadow-xl rounded-2xl p-6 mt-6">
-              <div class="flex items-center justify-between">
-                <h3 class="text-base font-semibold text-gray-800">Simulador de escalas de volumen</h3>
-                <div class="text-xs text-gray-500">Aplica el descuento por bucket de forma uniforme</div>
-              </div>
-              <div class="mt-4 grid md:grid-cols-3 gap-4 items-end">
-                <div class="md:col-span-2">
-                  <label class="text-sm font-medium text-gray-600">Cantidades (separadas por coma)</label>
-
-                  <div class="flex items-center justify-between mb-1">
-                    <span id="volScaleTitle" class="text-xs text-gray-500">
-                      Escalas de volumen para la categoría seleccionada
-                    </span>
-                    <label class="flex items-center gap-1 text-xs text-gray-600">
-                      <input id="volManualToggle" type="checkbox" class="h-3 w-3 text-green-600 border-gray-300 rounded" onchange="onVolManualToggleChange()">
-                      Editar manual
-                    </label>
-                  </div>
-
-                  <input id="volQuantities" class="input w-full" value="1,10,50,100" oninput="calcVolumeScales()">
-                </div>
-                <button class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700" onclick="calcVolumeScales()">Calcular escalas</button>
-              </div>
-
-              <div class="mt-4 overflow-x-auto">
-                <table id="volScaleTable" class="min-w-full text-sm">
-                  <thead class="text-gray-500">
-                    <tr>
-                      <th class="text-left py-2">Piezas</th>
-                      <th class="text-left py-2">Precio unitario</th>
-                      <th class="text-left py-2">Total</th>
-                      <th class="text-left py-2">IVA</th>
-                      <th class="text-left py-2">Ganancia</th>
-                      <th class="text-left py-2">Descuento</th>
-                      <th class="text-left py-2">Margen</th>
-                    </tr>
-                  </thead>
-                  <tbody id="volTableBody" class="divide-y divide-gray-100"></tbody>
-                </table>
+            <div class="space-y-1">
+              <label class="text-sm font-medium text-gray-600">Costo Base (Sin IVA)</label>
+              <div class="relative">
+                <span class="absolute left-3 top-2 text-gray-400">$</span>
+                <input type="number" id="calcBaseCost" value="0.00" step="0.01" 
+                  class="input-field pl-8 text-lg font-bold text-gray-800" oninput="runCalculations()">
               </div>
             </div>
           </div>
 
-          <!-- Columna derecha: panel resumen -->
-          <aside class="md:sticky md:top-6 h-fit bg-white shadow-xl rounded-2xl p-6">
-            <div class="flex items-center justify-between mb-3">
-              <h3 class="text-sm font-medium text-gray-500">Resumen</h3>
-              <div id="marginBadge" class="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 transition-all">Margen —</div>
+          <div class="grid md:grid-cols-2 gap-6 mt-4">
+            <div class="space-y-1">
+              <label class="text-sm font-medium text-gray-600">Tipo de Etiqueta (IEPS)</label>
+              <select id="calcIeps" onchange="runCalculations()" class="form-select"></select>
+            </div>
+            <div class="space-y-1">
+              <label class="text-sm font-medium text-gray-600">Producto Especial</label>
+              <select id="calcOportunidad" onchange="runCalculations()" class="form-select">
+                <option value="">— Ninguno —</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-6 p-4 bg-gray-50 rounded-xl space-y-3">
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="calcManualToggle" onchange="toggleManualMargin()" class="rounded text-green-600">
+              <span class="text-sm font-medium text-gray-700">Editar margen manualmente</span>
+            </label>
+            
+            <div id="manualMarginWrap" class="hidden animate-fade-in">
+              <label class="text-xs font-bold text-gray-500 uppercase">Margen Manual %</label>
+              <input type="number" id="calcManualMargin" value="20" class="input-field mt-1" oninput="runCalculations()">
             </div>
 
-            <div class="rounded-xl p-4 bg-gradient-to-r from-green-600 to-green-500 text-center mb-4">
-              <div class="text-xs text-white/80">PRECIO DE VENTA FINAL</div>
-              <div id="finalPriceDisplay" class="text-4xl font-extrabold text-white flip">$0.00 <span class="text-base align-top ml-1">MXN</span></div>
-              <div id="finalPriceNote" class="text-[11px] text-white/80 mt-1">(Sin IVA en costo)</div>
-            </div>
-
-            <div id="categoryGraphic" class="mb-4 p-3 rounded-xl bg-white/90 border border-gray-100 shadow-sm flex items-center gap-3 hidden">
-              <div id="categoryEmoji" class="text-3xl">🌱</div>
-              <div class="text-left">
-                <div id="categoryTitle" class="text-sm font-semibold text-gray-800">Agroquímicos</div>
-                <div id="categoryDesc" class="text-xs text-gray-500">Productos para proteger y fortalecer tus cultivos.</div>
-              </div>
-            </div>
-
-            <div id="categoryImages" class="mb-4 grid grid-cols-2 gap-3 hidden">
-              <img id="categoryImg1" src="" alt="" class="w-full h-20 object-cover rounded-xl border border-gray-100 shadow-sm">
-              <img id="categoryImg2" src="" alt="" class="w-full h-20 object-cover rounded-xl border border-gray-100 shadow-sm">
-            </div>
-
-            <div class="space-y-3">
-              <div class="flex justify-between">
-                <span class="text-sm text-gray-500">Subtotal (antes de IVA de venta)</span>
-                <span id="subtotalDisplay" class="text-base font-semibold text-gray-900 flip">$0.00</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-sm text-gray-500">Descuento aplicado</span>
-                <span id="discountRow" class="text-base font-semibold text-amber-600 flip">-$0.00</span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-sm text-gray-500">IVA sobre costo base (16%)</span>
-                <span id="ivaAmount" class="text-base font-semibold text-gray-900 flip">$0.00</span>
-              </div>
-            </div>
-
-            <hr class="my-4">
-
-            <div class="space-y-3">
-              <div class="flex justify-between">
-                <span class="text-sm text-gray-500">Costo total (IEPS + IVA)</span>
-                <span id="totalCostDisplay" class="text-base font-semibold text-gray-900 flip">$0.00</span>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500">Ganancia</span>
-                <div class="flex items-center gap-2">
-                  <i id="profitIcon" data-lucide="trending-up" class="w-4 h-4 text-gray-400"></i>
-                  <span id="profitAmount" class="text-base font-semibold text-gray-900 flip">$0.00</span>
-                </div>
-              </div>
-              <div class="flex justify-between items-center">
-                <span class="text-sm text-gray-500">Margen bruto</span>
-                <div class="flex items-center gap-2">
-                  <i id="marginIcon" data-lucide="gauge" class="w-4 h-4 text-gray-400"></i>
-                  <span id="grossMarginPercent" class="text-base font-bold flip">0.00%</span>
-                </div>
-              </div>
-            </div>
-          </aside>
+            <label class="flex items-center gap-2 cursor-pointer">
+              <input type="checkbox" id="calcIvaToggle" onchange="runCalculations()" class="rounded text-green-600">
+              <span class="text-sm font-medium text-gray-700">Incluir IVA en costo (16%)</span>
+            </label>
+          </div>
         </div>
-      </div>
 
-      <!-- ======= CONFIGURACIÓN AVANZADA ======= -->
-      <div id="tabConfigContent" class="hidden">
-        <div class="bg-white shadow-xl rounded-2xl p-6">
-          <h3 class="text-lg font-semibold text-gray-800 mb-4">Configuración avanzada</h3>
-
-          <!-- Selector de categoría a configurar -->
-          <div class="mb-6">
-            <label class="text-sm font-medium text-gray-600 mr-2">Categoría a configurar:</label>
-            <select id="cfgCategorySelect" class="form-select" onchange="onConfigCategoryChange()">
-              <option value="Agroquimicos">Agroquímicos</option>
-              <option value="Granel">Granel</option>
-              <option value="KG-LT">Kg-lt</option>
-              <option value="FERTILIZANTES">Fertilizantes</option>
-              <option value="INOCUIDAD">Inocuidad</option>
-              <option value="MAQUINARIA">Maquinaria</option>
-            </select>
+        <div class="bg-white shadow-sm rounded-2xl p-6 border border-gray-100">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-gray-800">Escalas de Volumen</h3>
+            <input type="text" id="calcScaleQty" value="1, 10, 50, 100" class="text-xs border rounded px-2 py-1 w-32" oninput="runCalculations()">
           </div>
-
-          <!-- Reglas de margen (dinámico) -->
-          <div class="mb-8">
-            <h4 class="font-medium text-gray-700 mb-2">Reglas de margen automático (dinámico)</h4>
-            <p class="text-xs text-gray-500 mb-3">Se evalúa en orden por <em>Max &lt; precio</em>. Si dejas <strong>Max</strong> vacío, se toma como <strong>Infinity</strong>.</p>
-            <div class="overflow-x-auto">
-              <table id="marginRulesTable" class="text-sm">
-                <thead class="text-gray-500">
-                  <tr>
-                    <th class="text-left py-2 pr-2">Max &lt; $</th>
-                    <th class="text-left py-2 pr-2">Margen %</th>
-                    <th class="text-right py-2 pl-2">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="marginRulesContainer" class="divide-y divide-gray-100"></tbody>
-              </table>
-            </div>
-            <div class="flex gap-3 mt-3">
-              <button class="btn bg-gray-100 hover:bg-gray-200 text-gray-700" onclick="addMarginRule()">Agregar regla</button>
-              <button class="btn bg-gray-100 hover:bg-gray-200 text-gray-700" onclick="sortMarginRules()">Ordenar por Max</button>
-              <button class="btn bg-gray-100 hover:bg-gray-200 text-gray-700" onclick="ensureInfinityRule()">Asegurar última = ∞</button>
-            </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-sm text-left">
+              <thead class="text-gray-400 border-b">
+                <tr>
+                  <th class="pb-2">Cant.</th>
+                  <th class="pb-2">P. Unit</th>
+                  <th class="pb-2">Total</th>
+                  <th class="pb-2">Ganancia</th>
+                  <th class="pb-2 text-right">Margen</th>
+                </tr>
+              </thead>
+              <tbody id="scaleTableBody" class="divide-y divide-gray-50"></tbody>
+            </table>
           </div>
-
-          <!-- Bloque combinado: Buckets + Tiers de volumen -->
-          <div class="mb-6">
-            <!-- Reglas de descuento (por bucket) -->
-            <h4 class="font-medium text-gray-700 mb-2">Reglas de descuento (por bucket)</h4>
-            <p class="text-xs text-gray-500 mb-3">Cada rango define los descuentos permitidos según el precio antes de descuento.</p>
-            <div class="overflow-x-auto">
-              <table id="bucketRulesTable" class="text-sm">
-                <thead class="text-gray-500">
-                  <tr>
-                    <th class="text-left py-1 pr-2">Rango</th>
-                    <th class="text-left py-1 pr-2">Min</th>
-                    <th class="text-left py-1 pr-2">Max</th>
-                    <th class="text-left py-1 pr-2">Descuentos (%)</th>
-                    <th class="text-right py-1 pl-2">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="bucketRulesContainer"></tbody>
-              </table>
-            </div>
-            <div class="flex gap-3 mt-3">
-              <button class="btn bg-gray-100 hover:bg-gray-200 text-gray-700" onclick="addBucketRule()">
-                Agregar rango
-              </button>
-            </div>
-
-            <hr class="my-5">
-
-            <!-- Tiers de volumen -->
-            <h4 class="font-medium text-gray-700 mb-2">
-              Tiers de volumen → índice de opción de descuento
-            </h4>
-            <p class="text-xs text-gray-500 mb-3">
-              Para mayor volumen, usa una opción de descuento más alta del bucket activo. El índice 0 es la primera opción del bucket, 1 la segunda, etc.
-            </p>
-            <div class="overflow-x-auto">
-              <table id="volTiersTable" class="text-sm">
-                <thead class="text-gray-500">
-                  <tr>
-                    <th class="text-left py-2 pr-2">Nombre</th>
-                    <th class="text-left py-2 pr-2">Min piezas</th>
-                    <th class="text-left py-2 pr-2">Índice opción</th>
-                    <th class="text-right py-2 pl-2">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="volTiersContainer" class="divide-y divide-gray-100"></tbody>
-              </table>
-            </div>
-            <div class="flex gap-3 mt-3">
-              <button class="btn bg-gray-100 hover:bg-gray-200 text-gray-700" onclick="addVolTier()">Agregar tier</button>
-              <button class="btn bg-gray-100 hover:bg-gray-200 text-gray-700" onclick="resetVolTiers()">Restablecer tiers</button>
-            </div>
-          </div>
-
-          <!-- Escalas de volumen por defecto para el simulador -->
-          <div class="mb-6">
-            <h4 class="font-medium text-gray-700 mb-2">
-              Escalas de volumen por defecto (simulador)
-            </h4>
-            <p class="text-xs text-gray-500 mb-3">
-              Estas cantidades se usarán en el simulador cuando elijas una sección
-              (Agroquímicos, Granel, Kg-Lt, etc.). Se guardan por categoría.
-            </p>
-            <input id="cfgVolumeScales"
-                   class="input w-full"
-                   placeholder="1,10,50,100">
-          </div>
-
-          <!-- PRODUCTOS DE OPORTUNIDAD (POR CATEGORÍA) -->
-          <div class="mb-6">
-            <h4 class="font-medium text-gray-700 mb-2">Productos de oportunidad</h4>
-            <p class="text-xs text-gray-500 mb-3">
-              Aquí defines los productos que pueden llevar un margen especial más alto
-              para la categoría seleccionada. El margen indicado sustituirá al margen normal
-              cuando lo selecciones en la calculadora.
-            </p>
-            <div class="overflow-x-auto">
-              <table id="opTable" class="text-sm">
-                <thead class="text-gray-500">
-                  <tr>
-                    <th class="text-left py-2 pr-2">Producto</th>
-                    <th class="text-left py-2 pr-2">Margen % especial</th>
-                    <th class="text-right py-2 pl-2">Acciones</th>
-                  </tr>
-                </thead>
-                <tbody id="opContainer" class="divide-y divide-gray-100"></tbody>
-              </table>
-            </div>
-            <div class="flex gap-3 mt-3">
-              <button class="btn bg-gray-100 hover:bg-gray-200 text-gray-700" onclick="addOportunidad()">
-                Agregar producto de oportunidad
-              </button>
-            </div>
-          </div>
-
-          <!-- ======= NUEVO: Nivel siguiente (opcional) ======= -->
-          <div class="mb-6 upgrade-card">
-            <div class="flex items-start gap-3">
-              <i data-lucide="lock" class="w-5 h-5 text-yellow-600 mt-1"></i>
-              <div class="flex-1">
-                <div class="font-semibold text-sm">Nivel siguiente (opcional, cuando tú quieras)</div>
-                <p class="text-xs text-gray-600 mt-1">
-                  Si quieres que:
-                </p>
-                <ul class="text-xs text-gray-700 list-disc list-inside mt-2">
-                  <li>todos tus empleados vean los mismos valores</li>
-                  <li>puedas cambiar algo una vez y se refleje en todos</li>
-                  <li>haya usuarios y contraseñas</li>
-                  <li>quede historial</li>
-                </ul>
-
-                <p class="text-xs text-gray-600 mt-2">entonces hay que agregar <strong>una base de datos</strong> (Firebase / Supabase).</p>
-                <p class="text-xs text-gray-500 mt-1">Eso <strong>NO</strong> es obligatorio ahora, pero es el siguiente paso profesional.</p>
-
-                <!-- Formulario de sincronización remota -->
-                <div class="mt-3 border-t pt-3">
-                  <label class="flex items-center gap-2 text-sm">
-                    <input id="enableRemoteSync" type="checkbox" class="h-4 w-4 text-green-600 border-gray-300 rounded" onchange="onRemoteToggleChange()">
-                    <span>Habilitar sincronización remota</span>
-                  </label>
-
-                  <div id="remoteCfgPanel" class="mt-3 hidden">
-                    <label class="text-xs text-gray-600">Proveedor</label>
-                    <select id="remoteProvider" class="form-select mt-1">
-                      <option value="none">— Ninguno —</option>
-                      <option value="firebase">Firebase (Realtime / Firestore)</option>
-                      <option value="supabase">Supabase</option>
-                    </select>
-
-                    <div class="grid grid-cols-2 gap-2 mt-2">
-                      <div>
-                        <label class="text-xs text-gray-600">Project URL / Endpoint</label>
-                        <input id="remoteUrl" class="input w-full mt-1" placeholder="https://..." />
-                      </div>
-                      <div>
-                        <label class="text-xs text-gray-600">API Key / anon key</label>
-                        <input id="remoteKey" class="input w-full mt-1" placeholder="Clave (opcional para pruebas)" />
-                      </div>
-                    </div>
-
-                    <div class="flex gap-2 mt-3">
-                      <button class="btn bg-green-600 text-white px-3 py-1 rounded" onclick="testRemoteConnection()">Probar conexión</button>
-                      <button class="btn bg-gray-100 text-gray-700 px-3 py-1 rounded" onclick="pushConfigToRemote()">Guardar en la nube</button>
-                      <div id="remoteStatus" class="text-xs mt-1 ml-2"></div>
-                    </div>
-
-                    <p class="text-xs text-gray-500 mt-2">
-                      Nota: la prueba de conexión hace una verificación básica (CORS puede bloquear). Para sincronización completa, sigue la guía en los comentarios del código (Firebase / Supabase).
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex gap-3">
-            <button id="btnSaveCfg" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Guardar</button>
-            <button id="btnResetCfg" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200">Restablecer</button>
-          </div>
-          <p id="cfgMsg" class="text-xs mt-3 text-gray-500"></p>
         </div>
-      </div>
+      </section>
+
+      <aside class="space-y-4">
+        <div class="bg-green-600 rounded-2xl p-6 text-white shadow-lg shadow-green-200">
+          <p class="text-green-100 text-xs font-bold uppercase tracking-wider">Precio de Venta Final</p>
+          <div id="resFinalPrice" class="text-4xl font-black mt-1">$0.00</div>
+          <p id="resIvaNote" class="text-green-200 text-[10px] mt-2 italic"></p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 border border-gray-100 shadow-sm space-y-4">
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500 text-sm">Margen Bruto</span>
+            <span id="resMarginPct" class="font-bold text-lg text-gray-800">0%</span>
+          </div>
+          <div class="flex justify-between items-center">
+            <span class="text-gray-500 text-sm">Utilidad</span>
+            <span id="resProfit" class="font-bold text-green-600 text-lg">$0.00</span>
+          </div>
+          <hr>
+          <div class="space-y-2 text-xs">
+            <div class="flex justify-between text-gray-400"><span>Costo Base</span><span id="resBaseCost">$0.00</span></div>
+            <div class="flex justify-between text-gray-400"><span>IEPS</span><span id="resIeps">$0.00</span></div>
+            <div class="flex justify-between text-gray-400"><span>IVA s/ costo</span><span id="resIva">$0.00</span></div>
+          </div>
+        </div>
+      </aside>
+    </main>
+
+    <div id="viewConfig" class="hidden bg-white rounded-2xl p-8 border shadow-sm">
+      <h2 class="text-xl font-bold mb-6">Configuración Avanzada</h2>
+      <p class="text-gray-500 mb-4">Los cambios se guardan localmente hasta que los subas a la nube.</p>
+      <button onclick="resetToDefaults()" class="bg-red-50 text-red-600 px-4 py-2 rounded-lg text-sm font-bold border border-red-100">Restablecer Valores</button>
+    </div>
+  </div>
+
+  <!-- Panel Firebase -->
+  <div id="cloud-panel" class="p-4 hidden md:block">
+    <div class="flex items-center gap-2 mb-3">
+      <div class="w-2 h-2 rounded-full bg-gray-300" id="auth-status-dot"></div>
+      <span class="text-xs font-bold text-gray-700" id="auth-status-text">Sin conexión</span>
+    </div>
+    <div id="auth-form" class="space-y-2">
+      <input type="email" id="fb-email" placeholder="Email" class="text-xs border w-full p-2 rounded">
+      <input type="password" id="fb-pass" placeholder="Password" class="text-xs border w-full p-2 rounded">
+      <button onclick="handleLogin()" class="w-full bg-blue-600 text-white text-xs py-2 rounded font-bold">Entrar</button>
+    </div>
+    <div id="cloud-actions" class="hidden space-y-2">
+      <button onclick="syncToCloud()" class="w-full bg-green-600 text-white text-xs py-2 rounded flex items-center justify-center gap-2">Subir a Nube</button>
+      <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-2 rounded flex items-center justify-center gap-2">Bajar de Nube</button>
+      <button onclick="auth.signOut()" class="w-full text-red-500 text-[10px] uppercase font-bold mt-2">Salir</button>
     </div>
   </div>
 
   <script>
-    /* =================== Utilidades =================== */
-    const IVA_RATE = 0.16;
-    const round2 = n => Math.round(n*100)/100;
-    const fmt$  = n => `$${(n||0).toFixed(2)}`;
-    const deepClone = o => JSON.parse(JSON.stringify(o));
-
-    /* =================== IEPS base =================== */
-    const IEPS_PROFILES = {
-      IEPS_AGRO:{
-        'none':  {label:'Sin Impuesto Adicional (0%)', rate:0.00},
-        'blue':  {label:'Etiqueta Azul (6%)',          rate:0.06},
-        'yellow':{label:'Etiqueta Amarilla (7%)',      rate:0.07},
-        'red':   {label:'Etiqueta Roja (9%)',          rate:0.09},
-      }
+    const CONFIG = {
+      IVA_RATE: 0.16,
+      LS_KEY: 'esquina_agricola_v4',
+      DEFAULT_MARGINS: {
+        Agroquimicos: [ {max: 400, m: 27}, {max: 1000, m: 22}, {max: Infinity, m: 17} ],
+        Granel: [ {max: 10, m: 50}, {max: Infinity, m: 40} ],
+        "KG-LT": [ {max: 400, m: 27}, {max: Infinity, m: 17} ],
+        FERTILIZANTES: [ {max: 500, m: 25}, {max: Infinity, m: 15} ],
+        INOCUIDAD: [ {max: Infinity, m: 20} ],
+        MAQUINARIA: [ {max: Infinity, m: 15} ]
+      },
+      // Datos para "Producto Especial" (Oportunidad)
+      OPORTUNIDADES: {
+        Agroquimicos: [{ name: "Herbicida Premium", m: 35 }, { name: "Fungicida Especial", m: 40 }],
+        Granel: [{ name: "Semilla a granel", m: 60 }]
+      },
+      IEPS: { 'none': 0, 'azul': 0.06, 'amarilla': 0.07, 'roja': 0.09 }
     };
 
-    /* =================== Categorías =================== */
-    const CATEGORIES = ["Agroquimicos","Granel","KG-LT","FERTILIZANTES","INOCUIDAD","MAQUINARIA"];
-
-    /* =================== Defaults por categoría =================== */
-    const DEFAULT_BUCKETS_AGRO = [
-      { name:'<400',     min:0,     max:400,  includeMin:false, includeMax:false, options:[0,4,8,12] },
-      { name:'400-1000', min:400,   max:1000, includeMin:true,  includeMax:true,  options:[0,1,3,5] },
-      { name:'1000+',    min:1000,  max:null, includeMin:false, includeMax:false, options:[0,1,2,4] }
-    ];
-
-    const DEFAULTS = {
-      marginProfiles: {
-        Agroquimicos: { ieps: 'IEPS_AGRO', margins:[ {maxPrice:400, margin:27}, {maxPrice:1000, margin:22}, {maxPrice:Infinity, margin:17} ] },
-        Granel:       { ieps: 'IEPS_AGRO', margins:[ {maxPrice:10.01, margin:50}, {maxPrice:Infinity, margin:40} ] },
-        "KG-LT":        { ieps: 'IEPS_AGRO', margins:[ {maxPrice:400, margin:27}, {maxPrice:1000, margin:22}, {maxPrice:Infinity, margin:17} ] },
-        "FERTILIZANTES":{ ieps: 'IEPS_AGRO', margins:[ {maxPrice:400, margin:27}, {maxPrice:1000, margin:22}, {maxPrice:Infinity, margin:17} ] },
-        "INOCUIDAD":    { ieps: 'IEPS_AGRO', margins:[ {maxPrice:400, margin:27}, {maxPrice:1000, margin:22}, {maxPrice:Infinity, margin:17} ] },
-        "MAQUINARIA":   { ieps: 'IEPS_AGRO', margins:[ {maxPrice:400, margin:27}, {maxPrice:1000, margin:22}, {maxPrice:Infinity, margin:17} ] }
-      },
-      discountBuckets: {},
-      volumeTiers: {},
-      volumeScales: {},
-      oportunidadList: {}   // por categoría
+    let appState = {
+      margins: JSON.parse(JSON.stringify(CONFIG.DEFAULT_MARGINS)),
+      oportunidades: JSON.parse(JSON.stringify(CONFIG.OPORTUNIDADES))
     };
-    CATEGORIES.forEach(cat=>{
-      DEFAULTS.discountBuckets[cat] = deepClone(DEFAULT_BUCKETS_AGRO);
-      DEFAULTS.volumeTiers[cat] = [
-        { name:'Volumen 1', minQty:1,  discIndex:0 },
-        { name:'Volumen 2', minQty:10, discIndex:1 },
-        { name:'Volumen 3', minQty:50, discIndex:2 }
-      ];
-      DEFAULTS.volumeScales[cat] = "1,10,50,100";
-      DEFAULTS.oportunidadList[cat] = [];
-    });
 
-    /* =================== Estado & persistencia =================== */
-    const LS_KEY = 'calc_cfg_per_cat_v3_mrules';
-    let RAW = null;
-    let MARGIN_PROFILES = {};
-    let DISCOUNT_BUCKETS_MAP = {};
-    const activeBucketNameMap = {};
-
-    function expandMarginProfiles(rawByCat){
-      const out = {};
-      for (const cat of Object.keys(rawByCat)) {
-        const p = deepClone(rawByCat[cat]);
-        p.ieps = IEPS_PROFILES[p.ieps];
-        p.margins = (p.margins || []).map(r => ({
-          maxPrice: (r.maxPrice == null ? Infinity : r.maxPrice),
-          margin: r.margin
-        }));
-        out[cat] = p;
-      }
-      return out;
-    }
-
-    function buildBuckets(rawArr){
-      return rawArr.map(b=>{
-        const min = (b.min ?? 0);
-        const max = (b.max == null ? Infinity : b.max);
-        const test = (v)=> v >= min && v <= max;
-        return { name:b.name, min, max, options:[...(b.options || [])], test };
-      });
-    }
-
-    function loadConfig(){
-      const s = localStorage.getItem(LS_KEY);
-      if(!s){
-        RAW = {
-          marginProfiles: deepClone(DEFAULTS.marginProfiles),
-          discountBuckets: deepClone(DEFAULTS.discountBuckets),
-          volumeTiers: deepClone(DEFAULTS.volumeTiers),
-          volumeScales: deepClone(DEFAULTS.volumeScales),
-          oportunidadList: deepClone(DEFAULTS.oportunidadList), // por categoría
-          remoteCfg: { enabled:false, provider:'none', url:'', key:'' } // nueva configuración remota
-        };
-      }else{
-        try{ RAW = JSON.parse(s); }
-        catch{ RAW = deepClone(DEFAULTS); }
-
-        // Compatibilidad: si antes era arreglo global
-        if(Array.isArray(RAW.oportunidadList)){
-          const tmp = deepClone(DEFAULTS.oportunidadList);
-          tmp['Agroquimicos'] = RAW.oportunidadList;
-          RAW.oportunidadList = tmp;
-        }
-
-        // Asegurar claves por categoría
-        CATEGORIES.forEach(cat=>{
-          if(!RAW.marginProfiles?.[cat]) RAW.marginProfiles[cat] = deepClone(DEFAULTS.marginProfiles[cat]);
-          if(!RAW.discountBuckets?.[cat]) RAW.discountBuckets[cat] = deepClone(DEFAULTS.discountBuckets[cat]);
-          if(!RAW.volumeTiers?.[cat]) RAW.volumeTiers[cat] = deepClone(DEFAULTS.volumeTiers[cat]);
-          if(!RAW.volumeScales?.[cat]) RAW.volumeScales[cat] = DEFAULTS.volumeScales[cat];
-          if(!RAW.oportunidadList?.[cat]) RAW.oportunidadList[cat] = [];
-        });
-
-        // Asegurar remoteCfg
-        if(!RAW.remoteCfg) RAW.remoteCfg = { enabled:false, provider:'none', url:'', key:'' };
-      }
-      expandAll();
-    }
-
-    function expandAll(){
-      MARGIN_PROFILES = expandMarginProfiles(RAW.marginProfiles);
-      DISCOUNT_BUCKETS_MAP = {};
-      Object.keys(RAW.discountBuckets).forEach(cat=>{
-        DISCOUNT_BUCKETS_MAP[cat] = buildBuckets(RAW.discountBuckets[cat]);
-      });
-    }
-    function persist(){
-      localStorage.setItem(LS_KEY, JSON.stringify(RAW));
-      expandAll();
-    }
-
-    /* =================== Reglas de margen dinámicas (UI) =================== */
-    function renderMarginRulesUI(){
-      const cat = currentConfigCategory();
-      const container = document.getElementById('marginRulesContainer');
-      container.innerHTML = '';
-      const rules = RAW.marginProfiles[cat].margins || [];
-
-      rules.forEach((r, i)=>{
-        const tr = document.createElement('tr');
-        tr.className = 'mr-row';
-        const maxVal = (r.maxPrice === Infinity || r.maxPrice == null) ? '' : r.maxPrice;
-        tr.innerHTML = `
-          <td class="py-2 pr-2">
-            <input class="mr-max input w-40" type="number" step="0.01" placeholder="∞" value="${maxVal}">
-          </td>
-          <td class="py-2 pr-2">
-            <input class="mr-pct input w-28" type="number" step="0.01" value="${r.margin}">
-          </td>
-          <td class="py-2 pl-2 text-right">
-            <button class="btn bg-red-50 hover:bg-red-100 text-red-600" onclick="removeMarginRule(${i})">Eliminar</button>
-          </td>
-        `;
-        container.appendChild(tr);
-      });
-
-      if(rules.length === 0){
-        addMarginRule();
-      }
-    }
-    function readMarginRulesFromUI(){
-      const rows = [...document.querySelectorAll('#marginRulesContainer .mr-row')];
-      let rules = rows.map(row=>{
-        const maxStr = row.querySelector('.mr-max').value.trim();
-        const pctStr = row.querySelector('.mr-pct').value.trim();
-        const max = maxStr === '' ? Infinity : parseFloat(maxStr);
-        const margin = parseFloat(pctStr);
-        return {
-          maxPrice: (isNaN(max) ? Infinity : max),
-          margin: (isNaN(margin) ? 0 : margin)
-        };
-      });
-      const finites = rules.filter(r=>r.maxPrice !== Infinity).sort((a,b)=>a.maxPrice-b.maxPrice);
-      const infs = rules.filter(r=>r.maxPrice === Infinity);
-      if(infs.length === 0){
-        const last = finites[finites.length-1] || {margin: 0};
-        finites.push({maxPrice: Infinity, margin: last.margin});
-      }
-      return finites.concat(infs.filter((_,i)=>i>0));
-    }
-    function addMarginRule(){
-      const cat = currentConfigCategory();
-      RAW.marginProfiles[cat].margins.push({maxPrice: '', margin: 0});
-      persist();
-      renderMarginRulesUI();
-    }
-    function removeMarginRule(idx){
-      const cat = currentConfigCategory();
-      RAW.marginProfiles[cat].margins.splice(idx,1);
-      persist();
-      renderMarginRulesUI();
-    }
-    function sortMarginRules(){
-      const cat = currentConfigCategory();
-      RAW.marginProfiles[cat].margins = readMarginRulesFromUI();
-      persist();
-      renderMarginRulesUI();
-    }
-    function ensureInfinityRule(){
-      const cat = currentConfigCategory();
-      const rules = readMarginRulesFromUI();
-      if(rules[rules.length-1].maxPrice !== Infinity){
-        rules.push({maxPrice: Infinity, margin: rules[rules.length-1]?.margin ?? 0});
-      }
-      RAW.marginProfiles[cat].margins = rules;
-      persist();
-      renderMarginRulesUI();
-    }
-
-    /* =================== Buckets de descuento (UI) =================== */
-    function renderBucketRulesUI(){
-      const cat = currentConfigCategory();
-      const container = document.getElementById('bucketRulesContainer');
-      if (!container) return;
-
-      container.innerHTML = '';
-      const buckets = RAW.discountBuckets[cat] || [];
-
-      buckets.forEach((b, i) => {
-        const tr = document.createElement('tr');
-        tr.className = 'bucket-row';
-        const optsStr = (b.options || []).join(',');
-
-        tr.innerHTML = `
-          <td class="py-1 pr-2 text-gray-600">
-            <input class="bucket-name input w-24" type="text" value="${b.name || ('Rango ' + (i+1))}">
-          </td>
-          <td class="py-1 pr-2">
-            <input class="bucket-min input w-20" type="number" step="0.01" value="${b.min ?? 0}">
-          </td>
-          <td class="py-1 pr-2">
-            <input class="bucket-max input w-20" type="number" step="0.01"
-                   value="${(b.max == null || b.max === Infinity) ? '' : b.max}">
-          </td>
-          <td class="py-1 pr-2">
-            <input class="bucket-opts input w-40" type="text" value="${optsStr}">
-          </td>
-          <td class="py-1 pl-2 text-right">
-            <button class="btn bg-red-50 hover:bg-red-100 text-red-600"
-                    onclick="removeBucketRule(${i})">
-              Eliminar
-            </button>
-          </td>
-        `;
-        container.appendChild(tr);
-      });
-
-      if (buckets.length === 0) {
-        addBucketRule();
-      }
-    }
-
-    function readBucketRulesFromUI(){
-      const rows = [...document.querySelectorAll('#bucketRulesContainer .bucket-row')];
-      const buckets = rows.map((row, i) => {
-        const name   = row.querySelector('.bucket-name').value.trim() || ('Rango ' + (i+1));
-        const minV   = parseFloat(row.querySelector('.bucket-min').value);
-        const maxStr = row.querySelector('.bucket-max').value.trim();
-        const maxV   = maxStr === '' ? null : parseFloat(maxStr);
-        const optsStr = row.querySelector('.bucket-opts').value || '';
-        const options = optsStr.split(',')
-          .map(s => parseFloat(s.trim()))
-          .filter(n => !isNaN(n));
-
-        return {
-          name,
-          min: isNaN(minV) ? 0 : minV,
-          max: (maxStr === '' || isNaN(maxV)) ? null : maxV,
-          options
-        };
-      });
-
-      buckets.sort((a,b) => (a.min || 0) - (b.min || 0));
-      return buckets;
-    }
-
-    function addBucketRule(){
-      const cat = currentConfigCategory();
-      const arr = RAW.discountBuckets[cat] || [];
-      const last = arr[arr.length - 1];
-
-      const newMin = last
-        ? (last.max == null ? (last.min || 0) : last.max)
-        : 0;
-
-      arr.push({
-        name: 'Rango ' + (arr.length + 1),
-        min: newMin,
-        max: null,
-        options: [0,3,10]
-      });
-
-      RAW.discountBuckets[cat] = arr;
-      persist();
-      renderBucketRulesUI();
-    }
-
-    function removeBucketRule(idx){
-      const cat = currentConfigCategory();
-      const arr = RAW.discountBuckets[cat] || [];
-      arr.splice(idx, 1);
-      RAW.discountBuckets[cat] = arr;
-      persist();
-      renderBucketRulesUI();
-    }
-
-    /* =================== Tiers de volumen (UI) =================== */
-    function renderVolTiersUI(){
-      const cat = currentConfigCategory();
-      const container = document.getElementById('volTiersContainer');
-      container.innerHTML = '';
-      const tiers = RAW.volumeTiers[cat] || [];
-
-      tiers.forEach((t, i)=>{
-        const tr = document.createElement('tr');
-        tr.className = 'vt-row';
-        tr.innerHTML = `
-          <td class="py-2 pr-2">
-            <input class="vt-name input w-40" type="text" value="${t.name ?? ''}">
-          </td>
-          <td class="py-2 pr-2">
-            <input class="vt-minqty input w-24" type="number" step="1" min="1" value="${t.minQty ?? 1}">
-          </td>
-          <td class="py-2 pr-2">
-            <input class="vt-index input w-24" type="number" step="1" min="0" value="${t.discIndex ?? 0}">
-          </td>
-          <td class="py-2 pl-2 text-right">
-            <button class="btn bg-red-50 hover:bg-red-100 text-red-600" onclick="removeVolTier(${i})">Eliminar</button>
-          </td>
-        `;
-        container.appendChild(tr);
-      });
-
-      if(tiers.length === 0){
-        addVolTier();
-      }
-    }
-
-    function readVolTiersFromUI(){
-      const rows = [...document.querySelectorAll('#volTiersContainer .vt-row')];
-      let tiers = rows.map(row=>{
-        const name = row.querySelector('.vt-name').value.trim() || 'Volumen';
-        const minQty = parseInt(row.querySelector('.vt-minqty').value, 10);
-        const discIndex = parseInt(row.querySelector('.vt-index').value, 10);
-        return {
-          name,
-          minQty: isNaN(minQty) ? 1 : Math.max(1, minQty),
-          discIndex: isNaN(discIndex) ? 0 : Math.max(0, discIndex)
-        };
-      });
-
-      tiers.sort((a,b)=>a.minQty - b.minQty);
-      return tiers;
-    }
-
-    function addVolTier(){
-      const cat = currentConfigCategory();
-      const tiers = RAW.volumeTiers[cat] || [];
-      const nextIndex = tiers.length;
-      tiers.push({name:'Volumen '+(nextIndex+1), minQty:1, discIndex:nextIndex});
-      RAW.volumeTiers[cat] = tiers;
-      persist();
-      renderVolTiersUI();
-    }
-
-    function removeVolTier(idx){
-      const cat = currentConfigCategory();
-      const tiers = RAW.volumeTiers[cat] || [];
-      tiers.splice(idx,1);
-      RAW.volumeTiers[cat] = tiers;
-      persist();
-      renderVolTiersUI();
-    }
-
-    function resetVolTiers(){
-      const cat = currentConfigCategory();
-      RAW.volumeTiers[cat] = deepClone(DEFAULTS.volumeTiers[cat]);
-      RAW.volumeScales[cat] = DEFAULTS.volumeScales[cat];
-      persist();
-      renderVolTiersUI();
-      renderVolumeScalesUI();
-    }
-
-    /* ====== Escalas de volumen por defecto (UI Config) ====== */
-    function renderVolumeScalesUI(){
-      const cat = currentConfigCategory();
-      const inp = document.getElementById('cfgVolumeScales');
-      if (!inp) return;
-      inp.value = (RAW.volumeScales && RAW.volumeScales[cat]) || "";
-    }
-
-    function readVolumeScalesFromUI(){
-      const inp = document.getElementById('cfgVolumeScales');
-      return inp ? (inp.value || "").trim() : "";
-    }
-
-    /* =================== Productos de oportunidad (POR CATEGORÍA) =================== */
-    function renderOportunidadList(){
-      const sel = document.getElementById('oportunidadSelect');
-      if(!sel) return;
-
-      const cat = document.getElementById('categorySelect')?.value || 'Agroquimicos';
-      const list = (RAW.oportunidadList && RAW.oportunidadList[cat]) ? RAW.oportunidadList[cat] : [];
-
-      sel.innerHTML = '<option value="">— Ninguno —</option>';
-      list.forEach(o=>{
-        const opt = document.createElement('option');
-        opt.value = o.name;
-        opt.textContent = `${o.name} (+${o.margin}%)`;
-        sel.appendChild(opt);
-      });
-    }
-
-    function onOportunidadChange(){
-      calculatePrice();
-      calcVolumeScales();
-    }
-
-    function renderOportunidadTable(){
-      const tbody = document.getElementById('opContainer');
-      if(!tbody) return;
-
-      const cat = currentConfigCategory();
-      const list = (RAW.oportunidadList && RAW.oportunidadList[cat]) ? RAW.oportunidadList[cat] : [];
-
-      tbody.innerHTML = '';
-      list.forEach((o,idx)=>{
-        const tr = document.createElement('tr');
-        tr.className = 'op-row';
-        tr.innerHTML = `
-          <td class="py-2 pr-2">
-            <input class="input op-name w-48" type="text" value="${o.name}">
-          </td>
-          <td class="py-2 pr-2">
-            <input class="input op-margin w-24" type="number" step="0.01" value="${o.margin}">
-          </td>
-          <td class="py-2 pl-2 text-right">
-            <button class="btn bg-red-50 hover:bg-red-100 text-red-600" onclick="removeOportunidad(${idx})">Eliminar</button>
-          </td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
-
-    function readOportunidadFromUI(){
-      const rows = [...document.querySelectorAll('#opContainer .op-row')];
-      const list = rows.map(row=>{
-        const name = row.querySelector('.op-name').value.trim();
-        const margin = parseFloat(row.querySelector('.op-margin').value);
-        return {
-          name,
-          margin: isNaN(margin)?0:margin
-        };
-      }).filter(o=>o.name);
-      return list;
-    }
-
-    function addOportunidad(){
-      const cat = currentConfigCategory();
-      RAW.oportunidadList = RAW.oportunidadList || {};
-      if(!RAW.oportunidadList[cat]) RAW.oportunidadList[cat] = [];
-      RAW.oportunidadList[cat].push({name:'Nuevo producto', margin:50});
-      persist();
-      renderOportunidadTable();
-      renderOportunidadList();
-    }
-
-    function removeOportunidad(idx){
-      const cat = currentConfigCategory();
-      if(!RAW.oportunidadList || !RAW.oportunidadList[cat]) return;
-      RAW.oportunidadList[cat].splice(idx,1);
-      persist();
-      renderOportunidadTable();
-      renderOportunidadList();
-    }
-
-    /* =================== Gráfico por categoría =================== */
-    function updateCategoryGraphic(){
-      const cat = document.getElementById('categorySelect').value;
-      const titleEl = document.getElementById('categoryTitle');
-      const descEl  = document.getElementById('categoryDesc');
-      const emojiEl = document.getElementById('categoryEmoji');
-      const cardEl  = document.getElementById('categoryGraphic');
-      const imgsEl  = document.getElementById('categoryImages');
-      const img1El  = document.getElementById('categoryImg1');
-      const img2El  = document.getElementById('categoryImg2');
-
-      if(!titleEl || !descEl || !emojiEl || !cardEl || !imgsEl || !img1El || !img2El){
-        return;
-      }
-
-      const infoByCat = {
-        "Agroquimicos":{
-          title:"Agroquímicos",
-          emoji:"🌿",
-          desc:"Productos para proteger y fortalecer tus cultivos.",
-          img1:"https://elciudadanovoces.com/wp-content/uploads/2024/06/6-720x406.jpg",
-          img2:"https://datos-bo.com/wp-content/uploads/2021/04/agroqumicos_mujer_fumigando_cbba_DANIEL_JAMES_LOS_TIEMPOS.jpg"
-        },
-        "Granel":{
-          title:"Productos a granel",
-          emoji:"🧪",
-          desc:"Insumos vendidos por Mililitro o Gramo para productores.",
-          img1:"https://www.clikisalud.net/wp-content/uploads/2023/12/productos-biologicos-psoriasis-debes-saber.jpg",
-          img2:"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW2oljMgSWqHmnrNObMtJb6sh8nWUovf_Zg&s"
-        },
-        "KG-LT":{
-          title:"Presentaciones KG/LT",
-          emoji:"⚖️",
-          desc:"Productos Kileados o litreados venta a minoristas.",
-          img1:"https://lamarinamx.vtexassets.com/arquivos/ids/651528-800-800?v=638095861978300000&width=800&height=800&aspect=true",
-          img2:"https://media.istockphoto.com/id/1283025593/es/foto/se-est%C3%A1-pesando-az%C3%BAcar-de-la-elaboraci%C3%B3n.jpg?s=170667a&w=0&k=20&c=bJiO4FyI8I-fF3dX7aoJEZaInIjNRThws_6ikzPQSuM="
-        },
-        "FERTILIZANTES":{
-          title:"Fertilizantes",
-          emoji:"🌱",
-          desc:"Nutrición para suelo y planta en cada etapa del cultivo.",
-          img1:"https://eos.com/wp-content/uploads/2023/11/components-of-different-types-of-fertilizers.jpg.webp",
-          img2:"https://bloglatam.jacto.com/wp-content/uploads/2022/09/jacto_jactomexico_image_563.jpeg"
-        },
-        "INOCUIDAD":{
-          title:"Inocuidad",
-          emoji:"🧴",
-          desc:"Productos enfocados en seguridad alimentaria.",
-          img1:"https://www.senasa.gob.pe/senasacontigo/wp-content/uploads/2019/11/inocuidad2.jpg",
-          img2:"https://www.gob.mx/cms/uploads/press/main_image/262283/post_230927_AGRICULTURA_FRUTILLAS-3.JPG"
-        },
-        "MAQUINARIA":{
-          title:"Maquinaria",
-          emoji:"🚜",
-          desc:"Equipos y herramientas para trabajo en campo.",
-          img1:"https://www.defrentealcampo.com.ar/wp-content/uploads/2018/09/drone-pulverizador.jpg",
-          img2:"https://images.pexels.com/photos/2889440/pexels-photo-2889440.jpeg?auto=compress&cs=tinysrgb&w=600"
-        }
-      };
-
-      const cfg = infoByCat[cat];
-      if(!cfg){
-        cardEl.classList.add("hidden");
-        imgsEl.classList.add("hidden");
-        return;
-      }
-
-      titleEl.textContent = cfg.title;
-      descEl.textContent  = cfg.desc;
-      emojiEl.textContent = cfg.emoji;
-      img1El.src = cfg.img1;
-      img1El.alt = cfg.title + " 1";
-      img2El.src = cfg.img2;
-      img2El.alt = cfg.title + " 2";
-
-      cardEl.classList.remove("hidden");
-      imgsEl.classList.remove("hidden");
-    }
-
-    function getAutomaticGrossMargin(cost, profile){
-      for(const r of profile.margins){
-        if(r.maxPrice === Infinity){ return r.margin; }
-        if(cost < r.maxPrice){ return r.margin; }
-      }
-      return profile.margins.length ? profile.margins[profile.margins.length-1].margin : 0;
-    }
-
-    function onCalcCategoryChange(){
-      updateIepsMenu();
-      const cat = document.getElementById('categorySelect').value;
-      activeBucketNameMap[cat] = null;
-      updateCategoryGraphic();
-      renderOportunidadList();
-      calculatePrice();
-      syncVolumeScalesUI();
-      calcVolumeScales();
-    }
-
-    function updateIepsMenu(){
-      const cat = document.getElementById('categorySelect').value;
-      const iepsSelect = document.getElementById('iepsSelect');
-      const iepsProfile = MARGIN_PROFILES[cat].ieps;
-
-      iepsSelect.innerHTML = '';
-      for(const key in iepsProfile){
-        const d = iepsProfile[key];
-        const opt = document.createElement('option');
-        opt.value = key;
-        const pct = Math.round(d.rate*10000)/100;
-        opt.textContent = `${d.label.replace(/\(\d+(\.\d+)?%?\)/, `(${pct}%)`)}`;
-        iepsSelect.appendChild(opt);
-      }
-    }
-
-    function toggleManualBlock(){
-      const manualOn = document.getElementById('toggleManualMargin').checked;
-      document.getElementById('manualMarginBlock').classList.toggle('hidden', !manualOn);
-    }
-
-    function buildDiscountSelect(bucket){
-      const cat = document.getElementById('categorySelect').value;
-      const block  = document.getElementById('discountBlock');
-      const select = document.getElementById('discountSelect');
-
-      if(!bucket){
-        activeBucketNameMap[cat] = null;
-        block.classList.add('hidden');
-        select.innerHTML = '';
-        document.getElementById('discountAmount').textContent = '$0.00';
-        document.getElementById('discountRow').textContent = '-$0.00';
-        return 0;
-      }
-
-      if(bucket.name !== activeBucketNameMap[cat]){
-        select.innerHTML = '';
-        bucket.options.forEach(p=>{
-          const op = document.createElement('option');
-          op.value = p; op.textContent = `${p}%`;
-          select.appendChild(op);
-        });
-        select.value = bucket.options[0];
-        activeBucketNameMap[cat] = bucket.name;
-      }
-
-      block.classList.remove('hidden');
-      return parseFloat(select.value || '0') || 0;
-    }
-
-    function setMarginVisuals(marginPct){
-      const badge = document.getElementById('marginBadge');
-      const icon  = document.getElementById('marginIcon');
-
-      let color = {bg:'bg-gray-100', text:'text-gray-700', icon:'text-gray-400'};
-      let label = 'Margen —';
-      if(marginPct >= 25){
-        color = {bg:'bg-green-100', text:'text-green-800', icon:'text-green-600'};
-        label = 'Margen saludable';
-      }else if(marginPct >= 15){
-        color = {bg:'bg-amber-100', text:'text-amber-800', icon:'text-amber-600'};
-        label = 'Margen moderado';
-      }else{
-        color = {bg:'bg-red-100', text:'text-red-800', icon:'text-red-600'};
-        label = 'Margen bajo';
-      }
-
-      badge.className = `text-xs px-2 py-1 rounded-full ${color.bg} ${color.text} transition-all`;
-      badge.textContent = label;
-      icon.className = `w-4 h-4 ${color.icon}`;
-    }
-
-    function setProfitIcon(profit){
-      const icon = document.getElementById('profitIcon');
-      const name = profit >= 0 ? 'trending-up' : 'trending-down';
-      icon.setAttribute('data-lucide', name);
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
-      icon.classList.add(profit >= 0 ? 'text-green-600' : 'text-red-600');
-      icon.classList.remove(profit >= 0 ? 'text-red-600' : 'text-green-600');
-    }
-
-    function calculatePrice(){
-      const baseCost     = parseFloat(document.getElementById('baseCost').value)||0;
-      const category     = document.getElementById('categorySelect').value;
-      const iepsKey      = document.getElementById('iepsSelect').value;
-      const manualOn     = document.getElementById('toggleManualMargin').checked;
-      const desiredInput = document.getElementById('desiredGrossMargin');
-      const includeIVA   = document.getElementById('includeIVA').checked;
-
-      const profile = MARGIN_PROFILES[category];
-
-      // IEPS y costo base
-      const iepsRate   = profile.ieps[iepsKey]?.rate ?? 0;
-      const iepsAmount = round2(baseCost * iepsRate);
-      const basePlusIeps = round2(baseCost + iepsAmount);
-
-      // IVA sobre costo base
-      const ivaOnCost = includeIVA ? round2(baseCost * IVA_RATE) : 0;
-
-      // Costo total para margen
-      const totalCostForMargin = round2(basePlusIeps + ivaOnCost);
-
-      // Margen deseado (auto o manual)
-      let desiredPercent = manualOn ? (parseFloat(desiredInput.value)||0)
-                                    : getAutomaticGrossMargin(totalCostForMargin, profile);
-
-      // Producto de oportunidad por categoría
-      const opSel = document.getElementById('oportunidadSelect');
-      if(opSel){
-        const opName = opSel.value;
-        if(opName){
-          const list = (RAW.oportunidadList && RAW.oportunidadList[category]) ? RAW.oportunidadList[category] : [];
-          const opItem = list.find(o=>o.name===opName);
-          if(opItem && !isNaN(parseFloat(opItem.margin))){
-            desiredPercent = parseFloat(opItem.margin);
-          }
-        }
-      }
-
-      desiredInput.value = desiredPercent;
-      let desiredRatio = Math.min(desiredPercent/100, 0.99);
-
-      const pvpBeforeDiscount = round2(totalCostForMargin / (1 - desiredRatio));
-
-      const buckets = DISCOUNT_BUCKETS_MAP[category] || [];
-      const bucket  = buckets.find(b => b.test(pvpBeforeDiscount));
-      const discPct = buildDiscountSelect(bucket);
-      const discAmt = round2(pvpBeforeDiscount * (discPct/100));
-      const pvpAfterDiscount = round2(pvpBeforeDiscount - discAmt);
-
-      const profitAmount = round2(pvpAfterDiscount - totalCostForMargin);
-      const actualGrossMarginPercent = pvpAfterDiscount>0 ? round2((profitAmount/pvpAfterDiscount)*100) : 0;
-
-      const finalPrice = pvpAfterDiscount;
-
-      const iepsDisplayDiv = document.getElementById('iepsAmountDisplay');
-      document.getElementById('iepsAmount').textContent = fmt$(iepsAmount);
-      iepsDisplayDiv.classList.toggle('hidden', iepsAmount<=0);
-
-      document.getElementById('subtotalDisplay').textContent = fmt$(pvpAfterDiscount);
-      document.getElementById('discountAmount').textContent = fmt$(discAmt);
-      document.getElementById('discountRow').textContent = `-${fmt$(discAmt).slice(1)}`;
-      document.getElementById('ivaAmount').textContent = fmt$(ivaOnCost);
-      document.getElementById('totalCostDisplay').textContent = fmt$(totalCostForMargin);
-      document.getElementById('profitAmount').textContent = fmt$(profitAmount);
-      document.getElementById('grossMarginPercent').textContent = `${actualGrossMarginPercent.toFixed(2)}%`;
-
-      document.getElementById('finalPriceDisplay').innerHTML = fmt$(finalPrice) + ' <span class="text-base align-top ml-1">MXN</span>';
-      document.getElementById('finalPriceNote').textContent = includeIVA ? '(IVA aplicado al costo)' : '(Sin IVA en costo)';
-
-      setMarginVisuals(actualGrossMarginPercent);
-      setProfitIcon(profitAmount);
-    }
-
-    /* =================== Simulador de volumen =================== */
-    function calcVolumeBase(){
-      const baseCost   = parseFloat(document.getElementById('baseCost').value)||0;
-      const category   = document.getElementById('categorySelect').value;
-      const iepsKey    = document.getElementById('iepsSelect').value;
-      const manualOn   = document.getElementById('toggleManualMargin').checked;
-      const desiredInp = document.getElementById('desiredGrossMargin');
-      const includeIVA = document.getElementById('includeIVA').checked;
-
-      const profile  = MARGIN_PROFILES[category];
-      const iepsRate = profile.ieps[iepsKey]?.rate ?? 0;
-
-      const iepsAmt  = round2(baseCost * iepsRate);
-      const basePlusIeps = round2(baseCost + iepsAmt);
-
-      const ivaOnCost = includeIVA ? round2(baseCost * IVA_RATE) : 0;
-
-      const totalCost  = round2(basePlusIeps + ivaOnCost);
-
-      let desiredPercent = manualOn ? (parseFloat(desiredInp.value)||0)
-                                    : getAutomaticGrossMargin(totalCost, profile);
-
-      // Oportunidad por categoría también aplica
-      const opSel = document.getElementById('oportunidadSelect');
-      if(opSel){
-        const opName = opSel.value;
-        if(opName){
-          const list = (RAW.oportunidadList && RAW.oportunidadList[category]) ? RAW.oportunidadList[category] : [];
-          const opItem = list.find(o=>o.name===opName);
-          if(opItem && !isNaN(parseFloat(opItem.margin))){
-            desiredPercent = parseFloat(opItem.margin);
-          }
-        }
-      }
-      desiredInp.value = desiredPercent;
-
-      const desiredRatio = Math.min(desiredPercent/100, 0.99);
-      const pvpBeforeDiscount = round2(totalCost / (1 - desiredRatio));
-
-      return { category, totalCost, pvpBeforeDiscount, ivaOnCost };
-    }
-
-    function getVolumeDiscountPercent(category, quantity, bucket){
-      if(!bucket || !bucket.options || bucket.options.length === 0){
-        return 0;
-      }
-      const tiers = RAW.volumeTiers?.[category];
-      if(!tiers || tiers.length === 0){
-        const sel = document.getElementById('discountSelect');
-        const selVal = parseFloat(sel.value);
-        if(!isNaN(selVal)) return selVal;
-        return bucket.options[0];
-      }
-      const sorted = [...tiers].sort((a,b)=>(a.minQty||0)-(b.minQty||0));
-      let chosen = sorted[0];
-      for(const t of sorted){
-        if(quantity >= (t.minQty||0)) chosen = t;
-        else break;
-      }
-      let idx = parseInt(chosen.discIndex);
-      if(isNaN(idx) || idx < 0) idx = 0;
-      if(idx >= bucket.options.length) idx = bucket.options.length-1;
-      return bucket.options[idx];
-    }
-
-    function calcVolumeScales(){
-      const { category, totalCost, pvpBeforeDiscount, ivaOnCost } = calcVolumeBase();
-      const body = document.getElementById('volTableBody');
-
-      const qtyStr = document.getElementById('volQuantities').value || '';
-      const qtys = qtyStr.split(',').map(s=>parseFloat(s.trim())).filter(n=>!isNaN(n) && n>0);
-      body.innerHTML = '';
-
-      const buckets = DISCOUNT_BUCKETS_MAP[category] || [];
-      const bucket  = buckets.find(b => b.test(pvpBeforeDiscount));
-
-      for(const qty of qtys){
-        const percent = getVolumeDiscountPercent(category, qty, bucket);
-        const discAmtUnit = round2(pvpBeforeDiscount * (percent/100));
-        const unitAfter   = round2(pvpBeforeDiscount - discAmtUnit);
-        const profitUnit  = round2(unitAfter - totalCost);
-        const marginUnit  = unitAfter>0 ? round2((profitUnit/unitAfter)*100) : 0;
-
-        const ivaTotal = round2(ivaOnCost * qty);
-        const subtotal = round2(unitAfter * qty);
-        const finalTot = subtotal;
-        const profitTot= round2(profitUnit * qty);
-
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="py-2 pr-4">${qty}</td>
-          <td class="py-2 pr-4 text-right">${fmt$(unitAfter)}</td>
-          <td class="py-2 pr-4 text-right">${fmt$(subtotal)}</td>
-          <td class="py-2 pr-4 text-right">${fmt$(ivaTotal)}</td>
-          <td class="py-2 pr-4 text-right">${fmt$(profitTot)}</td>
-          <td class="py-2 pr-4 text-right">${percent}%</td>
-          <td class="py-2 pr-0  text-right">${marginUnit.toFixed(2)}%</td>
-        `;
-        body.appendChild(tr);
-      }
-    }
-
-    function syncVolumeScalesUI(){
-      const cat   = document.getElementById('categorySelect').value;
-      const input = document.getElementById('volQuantities');
-      const title = document.getElementById('volScaleTitle');
-      const manualCB = document.getElementById('volManualToggle');
-      if (!input) return;
-
-      const titles = {
-        "Agroquimicos": "Escalas de volumen para Agroquímicos",
-        "Granel": "Escalas de volumen para productos a granel",
-        "KG-LT": "Escalas de volumen para presentaciones Kg/Lt",
-        "FERTILIZANTES": "Escalas de volumen para Fertilizantes",
-        "INOCUIDAD": "Escalas de volumen para Inocuidad",
-        "MAQUINARIA": "Escalas de volumen para Maquinaria"
-      };
-      if (title) {
-        title.textContent = titles[cat] || "Escalas de volumen para la categoría seleccionada";
-      }
-
-      const preset = (RAW.volumeScales && RAW.volumeScales[cat]) || "1,10,50,100";
-
-      if (!manualCB || !manualCB.checked) {
-        input.value = preset;
-        input.disabled = true;
+    function runCalculations() {
+      const category = document.getElementById('calcCategory').value;
+      const baseCost = parseFloat(document.getElementById('calcBaseCost').value) || 0;
+      const iepsKey = document.getElementById('calcIeps').value;
+      const opName = document.getElementById('calcOportunidad').value;
+      const isManual = document.getElementById('calcManualToggle').checked;
+      const includeIva = document.getElementById('calcIvaToggle').checked;
+
+      const iepsRate = CONFIG.IEPS[iepsKey] || 0;
+      const iepsAmt = baseCost * iepsRate;
+      const ivaAmt = includeIva ? baseCost * CONFIG.IVA_RATE : 0;
+      const totalCost = baseCost + iepsAmt + ivaAmt;
+
+      let marginPct = 0;
+      if(isManual) {
+        marginPct = parseFloat(document.getElementById('calcManualMargin').value) || 0;
+      } else if (opName) {
+        // Buscar margen del producto especial seleccionado
+        const op = appState.oportunidades[category]?.find(o => o.name === opName);
+        marginPct = op ? op.m : 20;
       } else {
-        input.disabled = false;
-      }
-    }
-
-    function onVolManualToggleChange(){
-      const manualCB = document.getElementById('volManualToggle');
-      const input    = document.getElementById('volQuantities');
-      if (!input || !manualCB) return;
-
-      if (manualCB.checked) {
-        input.disabled = false;
-      } else {
-        syncVolumeScalesUI();
-      }
-      calcVolumeScales();
-    }
-
-    /* =================== Config dinámica por categoría =================== */
-    function currentConfigCategory(){ return document.getElementById('cfgCategorySelect').value || 'Agroquimicos'; }
-
-    function hydrateConfigUI(){
-      const cat = currentConfigCategory();
-
-      renderMarginRulesUI();
-      renderBucketRulesUI();
-      renderVolTiersUI();
-      renderVolumeScalesUI();
-      renderOportunidadTable();
-
-      // Render remote config UI
-      renderRemoteCfgUI();
-    }
-
-    function onConfigCategoryChange(){ hydrateConfigUI(); }
-
-    function saveConfig(){
-      const cat = currentConfigCategory();
-
-      RAW.marginProfiles[cat].margins = readMarginRulesFromUI();
-      RAW.marginProfiles[cat].ieps = 'IEPS_AGRO';
-
-      RAW.discountBuckets[cat] = readBucketRulesFromUI();
-
-      RAW.volumeTiers[cat] = readVolTiersFromUI();
-
-      RAW.volumeScales[cat] = readVolumeScalesFromUI();
-
-      RAW.oportunidadList[cat] = readOportunidadFromUI();
-
-      // Leer configuración remota desde UI
-      const remoteEnabled = !!document.getElementById('enableRemoteSync').checked;
-      RAW.remoteCfg = RAW.remoteCfg || { enabled:false, provider:'none', url:'', key:'' };
-      RAW.remoteCfg.enabled = remoteEnabled;
-      RAW.remoteCfg.provider = document.getElementById('remoteProvider').value || 'none';
-      RAW.remoteCfg.url = document.getElementById('remoteUrl').value || '';
-      RAW.remoteCfg.key = document.getElementById('remoteKey').value || '';
-
-      persist();
-
-      document.getElementById('cfgMsg').textContent = 'Configuración de '+cat+' guardada ✔';
-      setTimeout(()=>document.getElementById('cfgMsg').textContent='', 2000);
-
-      if(document.getElementById('categorySelect').value === cat){
-        activeBucketNameMap[cat] = null;
-        renderOportunidadList();
-        calculatePrice();
-        calcVolumeScales();
-      }
-    }
-
-    function resetConfig(){
-      const cat = currentConfigCategory();
-      RAW.marginProfiles[cat] = deepClone(DEFAULTS.marginProfiles[cat]);
-      RAW.discountBuckets[cat] = deepClone(DEFAULTS.discountBuckets[cat]);
-      RAW.volumeTiers[cat] = deepClone(DEFAULTS.volumeTiers[cat]);
-      RAW.volumeScales[cat] = DEFAULTS.volumeScales[cat];
-      // No tocamos oportunidadList para no perder productos configurados
-      persist();
-      hydrateConfigUI();
-      document.getElementById('cfgMsg').textContent = 'Se restablecieron los valores por defecto de '+cat;
-      setTimeout(()=>document.getElementById('cfgMsg').textContent='', 2000);
-
-      if(document.getElementById('categorySelect').value === cat){
-        activeBucketNameMap[cat] = null;
-        renderOportunidadList();
-        calculatePrice();
-        calcVolumeScales();
-      }
-    }
-
-    /* =================== NUEVO: UI + helpers para sincronización remota =================== */
-    function renderRemoteCfgUI(){
-      const cfg = RAW.remoteCfg || { enabled:false, provider:'none', url:'', key:'' };
-      const chk = document.getElementById('enableRemoteSync');
-      const panel = document.getElementById('remoteCfgPanel');
-      const prov = document.getElementById('remoteProvider');
-      const url  = document.getElementById('remoteUrl');
-      const key  = document.getElementById('remoteKey');
-
-      if(chk) chk.checked = !!cfg.enabled;
-      if(prov) prov.value = cfg.provider || 'none';
-      if(url) url.value = cfg.url || '';
-      if(key) key.value = cfg.key || '';
-
-      if(panel) panel.classList.toggle('hidden', !cfg.enabled);
-    }
-
-    function onRemoteToggleChange(){
-      const panel = document.getElementById('remoteCfgPanel');
-      const enabled = !!document.getElementById('enableRemoteSync').checked;
-      if(panel) panel.classList.toggle('hidden', !enabled);
-    }
-
-    async function testRemoteConnection(){
-      const provider = document.getElementById('remoteProvider').value;
-      const url = (document.getElementById('remoteUrl').value || '').trim();
-      const key = (document.getElementById('remoteKey').value || '').trim();
-      const status = document.getElementById('remoteStatus');
-
-      status.textContent = 'Probando...';
-      status.className = 'text-xs';
-
-      if(!url){
-        status.textContent = 'URL vacía';
-        status.classList.add('status-err');
-        return;
+        const rules = appState.margins[category];
+        const rule = rules.find(r => totalCost < r.max) || rules[rules.length-1];
+        marginPct = rule.m;
       }
 
-      // Intento básico: un fetch GET para comprobar reachability (CORS puede bloquear)
-      try{
-        const resp = await fetch(url, { method:'GET' });
-        if(resp && (resp.ok || resp.status === 0)){
-          status.textContent = 'Conexión OK (respuesta recibida)';
-          status.className = 'text-xs status-ok';
-        }else{
-          status.textContent = `Conectado pero respuesta: ${resp.status}`;
-          status.className = 'text-xs status-err';
-        }
-      }catch(err){
-        // Si fetch falla por CORS, lo avisamos; aún así, la configuración queda validada localmente
-        console.warn('testRemoteConnection error', err);
-        status.textContent = 'Error: no se pudo conectar (CORS o URL inválida). Revisa consola.';
-        status.className = 'text-xs status-err';
-      }
+      const ratio = Math.min(marginPct / 100, 0.99);
+      const finalPrice = totalCost / (1 - ratio);
+      const profit = finalPrice - totalCost;
+
+      updateMainUI({ finalPrice, profit, marginPct, totalCost, baseCost, iepsAmt, ivaAmt, includeIva });
+      updateScales(totalCost, finalPrice);
+      saveLocal(); 
     }
 
-    async function pushConfigToRemote(){
-      // Esta función NO IMPLEMENTA la sincronización real.
-      // Aquí sólo se muestra cómo podrías llamar a tu backend o usar SDKs.
-      const provider = document.getElementById('remoteProvider').value;
-      const url = (document.getElementById('remoteUrl').value || '').trim();
-      const key = (document.getElementById('remoteKey').value || '').trim();
-      const status = document.getElementById('remoteStatus');
-      status.textContent = 'Guardando...';
-
-      if(!url || provider === 'none'){
-        status.textContent = 'Proveedor o URL no configurada';
-        status.className = 'text-xs status-err';
-        return;
-      }
-
-      // Guardamos la configuración localmente (persist)
-      RAW.remoteCfg = { enabled: true, provider, url, key };
-      persist();
-
-      // TODO: Aquí van las llamadas reales según provider:
-      // - Firebase: usar firebase SDK (import <script src="https://www.gstatic.com/firebasejs/...">) y firebase.firestore().doc('...').set(RAW)
-      // - Supabase: usar @supabase/supabase-js y supabase.from('settings').upsert({ id:'cfg', data: RAW })
-      //
-      // Ejemplo conceptual (no activo):
-      // if(provider === 'firebase'){ /* inicializar Firebase con key/url y subir RAW */ }
-      // if(provider === 'supabase'){ /* inicializar supabase client y upsert */ }
-
-      // Por ahora informamos que se guardó localmente y simular éxito
-      status.textContent = 'Configuración guardada localmente. Implementa push real según provider.';
-      status.className = 'text-xs status-ok';
+    function updateMainUI(d) {
+      document.getElementById('resFinalPrice').textContent = fmt$(d.finalPrice);
+      document.getElementById('resProfit').textContent = fmt$(d.profit);
+      document.getElementById('resMarginPct').textContent = d.marginPct.toFixed(1) + '%';
+      document.getElementById('resBaseCost').textContent = fmt$(d.baseCost);
+      document.getElementById('resIeps').textContent = fmt$(d.iepsAmt);
+      document.getElementById('resIva').textContent = fmt$(d.ivaAmt);
+      document.getElementById('resIvaNote').textContent = d.includeIva ? "IVA de compra incluido" : "Sin IVA de compra aplicado";
     }
 
-    // Si deseas sincronizar al iniciar desde un remote real, puedes implementar una función `pullConfigFromRemote`
-    // que use Firebase / Supabase SDK para leer y reemplazar RAW, luego persist().
-    // Ten en cuenta: manejo de usuarios/contraseñas y seguridad requiere configuración del servicio.
-
-    /* =================== Tabs & boot =================== */
-    function switchTab(which){
-      const btnCalc  = document.getElementById('tabCalc');
-      const btnCfg   = document.getElementById('tabConfig');
-      const calcC    = document.getElementById('tabCalcContent');
-      const cfgC     = document.getElementById('tabConfigContent');
-
-      if(which === 'calc'){
-        btnCalc.classList.add('active'); btnCfg.classList.remove('active');
-        calcC.classList.remove('hidden'); cfgC.classList.add('hidden');
-      }else{
-        btnCfg.classList.add('active'); btnCalc.classList.remove('active');
-        cfgC.classList.remove('hidden'); calcC.classList.add('hidden');
-        hydrateConfigUI();
-      }
-    }
-
-    function initializeCalculator(){
-      if (window.lucide && typeof lucide.createIcons === 'function') {
-        lucide.createIcons();
-      }
-
-      loadConfig();
-
-      document.getElementById('tabCalc').onclick   = ()=>switchTab('calc');
-      document.getElementById('tabConfig').onclick = ()=>switchTab('cfg');
-
-      document.getElementById('btnSaveCfg').onclick  = saveConfig;
-      document.getElementById('btnResetCfg').onclick = resetConfig;
-
-      updateIepsMenu();
-      toggleManualBlock();
-      updateCategoryGraphic();
-      renderOportunidadList();
-      calculatePrice();
-      syncVolumeScalesUI();
-      calcVolumeScales();
-
-      // Inicializar UI de remote
-      renderRemoteCfgUI();
-    }
-  </script>
-
-  <script>
-    function colorIEPSOptions(){
-      const sel = document.getElementById('iepsSelect');
-      if(!sel) return;
-      Array.from(sel.options).forEach(opt=>{
-        const txt = opt.text || "";
-        if(txt.includes("Azul"))     opt.style.color = "#0056d6";
-        else if(txt.includes("Amarilla")) opt.style.color = "#b59a00";
-        else if(txt.includes("Roja"))     opt.style.color = "#c40000";
-        else                               opt.style.color = "#1f2937";
+    function updateScales(cost, basePVP) {
+      const container = document.getElementById('scaleTableBody');
+      const qtys = document.getElementById('calcScaleQty').value.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
+      container.innerHTML = '';
+      qtys.forEach(q => {
+        let disc = q >= 100 ? 8 : (q >= 50 ? 5 : (q >= 10 ? 3 : 0));
+        let unitP = basePVP * (1 - disc/100);
+        let profit = (unitP - cost) * q;
+        let margin = unitP > 0 ? ((unitP - cost) / unitP) * 100 : 0;
+        container.innerHTML += `<tr><td class="py-2">${q}</td><td class="font-bold">${fmt$(unitP)}</td><td>${fmt$(unitP * q)}</td><td class="text-green-600">${fmt$(profit)}</td><td class="text-right">${margin.toFixed(1)}%</td></tr>`;
       });
-      const selected = sel.options[sel.selectedIndex];
-      if(selected){
-        sel.style.color = selected.style.color || "#1f2937";
+    }
+
+    /* FIREBASE AUTH */
+    auth.onAuthStateChanged(user => {
+      const dot = document.getElementById('auth-status-dot');
+      const text = document.getElementById('auth-status-text');
+      const form = document.getElementById('auth-form');
+      const actions = document.getElementById('cloud-actions');
+      if (user) {
+        dot.className = "w-2 h-2 rounded-full bg-green-500";
+        text.textContent = user.email;
+        form.classList.add('hidden');
+        actions.classList.remove('hidden');
+      } else {
+        dot.className = "w-2 h-2 rounded-full bg-gray-300";
+        text.textContent = "Sin conexión";
+        form.classList.remove('hidden');
+        actions.classList.add('hidden');
+      }
+    });
+
+    async function handleLogin() {
+      const email = document.getElementById('fb-email').value;
+      const pass = document.getElementById('fb-pass').value;
+      try { await auth.signInWithEmailAndPassword(email, pass); } catch (e) { alert(e.message); }
+    }
+
+    async function syncToCloud() {
+      if(!auth.currentUser) return;
+      try {
+        await db.collection('configs').doc('global').set({ data: JSON.stringify(appState), updatedAt: new Date() });
+        alert("Sincronizado con éxito.");
+      } catch (e) { alert(e.message); }
+    }
+
+    async function pullFromCloud() {
+      if(!auth.currentUser) return;
+      try {
+        const doc = await db.collection('configs').doc('global').get();
+        if(doc.exists) {
+          appState = JSON.parse(doc.data().data);
+          saveLocal();
+          handleCategoryChange();
+          alert("Datos descargados.");
+        }
+      } catch (e) { alert(e.message); }
+    }
+
+    const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
+
+    function switchTab(view) {
+      document.getElementById('viewCalc').classList.toggle('hidden', view !== 'calc');
+      document.getElementById('viewConfig').classList.toggle('hidden', view !== 'config');
+      document.getElementById('btnTabCalc').classList.toggle('active', view === 'calc');
+      document.getElementById('btnTabConfig').classList.toggle('active', view === 'config');
+    }
+
+    function toggleManualMargin() {
+      document.getElementById('manualMarginWrap').classList.toggle('hidden');
+      runCalculations();
+    }
+
+    function handleCategoryChange() {
+      const category = document.getElementById('calcCategory').value;
+      const opSel = document.getElementById('calcOportunidad');
+      opSel.innerHTML = '<option value="">— Ninguno —</option>';
+      const items = appState.oportunidades[category] || [];
+      items.forEach(o => { opSel.innerHTML += `<option value="${o.name}">${o.name} (${o.m}%)</option>`; });
+      runCalculations();
+    }
+
+    function saveLocal() { localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState)); }
+
+    function resetToDefaults() {
+      if(confirm("¿Restablecer todo?")) {
+        appState = { margins: JSON.parse(JSON.stringify(CONFIG.DEFAULT_MARGINS)), oportunidades: JSON.parse(JSON.stringify(CONFIG.OPORTUNIDADES)) };
+        saveLocal();
+        location.reload();
       }
     }
 
-    document.addEventListener('DOMContentLoaded', function(){
-      setTimeout(colorIEPSOptions, 500);
-    });
-
-    document.addEventListener('change', function(e){
-      if(e.target && e.target.id === 'iepsSelect'){
-        colorIEPSOptions();
-      }
-    });
+    window.onload = () => {
+      const local = localStorage.getItem(CONFIG.LS_KEY);
+      if(local) appState = JSON.parse(local);
+      
+      const iepsSel = document.getElementById('calcIeps');
+      iepsSel.innerHTML = `<option value="none">Sin IEPS (0%)</option><option value="azul" style="color:blue">Etiqueta Azul (6%)</option><option value="amarilla" style="color:orange">Etiqueta Amarilla (7%)</option><option value="roja" style="color:red">Etiqueta Roja (9%)</option>`;
+      
+      lucide.createIcons();
+      handleCategoryChange();
+    };
   </script>
-<script>
-(() => {
-  // =========================
-  // Config
-  // =========================
-  const KEY = (window.LS_KEY || "calc_cfg_per_cat_v3_mrules"); // tu localStorage key
-  const DOC_PATH = { col: "appConfig", doc: "global" };
-
-  // Debe existir firebase + auth + db (ya los pusiste arriba)
-  if (!window.firebase || !window.auth || !window.db) {
-    console.warn("Firebase/auth/db no están listos todavía.");
-    return;
-  }
-
-  // =========================
-  // UI flotante (login + sync)
-  // =========================
-  const panel = document.createElement("div");
-  panel.style.cssText = `
-    position:fixed; right:14px; bottom:14px; z-index:999999;
-    width:320px; padding:12px; border-radius:12px;
-    background:#ffffff; box-shadow:0 10px 35px rgba(0,0,0,.18);
-    font-family:system-ui, -apple-system, Segoe UI, Roboto, Arial;
-    border:1px solid rgba(0,0,0,.08);
-  `;
-  panel.innerHTML = `
-    <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
-      <div style="font-weight:700; font-size:14px;">☁️ Nube (Configuración)</div>
-      <button id="cfgClose" style="border:none;background:transparent;cursor:pointer;font-size:16px;">✕</button>
-    </div>
-
-    <div id="cfgState" style="margin-top:8px; font-size:12px; color:#333;">Estado: verificando…</div>
-
-    <div id="cfgAuthBox" style="margin-top:10px; display:grid; gap:8px;">
-      <input id="cfgEmail" type="email" placeholder="Correo" style="padding:9px;border:1px solid #ddd;border-radius:10px;">
-      <input id="cfgPass" type="password" placeholder="Contraseña" style="padding:9px;border:1px solid #ddd;border-radius:10px;">
-      <div style="display:flex; gap:8px;">
-        <button id="cfgLogin" style="flex:1; padding:9px; border-radius:10px; border:1px solid #0ea5e9; background:#0ea5e9; color:#fff; cursor:pointer;">Entrar</button>
-        <button id="cfgGoogle" style="flex:1; padding:9px; border-radius:10px; border:1px solid #111827; background:#111827; color:#fff; cursor:pointer;">Google</button>
-      </div>
-    </div>
-
-    <div id="cfgActions" style="margin-top:10px; display:none; gap:8px;">
-      <button id="cfgLoad" style="width:100%; padding:10px; border-radius:10px; border:1px solid #16a34a; background:#16a34a; color:#fff; cursor:pointer;">⬇️ Cargar de la nube</button>
-      <button id="cfgSave" style="width:100%; padding:10px; border-radius:10px; border:1px solid #2563eb; background:#2563eb; color:#fff; cursor:pointer;">⬆️ Guardar en la nube</button>
-      <button id="cfgLogout" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ef4444; background:#ef4444; color:#fff; cursor:pointer;">Salir</button>
-      <div style="font-size:11px; color:#555; line-height:1.35;">
-        Nota: “Cargar” reemplaza tus ajustes locales por los de la nube (y recarga la página).
-      </div>
-    </div>
-  `;
-  document.body.appendChild(panel);
-
-  const $ = (id) => panel.querySelector(id);
-
-  $("#cfgClose").onclick = () => panel.remove();
-
-  // =========================
-  // Firestore helpers
-  // =========================
-  const docRef = db.collection(DOC_PATH.col).doc(DOC_PATH.doc);
-
-  function getLocalRaw() {
-    return localStorage.getItem(KEY) || "";
-  }
-  function setLocalRaw(raw) {
-    localStorage.setItem(KEY, raw);
-  }
-
-  async function saveToCloud(reason = "manual") {
-    const raw = getLocalRaw();
-    if (!raw) throw new Error("No hay configuración local para guardar.");
-    await docRef.set(
-      {
-        raw,
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedReason: reason,
-        updatedBy: auth.currentUser ? auth.currentUser.uid : null,
-      },
-      { merge: true }
-    );
-    $("#cfgState").textContent = "Estado: ✅ Guardado en la nube";
-  }
-
-  async function loadFromCloud() {
-    const snap = await docRef.get();
-    if (!snap.exists) throw new Error("No existe config en nube todavía.");
-    const data = snap.data() || {};
-    if (!data.raw) throw new Error("La nube no trae 'raw'.");
-    setLocalRaw(data.raw);
-    $("#cfgState").textContent = "Estado: ✅ Cargado. Recargando…";
-    setTimeout(() => location.reload(), 600);
-  }
-
-  // =========================
-  // Auto-guardado: detecta cuando tu app guarda en localStorage
-  // =========================
-  let t = null;
-  const originalSetItem = localStorage.setItem.bind(localStorage);
-  localStorage.setItem = function (k, v) {
-    originalSetItem(k, v);
-
-    // Si tu app actualiza la configuración (KEY), disparar autoguardado (si hay sesión)
-    if (k === KEY && auth.currentUser) {
-      clearTimeout(t);
-      t = setTimeout(() => {
-        saveToCloud("auto").catch((e) => console.warn("Auto-save falló:", e));
-      }, 900);
-      $("#cfgState").textContent = "Estado: ✍️ Cambio detectado… (auto-guardado)";
-    }
-  };
-
-  // =========================
-  // Auth (correo/pass + Google)
-  // =========================
-  $("#cfgLogin").onclick = async () => {
-    try {
-      const email = $("#cfgEmail").value.trim();
-      const pass = $("#cfgPass").value;
-      await auth.signInWithEmailAndPassword(email, pass);
-    } catch (e) {
-      alert("Error al entrar: " + (e.message || e));
-    }
-  };
-
-  $("#cfgGoogle").onclick = async () => {
-    try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await auth.signInWithPopup(provider);
-    } catch (e) {
-      alert("Error Google: " + (e.message || e));
-    }
-  };
-
-  $("#cfgLogout").onclick = async () => {
-    try {
-      await auth.signOut();
-    } catch (e) {
-      alert("Error al salir: " + (e.message || e));
-    }
-  };
-
-  $("#cfgSave").onclick = async () => {
-    try {
-      $("#cfgState").textContent = "Estado: guardando…";
-      await saveToCloud("manual");
-    } catch (e) {
-      alert("No se pudo guardar: " + (e.message || e));
-    }
-  };
-
-  $("#cfgLoad").onclick = async () => {
-    if (!confirm("Esto va a reemplazar tus ajustes locales por los de la nube. ¿Continuar?")) return;
-    try {
-      $("#cfgState").textContent = "Estado: cargando…";
-      await loadFromCloud();
-    } catch (e) {
-      alert("No se pudo cargar: " + (e.message || e));
-    }
-  };
-
-  auth.onAuthStateChanged(async (user) => {
-    if (user) {
-      $("#cfgAuthBox").style.display = "none";
-      $("#cfgActions").style.display = "grid";
-      $("#cfgState").textContent = "Estado: ✅ Sesión iniciada (" + user.email + ")";
-    } else {
-      $("#cfgAuthBox").style.display = "grid";
-      $("#cfgActions").style.display = "none";
-      $("#cfgState").textContent = "Estado: 🔒 Inicia sesión para sincronizar";
-    }
-  });
-})();
-</script>
-
 </body>
 </html>
