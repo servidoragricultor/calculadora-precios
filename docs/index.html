@@ -114,6 +114,8 @@
                 <th class="pb-3">Nivel</th>
                 <th class="pb-3">Cant. Min.</th>
                 <th class="pb-3">Unitario</th>
+                <th class="pb-3">Precio Total</th>
+                <th class="pb-3">Ganancia Total</th>
                 <th class="pb-3 text-right">Margen %</th>
               </tr>
             </thead>
@@ -129,15 +131,6 @@
             <span id="resBadge" class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Margen saludable</span>
           </div>
 
-          <div class="bg-[#22c55e] rounded-3xl p-6 text-white text-center shadow-lg shadow-green-100 mb-4">
-            <p class="text-[10px] font-bold uppercase tracking-widest opacity-90">Precio de Venta Final</p>
-            <div class="flex justify-center items-start gap-1 mt-1">
-              <span id="resFinalPrice" class="text-5xl font-black tracking-tighter">$0.00</span>
-              <span class="text-sm font-bold mt-2">MXN</span>
-            </div>
-            <p id="resIvaNote" class="text-[10px] mt-2 opacity-80 italic">(Sin IVA en costo)</p>
-          </div>
-
           <div class="bg-white border border-gray-50 rounded-2xl p-4 flex items-center gap-4 shadow-sm mb-4">
             <div id="resCatIcon" class="text-3xl">🌿</div>
             <div>
@@ -149,6 +142,24 @@
           <div class="grid grid-cols-2 gap-2 mb-6">
             <img id="resImg1" src="" class="w-full h-20 object-cover rounded-xl border border-gray-50 bg-gray-50">
             <img id="resImg2" src="" class="w-full h-20 object-cover rounded-xl border border-gray-50 bg-gray-50">
+          </div>
+
+          <div class="bg-[#22c55e] rounded-3xl p-6 text-white text-center shadow-lg shadow-green-100 mb-4">
+            <p class="text-[10px] font-bold uppercase tracking-widest opacity-90">Precio de Venta Final</p>
+            <div class="flex justify-center items-start gap-1 mt-1">
+              <span id="resFinalPrice" class="text-5xl font-black tracking-tighter">$0.00</span>
+              <span class="text-sm font-bold mt-2">MXN</span>
+            </div>
+            <p id="resIvaNote" class="text-[10px] mt-2 opacity-80 italic">(Sin IVA en costo)</p>
+          </div>
+
+          <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 shadow-sm">
+            <h4 class="text-[10px] font-black text-blue-800 uppercase tracking-widest mb-3 flex items-center gap-1">
+              <i data-lucide="brain" class="w-4 h-4"></i> Precios Sugeridos
+            </h4>
+            <div id="resPsychPrices" class="grid grid-cols-3 gap-2">
+              </div>
+            <p class="text-[9px] text-blue-500 mt-2 text-center italic leading-tight">Usa estas opciones visuales para aumentar conversiones.</p>
           </div>
 
           <div class="space-y-3 text-xs font-bold">
@@ -183,31 +194,52 @@
     </main>
 
     <div id="viewConfig" class="hidden animate-fade-in space-y-10">
-      <div class="bg-white rounded-3xl p-8 border-2 border-green-50 shadow-sm">
-        <h2 class="text-xl font-black text-gray-800 uppercase italic mb-6 flex items-center gap-2">
-           <i data-lucide="folder-edit" class="text-green-600"></i> Gestión de Categorías
-        </h2>
-        <div id="categoryManager" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
-        <button onclick="addNewCategory()" class="bg-gray-800 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-black transition shadow-lg">+ Agregar Categoría</button>
-      </div>
-
-      <div class="bg-white rounded-3xl p-8 border shadow-sm border-2 border-orange-50 mb-6">
-        <h2 class="text-xl font-black text-gray-800 uppercase italic mb-6 flex items-center gap-2">
-           <i data-lucide="layers" class="text-orange-500"></i> Escalas de Precio (PRECIO 1 - 4)
-        </h2>
-        <div id="volumeConfigContainer" class="grid grid-cols-1 md:grid-cols-4 gap-4"></div>
-      </div>
-
-      <div class="bg-white rounded-3xl p-8 border shadow-sm">
-        <div class="flex justify-between items-center mb-8">
-          <h2 class="text-xl font-black text-gray-800 uppercase italic">Editor de Márgenes</h2>
-          <div class="flex gap-3">
-            <button onclick="saveAllConfig()" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg"><i data-lucide="save" class="w-4 h-4"></i> Guardar Todo</button>
-            <button onclick="resetToDefaults()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold border border-red-100 text-xs">Restablecer</button>
-          </div>
+      
+      <div class="bg-white rounded-3xl p-8 border-2 border-green-50 shadow-sm transition-all duration-300">
+        <div class="flex justify-between items-center cursor-pointer" onclick="toggleCategoryManager()">
+          <h2 class="text-xl font-black text-gray-800 uppercase italic flex items-center gap-2">
+             <i data-lucide="folder-edit" class="text-green-600"></i> Gestión de Categorías
+          </h2>
+          <button id="cat-toggle-btn" class="text-gray-400 hover:text-gray-800">
+            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+          </button>
         </div>
-        <div id="configContainer" class="grid md:grid-cols-2 gap-8"></div>
+        <div id="category-manager-content" class="hidden transition-all duration-300 mt-6">
+          <div id="categoryManager" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"></div>
+          <button onclick="addNewCategory()" class="bg-gray-800 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-black transition shadow-lg">+ Agregar Categoría</button>
+        </div>
       </div>
+
+      <div class="bg-white rounded-3xl p-8 border shadow-sm border-2 border-orange-50 mb-6 transition-all duration-300">
+        <div class="flex justify-between items-center cursor-pointer" onclick="toggleVolumeManager()">
+          <h2 class="text-xl font-black text-gray-800 uppercase italic flex items-center gap-2">
+             <i data-lucide="layers" class="text-orange-500"></i> Escalas de Precio (PRECIO 1 - 4)
+          </h2>
+          <button id="vol-toggle-btn" class="text-gray-400 hover:text-gray-800">
+            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div id="volume-manager-content" class="hidden transition-all duration-300 mt-6">
+          <div id="volumeConfigContainer" class="grid grid-cols-1 md:grid-cols-4 gap-4"></div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl p-8 border shadow-sm transition-all duration-300">
+        <div class="flex justify-between items-center cursor-pointer" onclick="toggleMarginManager()">
+          <h2 class="text-xl font-black text-gray-800 uppercase italic">Editor de Márgenes</h2>
+          <button id="margin-toggle-btn" class="text-gray-400 hover:text-gray-800">
+            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+          </button>
+        </div>
+        <div id="margin-manager-content" class="hidden transition-all duration-300 mt-8">
+          <div class="flex gap-3 mb-6">
+            <button onclick="saveAllConfig()" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:bg-green-700 transition"><i data-lucide="save" class="w-4 h-4"></i> Guardar Todo</button>
+            <button onclick="resetToDefaults()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold border border-red-100 text-xs hover:bg-red-100 transition">Restablecer</button>
+          </div>
+          <div id="configContainer" class="grid md:grid-cols-2 gap-8"></div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -261,7 +293,8 @@
         { label: "PRECIO 2", qty: 10, discount: 3 },
         { label: "PRECIO 3", qty: 50, discount: 5 },
         { label: "PRECIO 4", qty: 100, discount: 8 }
-      ]
+      ],
+      categoryMetadata: {} 
     };
 
     function runCalculations() {
@@ -292,16 +325,52 @@
 
     function updateMainUI(d) {
       const cat = document.getElementById('calcCategory').value;
-      const info = CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: ["",""] };
+      
+      let customMeta = null;
+      if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
+        customMeta = appState.categoryMetadata[cat];
+      }
+
+      const info = customMeta || CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: ["", ""] };
+      const fallbackImg = "https://via.placeholder.com/300x150/f9fafb/9ca3af?text=Sin+Imagen";
+      
+      const img1 = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "") ? info.imgs[0] : fallbackImg;
+      const img2 = (info.imgs && info.imgs[1] && info.imgs[1].trim() !== "") ? info.imgs[1] : fallbackImg;
 
       document.getElementById('resCatTitle').textContent = cat;
-      document.getElementById('resCatIcon').textContent = info.icon;
-      document.getElementById('resCatDesc').textContent = info.desc;
-      document.getElementById('resImg1').src = info.imgs[0];
-      document.getElementById('resImg2').src = info.imgs[1];
+      document.getElementById('resCatIcon').textContent = info.icon || "📦";
+      document.getElementById('resCatDesc').textContent = info.desc || "Categoría general";
+      document.getElementById('resImg1').src = img1;
+      document.getElementById('resImg2').src = img2;
 
       document.getElementById('resFinalPrice').textContent = fmt$(d.finalPrice).replace('$', '');
       document.getElementById('resIvaNote').textContent = d.includeIva ? "(IVA incluido en costo)" : "(Sin IVA en costo)";
+
+      // PRECIOS PSICOLÓGICOS
+      const p = d.finalPrice;
+      
+      let charm1 = (Math.floor(p / 10) * 10) - 1; // Agresivo (Terminación 9 inferior)
+      if(charm1 <= 0) charm1 = 9;
+      
+      let charm2 = (Math.floor(p / 10) * 10) + 5; // Comercial (Terminación 5)
+      
+      let charm3 = (Math.ceil(p / 10) * 10) - 1; // Margen + (Terminación 9 superior)
+      if(charm3 === charm1) charm3 += 10; 
+
+      document.getElementById('resPsychPrices').innerHTML = `
+        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
+          <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Agresivo</span>
+          <span class="font-black text-blue-700 text-sm">${fmt$(charm1).replace('$','')}</span>
+        </div>
+        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
+          <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Comercial</span>
+          <span class="font-black text-blue-700 text-sm">${fmt$(charm2).replace('$','')}</span>
+        </div>
+        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
+          <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Margen +</span>
+          <span class="font-black text-blue-700 text-sm">${fmt$(charm3).replace('$','')}</span>
+        </div>
+      `;
 
       const badge = document.getElementById('resBadge');
       if (d.marginPct >= 25) { badge.className = "bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen saludable"; }
@@ -324,11 +393,16 @@
         let p = basePVP * (1 - tier.discount / 100);
         let margin = p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0;
         
+        let totalPrice = p * tier.qty; 
+        let totalProfit = (p - cost) * tier.qty; 
+        
         container.innerHTML += `
           <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
             <td class="py-3 text-xs text-green-700 font-black uppercase tracking-wider">${tier.label}</td>
             <td class="py-3 text-gray-500 font-bold">≥ ${tier.qty} pz</td>
             <td class="py-3 font-black text-gray-800 text-base">${fmt$(p)}</td>
+            <td class="py-3 font-black text-blue-600">${fmt$(totalPrice)}</td>
+            <td class="py-3 font-black text-green-600">${fmt$(totalProfit)}</td>
             <td class="py-3 text-right text-gray-400 font-bold">${margin}%</td>
           </tr>
         `;
@@ -339,10 +413,53 @@
       const container = document.getElementById('categoryManager');
       container.innerHTML = '';
       appState.categories.forEach((cat, index) => {
-        container.innerHTML += `<div class="flex items-center gap-2 bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm"><input type="text" value="${cat}" onchange="renameCategory(${index}, this.value)" class="bg-transparent font-black text-sm w-full outline-none text-gray-700 focus:text-green-600"><button onclick="removeCategory(${index})" class="text-red-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div>`;
+        
+        let meta = { icon: "📦", desc: "", imgs: ["", ""] };
+        if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
+           meta = appState.categoryMetadata[cat];
+        } else if (CATEGORY_INFO[cat]) {
+           meta = { ...CATEGORY_INFO[cat] };
+        }
+
+        container.innerHTML += `
+          <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-green-400"></div>
+            <div class="flex items-center gap-2 pl-2">
+              <input type="text" value="${cat}" onchange="renameCategory(${index}, this.value)" class="bg-transparent font-black text-sm w-full outline-none text-gray-700 focus:text-green-600">
+              <button onclick="removeCategory(${index})" class="text-red-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+            <div class="grid grid-cols-2 gap-2 pl-2">
+              <input type="text" placeholder="Icono (ej: 🍎)" value="${meta.icon}" onchange="updateMeta('${cat}', 'icon', this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400">
+              <input type="text" placeholder="Descripción corta" value="${meta.desc}" onchange="updateMeta('${cat}', 'desc', this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400">
+            </div>
+            <div class="pl-2 space-y-2">
+              <input type="text" placeholder="Link de Imagen 1" value="${meta.imgs[0] || ''}" onchange="updateMetaImg('${cat}', 0, this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400">
+              <input type="text" placeholder="Link de Imagen 2" value="${meta.imgs[1] || ''}" onchange="updateMetaImg('${cat}', 1, this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400">
+            </div>
+          </div>`;
       });
       lucide.createIcons();
       updateCategoryDropdowns();
+    }
+
+    function updateMeta(cat, field, val) {
+      if(!appState.categoryMetadata) appState.categoryMetadata = {};
+      if(!appState.categoryMetadata[cat]) {
+        appState.categoryMetadata[cat] = CATEGORY_INFO[cat] ? { ...CATEGORY_INFO[cat] } : { icon: "📦", desc: "", imgs: ["", ""] };
+      }
+      appState.categoryMetadata[cat][field] = val;
+      saveLocal();
+      runCalculations();
+    }
+
+    function updateMetaImg(cat, idx, val) {
+      if(!appState.categoryMetadata) appState.categoryMetadata = {};
+      if(!appState.categoryMetadata[cat]) {
+        appState.categoryMetadata[cat] = CATEGORY_INFO[cat] ? { ...CATEGORY_INFO[cat] } : { icon: "📦", desc: "", imgs: ["", ""] };
+      }
+      appState.categoryMetadata[cat].imgs[idx] = val;
+      saveLocal();
+      runCalculations();
     }
 
     function addNewCategory() {
@@ -352,11 +469,32 @@
 
     function renameCategory(index, newName) {
       const old = appState.categories[index];
-      if (newName && old !== newName) { appState.categories[index] = newName; appState.margins[newName] = appState.margins[old]; delete appState.margins[old]; updateCategoryDropdowns(); renderConfigTables(); saveLocal(); }
+      if (newName && old !== newName) { 
+        appState.categories[index] = newName; 
+        appState.margins[newName] = appState.margins[old]; 
+        delete appState.margins[old]; 
+        
+        if (appState.categoryMetadata && appState.categoryMetadata[old]) {
+          appState.categoryMetadata[newName] = appState.categoryMetadata[old];
+          delete appState.categoryMetadata[old];
+        }
+
+        updateCategoryDropdowns(); 
+        renderConfigTables(); 
+        saveLocal(); 
+      }
     }
 
     function removeCategory(index) {
-      if (confirm("¿Borrar?")) { const name = appState.categories[index]; appState.categories.splice(index, 1); delete appState.margins[name]; renderCategoryManager(); renderConfigTables(); saveLocal(); }
+      if (confirm("¿Borrar?")) { 
+        const name = appState.categories[index]; 
+        appState.categories.splice(index, 1); 
+        delete appState.margins[name]; 
+        if (appState.categoryMetadata) delete appState.categoryMetadata[name];
+        renderCategoryManager(); 
+        renderConfigTables(); 
+        saveLocal(); 
+      }
     }
 
     function renderConfigTables() {
@@ -418,7 +556,39 @@
       }
     }
 
-    // NUEVA FUNCIÓN PARA MINIMIZAR/MAXIMIZAR EL PANEL DE LA NUBE
+    function toggleCategoryManager() {
+      const content = document.getElementById('category-manager-content');
+      const btn = document.getElementById('cat-toggle-btn');
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+      } else {
+        content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+      }
+      lucide.createIcons();
+    }
+
+    function toggleVolumeManager() {
+      const content = document.getElementById('volume-manager-content');
+      const btn = document.getElementById('vol-toggle-btn');
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+      } else {
+        content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+      }
+      lucide.createIcons();
+    }
+
+    function toggleMarginManager() {
+      const content = document.getElementById('margin-manager-content');
+      const btn = document.getElementById('margin-toggle-btn');
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+      } else {
+        content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+      }
+      lucide.createIcons();
+    }
+
     function toggleCloudPanel() {
       const content = document.getElementById('cloud-panel-content');
       const header = document.getElementById('cloud-header');
@@ -470,6 +640,7 @@
                { label: "PRECIO 4", qty: 100, discount: 8 }
              ];
           }
+          if (!p.categoryMetadata) p.categoryMetadata = {};
           appState = p;
         } catch (e) { console.error(e); }
       }
