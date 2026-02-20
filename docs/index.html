@@ -5,11 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Calculadora Pro | La Esquina del Agricultor</title>
   
-  <!-- Frameworks -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- Firebase SDK (Compat v8) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -66,7 +64,6 @@
       <button onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-2 py-3 uppercase">Configuración</button>
     </nav>
 
-    <!-- ======= VISTA CALCULADORA ======= -->
     <main id="viewCalc" class="grid lg:grid-cols-3 gap-8 animate-fade-in">
       <section class="lg:col-span-2 space-y-6">
         <div class="bg-white shadow-sm rounded-3xl p-8 border border-gray-100">
@@ -107,16 +104,15 @@
           </div>
         </div>
 
-        <!-- Tabla Escalas -->
         <div class="bg-white shadow-sm rounded-3xl p-8 border border-gray-100">
           <div class="flex justify-between items-center mb-6">
-            <h3 class="font-black text-gray-800 uppercase text-xs tracking-widest">Escalas de Volumen</h3>
-            <input type="text" id="calcScaleQty" value="1, 10, 50, 100" class="text-xs border rounded-lg px-3 py-1 w-40 font-bold text-green-700" oninput="runCalculations()">
+            <h3 class="font-black text-gray-800 uppercase text-xs tracking-widest">Escalas de Volumen (Precios)</h3>
           </div>
           <table class="w-full text-sm">
             <thead>
               <tr class="text-gray-400 border-b uppercase text-[10px] text-left font-black">
-                <th class="pb-3">Cant.</th>
+                <th class="pb-3">Nivel</th>
+                <th class="pb-3">Cant. Min.</th>
                 <th class="pb-3">Unitario</th>
                 <th class="pb-3 text-right">Margen %</th>
               </tr>
@@ -126,7 +122,6 @@
         </div>
       </section>
 
-      <!-- ======= PANEL RESUMEN ======= -->
       <aside class="space-y-4 animate-fade-in">
         <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
           <div class="flex justify-between items-center mb-4">
@@ -187,7 +182,6 @@
       </aside>
     </main>
 
-    <!-- ======= VISTA CONFIGURACIÓN ======= -->
     <div id="viewConfig" class="hidden animate-fade-in space-y-10">
       <div class="bg-white rounded-3xl p-8 border-2 border-green-50 shadow-sm">
         <h2 class="text-xl font-black text-gray-800 uppercase italic mb-6 flex items-center gap-2">
@@ -195,6 +189,13 @@
         </h2>
         <div id="categoryManager" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6"></div>
         <button onclick="addNewCategory()" class="bg-gray-800 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-black transition shadow-lg">+ Agregar Categoría</button>
+      </div>
+
+      <div class="bg-white rounded-3xl p-8 border shadow-sm border-2 border-orange-50 mb-6">
+        <h2 class="text-xl font-black text-gray-800 uppercase italic mb-6 flex items-center gap-2">
+           <i data-lucide="layers" class="text-orange-500"></i> Escalas de Precio (PRECIO 1 - 4)
+        </h2>
+        <div id="volumeConfigContainer" class="grid grid-cols-1 md:grid-cols-4 gap-4"></div>
       </div>
 
       <div class="bg-white rounded-3xl p-8 border shadow-sm">
@@ -210,17 +211,28 @@
     </div>
   </div>
 
-  <div id="cloud-panel" class="p-5">
-    <div class="flex items-center gap-2 mb-4 border-b pb-2"><div class="w-2.5 h-2.5 rounded-full bg-gray-300" id="auth-status-dot"></div><span class="text-[10px] font-black text-gray-400 uppercase tracking-widest" id="auth-status-text">Offline</span></div>
-    <div id="auth-form" class="space-y-3">
-      <input type="email" id="fb-email" placeholder="Email" class="text-xs border w-full p-2.5 rounded-lg">
-      <input type="password" id="fb-pass" placeholder="Password" class="text-xs border w-full p-2.5 rounded-lg">
-      <button onclick="handleLogin()" class="w-full bg-blue-600 text-white text-xs py-2.5 rounded-lg font-black uppercase shadow-lg shadow-blue-50">Entrar</button>
+  <div id="cloud-panel" class="p-4 transition-all duration-300">
+    <div class="flex items-center justify-between cursor-pointer" onclick="toggleCloudPanel()" id="cloud-header">
+      <div class="flex items-center gap-2">
+        <div class="w-2.5 h-2.5 rounded-full bg-gray-300" id="auth-status-dot"></div>
+        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest" id="auth-status-text">Offline</span>
+      </div>
+      <button id="cloud-toggle-btn" class="text-gray-400 hover:text-gray-800">
+        <i data-lucide="chevron-up" class="w-4 h-4"></i>
+      </button>
     </div>
-    <div id="cloud-actions" class="hidden space-y-3">
-      <button onclick="syncToCloud()" class="w-full bg-green-600 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Guardar en Nube</button>
-      <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2"><i data-lucide="download-cloud" class="w-4 h-4"></i> Bajar de Nube</button>
-      <button onclick="auth.signOut()" class="w-full text-red-500 text-[10px] font-black mt-4 uppercase">Salir</button>
+    
+    <div id="cloud-panel-content" class="mt-4 hidden transition-all duration-300">
+      <div id="auth-form" class="space-y-3">
+        <input type="email" id="fb-email" placeholder="Email" class="text-xs border w-full p-2.5 rounded-lg">
+        <input type="password" id="fb-pass" placeholder="Password" class="text-xs border w-full p-2.5 rounded-lg">
+        <button onclick="handleLogin()" class="w-full bg-blue-600 text-white text-xs py-2.5 rounded-lg font-black uppercase shadow-lg shadow-blue-50">Entrar</button>
+      </div>
+      <div id="cloud-actions" class="hidden space-y-3">
+        <button onclick="syncToCloud()" class="w-full bg-green-600 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Guardar en Nube</button>
+        <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2"><i data-lucide="download-cloud" class="w-4 h-4"></i> Bajar de Nube</button>
+        <button onclick="auth.signOut()" class="w-full text-red-500 text-[10px] font-black mt-4 uppercase">Salir</button>
+      </div>
     </div>
   </div>
 
@@ -243,7 +255,13 @@
 
     let appState = {
       categories: [...CONFIG.DEFAULT_CATS],
-      margins: { Agroquimicos: [{max: 400, m: 27}, {max: Infinity, m: 17}], Granel: [{max: Infinity, m: 40}], "KG-LT": [{max: Infinity, m: 20}], FERTILIZANTES: [{max: Infinity, m: 15}], INOCUIDAD: [{max: Infinity, m: 20}], MAQUINARIA: [{max: Infinity, m: 10}] }
+      margins: { Agroquimicos: [{max: 400, m: 27}, {max: Infinity, m: 17}], Granel: [{max: Infinity, m: 40}], "KG-LT": [{max: Infinity, m: 20}], FERTILIZANTES: [{max: Infinity, m: 15}], INOCUIDAD: [{max: Infinity, m: 20}], MAQUINARIA: [{max: Infinity, m: 10}] },
+      volumeConfig: [
+        { label: "PRECIO 1", qty: 1, discount: 0 },
+        { label: "PRECIO 2", qty: 10, discount: 3 },
+        { label: "PRECIO 3", qty: 50, discount: 5 },
+        { label: "PRECIO 4", qty: 100, discount: 8 }
+      ]
     };
 
     function runCalculations() {
@@ -300,12 +318,20 @@
 
     function updateScales(cost, basePVP) {
       const container = document.getElementById('scaleTableBody');
-      const qtys = document.getElementById('calcScaleQty').value.split(',').map(n => parseFloat(n.trim())).filter(n => !isNaN(n));
       container.innerHTML = '';
-      qtys.forEach(q => {
-        let disc = q >= 100 ? 8 : (q >= 50 ? 5 : (q >= 10 ? 3 : 0));
-        let p = basePVP * (1 - disc/100);
-        container.innerHTML += `<tr><td class="py-2 text-gray-400 font-bold">${q}</td><td class="font-black text-gray-800">${fmt$(p)}</td><td class="text-right text-gray-700 font-bold">${p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0}%</td></tr>`;
+      
+      appState.volumeConfig.forEach(tier => {
+        let p = basePVP * (1 - tier.discount / 100);
+        let margin = p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0;
+        
+        container.innerHTML += `
+          <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+            <td class="py-3 text-xs text-green-700 font-black uppercase tracking-wider">${tier.label}</td>
+            <td class="py-3 text-gray-500 font-bold">≥ ${tier.qty} pz</td>
+            <td class="py-3 font-black text-gray-800 text-base">${fmt$(p)}</td>
+            <td class="py-3 text-right text-gray-400 font-bold">${margin}%</td>
+          </tr>
+        `;
       });
     }
 
@@ -351,12 +377,63 @@
     function removeMarginRow(cat, idx) { appState.margins[cat].splice(idx, 1); renderConfigTables(); }
     function updateMarginRule(cat, idx, field, val) { appState.margins[cat][idx][field] = val === '' ? Infinity : parseFloat(val); }
 
+    function renderVolumeConfig() {
+      const container = document.getElementById('volumeConfigContainer');
+      container.innerHTML = '';
+      appState.volumeConfig.forEach((tier, idx) => {
+        container.innerHTML += `
+          <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
+            <h4 class="font-black text-gray-800 text-sm mb-3 ml-2">${tier.label}</h4>
+            <div class="space-y-3 ml-2">
+              <div>
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">A partir de (Piezas)</label>
+                <input type="number" value="${tier.qty}" onchange="updateVolumeTier(${idx}, 'qty', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs bg-white focus:ring-2 focus:ring-orange-200 outline-none">
+              </div>
+              <div>
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">% Descuento</label>
+                <input type="number" value="${tier.discount}" onchange="updateVolumeTier(${idx}, 'discount', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs text-orange-600 bg-white focus:ring-2 focus:ring-orange-200 outline-none">
+              </div>
+            </div>
+          </div>
+        `;
+      });
+    }
+
+    function updateVolumeTier(idx, field, value) {
+      appState.volumeConfig[idx][field] = parseFloat(value) || 0;
+      saveLocal();
+      runCalculations(); 
+    }
+
     function switchTab(view) {
       document.getElementById('viewCalc').classList.toggle('hidden', view !== 'calc');
       document.getElementById('viewConfig').classList.toggle('hidden', view !== 'config');
       document.getElementById('btnTabCalc').classList.toggle('active', view === 'calc');
       document.getElementById('btnTabConfig').classList.toggle('active', view === 'config');
-      if(view === 'config') { renderCategoryManager(); renderConfigTables(); }
+      if(view === 'config') { 
+        renderCategoryManager(); 
+        renderConfigTables(); 
+        renderVolumeConfig();
+      }
+    }
+
+    // NUEVA FUNCIÓN PARA MINIMIZAR/MAXIMIZAR EL PANEL DE LA NUBE
+    function toggleCloudPanel() {
+      const content = document.getElementById('cloud-panel-content');
+      const header = document.getElementById('cloud-header');
+      const btn = document.getElementById('cloud-toggle-btn');
+      
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        header.classList.add('border-b', 'pb-2');
+        btn.innerHTML = '<i data-lucide="chevron-down" class="w-4 h-4"></i>';
+      } else {
+        content.classList.add('hidden');
+        header.classList.remove('border-b', 'pb-2');
+        btn.innerHTML = '<i data-lucide="chevron-up" class="w-4 h-4"></i>';
+      }
+      lucide.createIcons();
     }
 
     const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
@@ -385,6 +462,14 @@
           const p = JSON.parse(local);
           if (!p.categories) p.categories = [...CONFIG.DEFAULT_CATS];
           if (!p.margins) p.margins = {};
+          if (!p.volumeConfig) {
+             p.volumeConfig = [
+               { label: "PRECIO 1", qty: 1, discount: 0 },
+               { label: "PRECIO 2", qty: 10, discount: 3 },
+               { label: "PRECIO 3", qty: 50, discount: 5 },
+               { label: "PRECIO 4", qty: 100, discount: 8 }
+             ];
+          }
           appState = p;
         } catch (e) { console.error(e); }
       }
