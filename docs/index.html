@@ -247,6 +247,109 @@
         </div>
       </div>
 
+      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 border border-blue-100 shadow-sm transition-all duration-300">
+        <div class="flex justify-between items-center cursor-pointer" onclick="toggleBulkAssistant()">
+          <h2 class="text-xl font-black text-blue-800 uppercase italic flex items-center gap-2">
+             <i data-lucide="flask-conical" class="text-blue-600"></i> Asistente IA para Venta a Granel
+          </h2>
+          <button id="bulk-toggle-btn" class="text-blue-400 hover:text-blue-800">
+            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+          </button>
+        </div>
+        
+        <div id="bulk-assistant-content" class="hidden transition-all duration-300 mt-6 space-y-6">
+          <p class="text-xs text-blue-700 font-medium">El algoritmo analizará tus límites de precios para sugerirte una curva comercial perfecta. Evitará que vendas volúmenes grandes más caros que el envase completo, garantizando que el cliente prefiera llevarse el granel pero protegiendo tu margen.</p>
+          
+          <div class="grid md:grid-cols-3 gap-4 bg-white p-5 rounded-xl shadow-sm border border-blue-100 mb-2 relative">
+            <div>
+              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tamaño Envase Completo</label>
+              <div class="relative mt-2">
+                <input type="number" id="asstFullQty" value="1000" placeholder="Ej: 1000" class="w-full pl-3 pr-10 p-3 border border-blue-200 rounded-xl font-bold text-lg text-blue-700 focus:ring-2 focus:ring-blue-300 outline-none">
+                <span class="absolute right-3 top-3 text-gray-400 text-sm font-bold">ml/g</span>
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Precio Envase Completo</label>
+              <div class="relative mt-2">
+                <span class="absolute left-3 top-3 text-blue-400 font-bold">$</span>
+                <input type="number" id="asstFullPrice" value="500" placeholder="Ej: 500" class="w-full pl-8 p-3 border border-blue-200 rounded-xl font-bold text-lg text-blue-700 focus:ring-2 focus:ring-blue-300 outline-none">
+              </div>
+            </div>
+            <div>
+              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex justify-between items-center">
+                Precio 1 Unidad (Auto)
+                <i data-lucide="lock" class="w-3 h-3 text-gray-400"></i>
+              </label>
+              <div class="relative mt-2">
+                <span class="absolute left-3 top-3 text-gray-500 font-bold">$</span>
+                <input type="number" id="asstBasePrice" readonly title="Este precio se toma automáticamente de la Calculadora principal" class="w-full pl-8 p-3 border border-gray-200 rounded-xl font-bold text-lg text-gray-600 bg-gray-100 outline-none cursor-not-allowed">
+              </div>
+            </div>
+          </div>
+
+          <div class="flex justify-end">
+             <button onclick="suggestBulkPrices()" class="bg-indigo-100 text-indigo-700 font-black uppercase text-[10px] px-6 py-3 rounded-xl shadow-sm hover:bg-indigo-200 transition border border-indigo-200 flex items-center gap-2">
+              <i data-lucide="sparkles" class="w-4 h-4"></i> Calcular Sugerencias Inteligentes
+            </button>
+          </div>
+
+          <div class="grid md:grid-cols-3 gap-4 mt-2">
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-blue-100">
+              <h4 class="font-black text-blue-800 text-sm mb-4 border-b border-blue-50 pb-2">PRECIO 2</h4>
+              <div class="space-y-4">
+                <div>
+                  <label class="text-[10px] text-gray-400 uppercase font-black">Cantidad Mínima a Vender</label>
+                  <input type="number" id="asstQty2" value="600" class="w-full p-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-blue-300">
+                </div>
+                <div>
+                  <label class="text-[10px] text-gray-400 uppercase font-black">Cobrar en Total ($)</label>
+                  <div class="relative">
+                    <span class="absolute left-2 top-2 text-green-500 font-bold">$</span>
+                    <input type="number" id="asstTotal2" value="0" class="w-full pl-6 p-2 border border-gray-200 rounded-lg text-sm font-bold text-green-600 outline-none focus:border-green-300 bg-green-50">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-blue-100">
+              <h4 class="font-black text-blue-800 text-sm mb-4 border-b border-blue-50 pb-2">PRECIO 3</h4>
+              <div class="space-y-4">
+                <div>
+                  <label class="text-[10px] text-gray-400 uppercase font-black">Cantidad Mínima a Vender</label>
+                  <input type="number" id="asstQty3" value="700" class="w-full p-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-blue-300">
+                </div>
+                <div>
+                  <label class="text-[10px] text-gray-400 uppercase font-black">Cobrar en Total ($)</label>
+                  <div class="relative">
+                    <span class="absolute left-2 top-2 text-green-500 font-bold">$</span>
+                    <input type="number" id="asstTotal3" value="0" class="w-full pl-6 p-2 border border-gray-200 rounded-lg text-sm font-bold text-green-600 outline-none focus:border-green-300 bg-green-50">
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-blue-100">
+              <h4 class="font-black text-blue-800 text-sm mb-4 border-b border-blue-50 pb-2">PRECIO 4</h4>
+              <div class="space-y-4">
+                <div>
+                  <label class="text-[10px] text-gray-400 uppercase font-black">Cantidad Mínima a Vender</label>
+                  <input type="number" id="asstQty4" value="800" class="w-full p-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-blue-300">
+                </div>
+                <div>
+                  <label class="text-[10px] text-gray-400 uppercase font-black">Cobrar en Total ($)</label>
+                  <div class="relative">
+                    <span class="absolute left-2 top-2 text-green-500 font-bold">$</span>
+                    <input type="number" id="asstTotal4" value="0" class="w-full pl-6 p-2 border border-gray-200 rounded-lg text-sm font-bold text-green-600 outline-none focus:border-green-300 bg-green-50">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <button onclick="applyBulkStrategy()" class="w-full bg-blue-600 text-white font-black uppercase text-xs px-6 py-4 rounded-xl shadow-lg hover:bg-blue-700 transition flex justify-center items-center gap-2 mt-4">
+            <i data-lucide="check-circle" class="w-4 h-4"></i> Aplicar Curva de Descuentos
+          </button>
+        </div>
+      </div>
+
       <div class="bg-white rounded-3xl p-8 border shadow-sm border-2 border-orange-50 mb-6 transition-all duration-300">
         <div class="flex justify-between items-center cursor-pointer" onclick="toggleVolumeManager()">
           <h2 class="text-xl font-black text-gray-800 uppercase italic flex items-center gap-2">
@@ -349,14 +452,108 @@
       margins: { Agroquimicos: [{max: 400, m: 27}, {max: Infinity, m: 17}], Granel: [{max: Infinity, m: 40}], "KG-LT": [{max: Infinity, m: 20}], FERTILIZANTES: [{max: Infinity, m: 15}], INOCUIDAD: [{max: Infinity, m: 20}], MAQUINARIA: [{max: Infinity, m: 10}] },
       volumeConfig: [
         { label: "PRECIO 1", qty: 1, discount: 0 },
-        { label: "PRECIO 2", qty: 10, discount: 3 },
-        { label: "PRECIO 3", qty: 50, discount: 5 },
-        { label: "PRECIO 4", qty: 100, discount: 8 }
+        { label: "PRECIO 2", qty: 600, discount: 5 },
+        { label: "PRECIO 3", qty: 700, discount: 8 },
+        { label: "PRECIO 4", qty: 800, discount: 12 }
       ],
-      categoryMetadata: {} 
+      categoryMetadata: {},
+      currentPVP: 0 // <--- Variable temporal para guardar el precio real
     };
 
-    // ====== FUNCIONES MINI CALCULADORA ======
+    // ====== ASISTENTE A GRANEL INTELIGENTE ======
+    function toggleBulkAssistant() {
+      const content = document.getElementById('bulk-assistant-content');
+      const btn = document.getElementById('bulk-toggle-btn');
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+        
+        // AUTO-LLENAR CON EL PRECIO REAL DE LA CALCULADORA AL ABRIR
+        const priceText = document.getElementById('resFinalPrice').textContent;
+        if(priceText && priceText !== "0.00") {
+            const cleanPrice = parseFloat(priceText.replace(/,/g, ''));
+            document.getElementById('asstBasePrice').value = cleanPrice.toFixed(2);
+        }
+      } else {
+        content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+      }
+      lucide.createIcons();
+    }
+
+    function suggestBulkPrices() {
+      const pUnit = parseFloat(document.getElementById('asstBasePrice').value) || 0;
+      const pFull = parseFloat(document.getElementById('asstFullPrice').value) || 0;
+      const qFull = parseFloat(document.getElementById('asstFullQty').value) || 0;
+
+      if(pUnit <= 0 || pFull <= 0 || qFull <= 0) {
+        alert("Por favor llena los datos base del envase y precio unitario.");
+        return;
+      }
+
+      const unitFull = pFull / qFull;
+
+      [2, 3, 4].forEach(i => {
+        const q = parseFloat(document.getElementById(`asstQty${i}`).value) || 0;
+        if(q > 0) {
+          let totalQ = 0;
+          if (q >= qFull) {
+            totalQ = pFull; 
+          } else {
+            let unitQ = pUnit - (pUnit - unitFull) * (q / qFull);
+            totalQ = q * unitQ;
+            if(totalQ >= pFull) {
+              totalQ = pFull - 15; 
+            }
+          }
+          document.getElementById(`asstTotal${i}`).value = Math.round(totalQ);
+        }
+      });
+      alert("¡Sugerencias calculadas! Revisa los montos en verde. Si te gustan, da clic en 'Aplicar Curva de Descuentos'.");
+    }
+
+    function applyBulkStrategy() {
+      const basePrice = parseFloat(document.getElementById('asstBasePrice').value) || 1;
+      
+      const q2 = parseFloat(document.getElementById('asstQty2').value) || 600;
+      const t2 = parseFloat(document.getElementById('asstTotal2').value) || 0;
+      let d2 = 0;
+      if(basePrice * q2 > 0 && t2 > 0) d2 = (1 - (t2 / (basePrice * q2))) * 100;
+
+      const q3 = parseFloat(document.getElementById('asstQty3').value) || 700;
+      const t3 = parseFloat(document.getElementById('asstTotal3').value) || 0;
+      let d3 = 0;
+      if(basePrice * q3 > 0 && t3 > 0) d3 = (1 - (t3 / (basePrice * q3))) * 100;
+
+      const q4 = parseFloat(document.getElementById('asstQty4').value) || 800;
+      const t4 = parseFloat(document.getElementById('asstTotal4').value) || 0;
+      let d4 = 0;
+      if(basePrice * q4 > 0 && t4 > 0) d4 = (1 - (t4 / (basePrice * q4))) * 100;
+
+      if(t2 === 0 || t3 === 0 || t4 === 0) {
+        alert("Parece que tienes montos en $0. Primero da clic en 'Calcular Sugerencias Inteligentes'.");
+        return;
+      }
+
+      if(appState.volumeConfig[1]) {
+        appState.volumeConfig[1].qty = q2;
+        appState.volumeConfig[1].discount = Math.max(0, parseFloat(d2.toFixed(2)));
+      }
+      if(appState.volumeConfig[2]) {
+        appState.volumeConfig[2].qty = q3;
+        appState.volumeConfig[2].discount = Math.max(0, parseFloat(d3.toFixed(2)));
+      }
+      if(appState.volumeConfig[3]) {
+        appState.volumeConfig[3].qty = q4;
+        appState.volumeConfig[3].discount = Math.max(0, parseFloat(d4.toFixed(2)));
+      }
+
+      saveLocal();
+      renderVolumeConfig(); 
+      runCalculations();    
+      
+      alert("¡Listo! Tu estrategia de descuentos ha sido aplicada a tu calculadora principal.");
+    }
+    // =======================================
+
     function openFreightModal() {
       document.getElementById('freightModal').classList.remove('hidden');
       document.getElementById('modalFreightTotal').focus();
@@ -374,15 +571,12 @@
       const costPerPiece = total / pieces;
       
       document.getElementById('calcExtraCost').value = costPerPiece.toFixed(2);
-      
-      // Activa la casilla automáticamente
       document.getElementById('calcExtraToggle').checked = true;
       document.getElementById('extraCostWrap').classList.remove('hidden');
 
       closeFreightModal();
       runCalculations();
     }
-    // ========================================
 
     function toggleManualMargin() { 
       document.getElementById('manualMarginWrap').classList.toggle('hidden'); 
@@ -397,11 +591,8 @@
     function runCalculations() {
       const cat = document.getElementById('calcCategory').value;
       const baseCost = parseFloat(document.getElementById('calcBaseCost').value) || 0;
-      
-      // Verifica si la casilla de flete está marcada, si no, es 0
       const isExtra = document.getElementById('calcExtraToggle').checked;
       const extraCost = isExtra ? (parseFloat(document.getElementById('calcExtraCost').value) || 0) : 0; 
-      
       const iepsKey = document.getElementById('calcIeps').value;
       const isManual = document.getElementById('calcManualToggle').checked;
       const includeIva = document.getElementById('calcIvaToggle').checked;
@@ -420,14 +611,22 @@
       const ratio = Math.min(m/100, 0.99);
       const finalPrice = totalCost / (1 - ratio);
       
+      appState.currentPVP = finalPrice; // Guardamos el precio final para el Asistente
+
       updateMainUI({ finalPrice, profit: finalPrice - totalCost, marginPct: m, totalCost, baseCost, extraCost, iepsAmt, ivaAmt, includeIva });
       updateScales(totalCost, finalPrice);
+      
+      // Actualiza en vivo el asistente si está abierto
+      const asstBasePriceInput = document.getElementById('asstBasePrice');
+      if(asstBasePriceInput && finalPrice > 0) {
+          asstBasePriceInput.value = finalPrice.toFixed(2);
+      }
+      
       saveLocal();
     }
 
     function updateMainUI(d) {
       const cat = document.getElementById('calcCategory').value;
-      
       let customMeta = null;
       if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
         customMeta = appState.categoryMetadata[cat];
@@ -477,7 +676,6 @@
 
       document.getElementById('resSubtotal').textContent = fmt$(d.baseCost); 
       
-      // Mostrar u ocultar el renglón de Flete en el resumen
       const extraRow = document.getElementById('resExtraRow');
       if(d.extraCost > 0) {
         extraRow.classList.remove('hidden');
@@ -521,7 +719,6 @@
       const container = document.getElementById('categoryManager');
       container.innerHTML = '';
       appState.categories.forEach((cat, index) => {
-        
         let meta = { icon: "📦", desc: "", imgs: ["", ""] };
         if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
            meta = appState.categoryMetadata[cat];
@@ -718,6 +915,7 @@
     function saveLocal() { localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState)); }
     function saveAllConfig() { for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max); saveLocal(); runCalculations(); alert("Guardado."); }
     function updateCategoryDropdowns() { const select = document.getElementById('calcCategory'); select.innerHTML = ''; appState.categories.forEach(cat => { select.innerHTML += `<option value="${cat}">${cat}</option>`; }); }
+    function handleCategoryChange() { runCalculations(); }
 
     auth.onAuthStateChanged(user => {
       const actions = document.getElementById('cloud-actions');
@@ -741,9 +939,9 @@
           if (!p.volumeConfig) {
              p.volumeConfig = [
                { label: "PRECIO 1", qty: 1, discount: 0 },
-               { label: "PRECIO 2", qty: 10, discount: 3 },
-               { label: "PRECIO 3", qty: 50, discount: 5 },
-               { label: "PRECIO 4", qty: 100, discount: 8 }
+               { label: "PRECIO 2", qty: 600, discount: 5 },
+               { label: "PRECIO 3", qty: 700, discount: 8 },
+               { label: "PRECIO 4", qty: 800, discount: 12 }
              ];
           }
           if (!p.categoryMetadata) p.categoryMetadata = {};
