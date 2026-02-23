@@ -457,7 +457,7 @@
         { label: "PRECIO 4", qty: 800, discount: 12 }
       ],
       categoryMetadata: {},
-      currentPVP: 0 // <--- Variable temporal para guardar el precio real
+      currentPVP: 0 
     };
 
     // ====== ASISTENTE A GRANEL INTELIGENTE ======
@@ -611,12 +611,11 @@
       const ratio = Math.min(m/100, 0.99);
       const finalPrice = totalCost / (1 - ratio);
       
-      appState.currentPVP = finalPrice; // Guardamos el precio final para el Asistente
+      appState.currentPVP = finalPrice; 
 
       updateMainUI({ finalPrice, profit: finalPrice - totalCost, marginPct: m, totalCost, baseCost, extraCost, iepsAmt, ivaAmt, includeIva });
       updateScales(totalCost, finalPrice);
       
-      // Actualiza en vivo el asistente si está abierto
       const asstBasePriceInput = document.getElementById('asstBasePrice');
       if(asstBasePriceInput && finalPrice > 0) {
           asstBasePriceInput.value = finalPrice.toFixed(2);
@@ -914,7 +913,24 @@
     const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
     function saveLocal() { localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState)); }
     function saveAllConfig() { for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max); saveLocal(); runCalculations(); alert("Guardado."); }
-    function updateCategoryDropdowns() { const select = document.getElementById('calcCategory'); select.innerHTML = ''; appState.categories.forEach(cat => { select.innerHTML += `<option value="${cat}">${cat}</option>`; }); }
+
+    // ====== FUNCIÓN CORREGIDA ======
+    function updateCategoryDropdowns() { 
+      const select = document.getElementById('calcCategory'); 
+      const currentSelection = select.value; // Guardamos la categoría actual
+      
+      select.innerHTML = ''; 
+      appState.categories.forEach(cat => { 
+        select.innerHTML += `<option value="${cat}">${cat}</option>`; 
+      }); 
+      
+      // Si la categoría que estaba seleccionada aún existe, la devolvemos
+      if (currentSelection && appState.categories.includes(currentSelection)) {
+        select.value = currentSelection;
+      }
+    }
+    // ===============================
+
     function handleCategoryChange() { runCalculations(); }
 
     auth.onAuthStateChanged(user => {
