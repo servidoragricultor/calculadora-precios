@@ -69,21 +69,48 @@
           <div class="grid md:grid-cols-2 gap-6">
             <div>
               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Categoría</label>
-              <select id="calcCategory" onchange="handleCategoryChange()" class="form-select mt-1 font-bold text-gray-700"></select>
+              <div class="mt-1">
+                <div class="relative">
+                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+                    <i data-lucide="search" class="w-4 h-4"></i>
+                  </span>
+                  <input
+                    type="text"
+                    id="calcCategorySearch"
+                    placeholder="Buscar o seleccionar categoría..."
+                    onfocus="handleCategoryInputFocus()"
+                    onblur="handleCategoryInputBlur()"
+                    oninput="syncCategoryFromSearch(this.value)"
+                    onkeydown="handleCategorySearchKeydown(event)"
+                    class="input-field pl-10 pr-10 text-sm font-semibold text-gray-700"
+                    autocomplete="off"
+                  >
+                  <button
+                    type="button"
+                    onclick="clearCategorySearch()"
+                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
+                    title="Restablecer categoría"
+                  >
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                  </button>
+                  <div id="calcCategorySuggestions" class="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-30 max-h-64 overflow-auto hidden"></div>
+                  <select id="calcCategory" onchange="handleCategoryChange()" class="hidden"></select>
+                </div>
+              </div>
             </div>
             
             <div>
               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Costo Base</label>
               <div class="relative mt-1">
                 <span class="absolute left-3 top-2 text-gray-400 font-bold">$</span>
-                <input type="number" id="calcBaseCost" value="0.00" step="0.01" class="input-field pl-8 text-lg font-bold text-gray-800" oninput="runCalculations()">
+                <input type="number" id="calcBaseCost" value="0.00" step="0.01" class="input-field pl-8 text-lg font-bold text-gray-800" oninput="handleBaseCostInput()">
               </div>
             </div>
           </div>
 
           <div class="mt-6">
             <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Etiqueta IEPS</label>
-            <select id="calcIeps" onchange="runCalculations()" class="form-select mt-1 font-bold text-gray-700"></select>
+            <select id="calcIeps" onchange="handleIepsChange()" class="form-select mt-1 font-bold text-gray-700 transition-all duration-200"></select>
           </div>
 
           <div class="mt-8 p-4 bg-green-50 rounded-2xl space-y-4 border border-green-100">
@@ -167,14 +194,15 @@
               <p id="resCatDesc" class="text-[10px] text-gray-500 leading-tight">Productos para proteger y fortalecer tus cultivos.</p>
             </div>
           </div>
-<div class="grid grid-cols-2 gap-3 mb-6">
-  <div class="w-full h-24 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
-    <img id="resImg1" src="" class="w-full h-full object-cover object-center">
-  </div>
-  <div class="w-full h-24 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
-    <img id="resImg2" src="" class="w-full h-full object-cover object-center">
-  </div>
-</div>
+
+          <div class="grid grid-cols-2 gap-3 mb-6">
+            <div class="w-full h-24 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
+              <img id="resImg1" src="" class="w-full h-full object-cover object-center">
+            </div>
+            <div class="w-full h-24 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
+              <img id="resImg2" src="" class="w-full h-full object-cover object-center">
+            </div>
+          </div>
 
           <div class="bg-[#22c55e] rounded-3xl p-6 text-white text-center shadow-lg shadow-green-100 mb-4">
             <p class="text-[10px] font-bold uppercase tracking-widest opacity-90">Precio de Venta Final</p>
@@ -242,8 +270,31 @@
           </button>
         </div>
         <div id="category-manager-content" class="hidden transition-all duration-300 mt-6">
+          <div class="relative mb-5">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <i data-lucide="search" class="w-4 h-4"></i>
+            </span>
+            <input
+              type="text"
+              id="categoryManagerSearch"
+              placeholder="Buscar en categorías configuradas..."
+              oninput="renderCategoryManager()"
+              class="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-700 bg-white focus:ring-2 focus:ring-green-100 outline-none"
+            >
+            <button
+              type="button"
+              onclick="clearCategoryManagerSearch()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
+              title="Limpiar búsqueda"
+            >
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
           <div id="categoryManager" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"></div>
-          <button onclick="addNewCategory()" class="bg-gray-800 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-black transition shadow-lg">+ Agregar Categoría</button>
+          <div class="flex flex-wrap gap-3">
+            <button onclick="addNewCategory()" class="bg-gray-800 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-black transition shadow-lg">+ Agregar Categoría</button>
+            <button onclick="sortCategoriesAlphabetically()" class="bg-green-50 text-green-700 border border-green-200 px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-green-100 transition shadow-sm">Ordenar A-Z</button>
+          </div>
         </div>
       </div>
 
@@ -523,212 +574,184 @@
       currentPVP: 0 
     };
 
-  // ====== GESTOR DE VIDEOS DE YOUTUBE ======
-  let videoList = [];
+    // ====== GESTOR DE VIDEOS DE YOUTUBE ======
+    let videoList = [];
 
-  function extractYouTubeId(url) {
-    if (!url) return null;
-
-    const patterns = [
-      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/,
-      /(?:youtube\.com\/watch\?.*?[&?]v=)([A-Za-z0-9_-]{11})/
-    ];
-
-    for (const p of patterns) {
-      const m = url.match(p);
-      if (m) return m[1];
+    function extractYouTubeId(url) {
+      if (!url) return null;
+      const patterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/
+      ];
+      for (const p of patterns) {
+        const m = url.match(p);
+        if (m) return m[1];
+      }
+      return null;
     }
 
-    return null;
-  }
+    function addVideo() {
+      const urlInput = document.getElementById('videoUrlInput');
+      const titleInput = document.getElementById('videoTitleInput');
+      const url = (urlInput.value || '').trim();
+      const title = (titleInput.value || '').trim();
 
-  function addVideo() {
-    const urlInput = document.getElementById('videoUrlInput');
-    const titleInput = document.getElementById('videoTitleInput');
+      const id = extractYouTubeId(url);
+      if (!id) {
+        alert('URL de YouTube no válida.\n\nEjemplos válidos:\n• https://www.youtube.com/watch?v=XXXXXXXXXXX\n• https://youtu.be/XXXXXXXXXXX\n• https://youtube.com/shorts/XXXXXXXXXXX');
+        return;
+      }
 
-    if (!urlInput || !titleInput) {
-      console.error('No se encontraron los inputs de video.');
-      return;
-    }
+      // Evitar duplicados
+      if (videoList.find(v => v.id === id)) {
+        alert('Este video ya está agregado.');
+        return;
+      }
 
-    const url = (urlInput.value || '').trim();
-    const title = (titleInput.value || '').trim();
-
-    const id = extractYouTubeId(url);
-
-    if (!id) {
-      alert(
-        'URL de YouTube no válida.\n\nEjemplos válidos:\n• https://www.youtube.com/watch?v=XXXXXXXXXXX\n• https://youtu.be/XXXXXXXXXXX\n• https://youtube.com/shorts/XXXXXXXXXXX'
-      );
-      return;
-    }
-
-    if (videoList.find(v => v.id === id)) {
-      alert('Este video ya está agregado.');
-      return;
-    }
-
-    videoList.push({
-      id,
-      title: title || 'Video sin título',
-      url
-    });
-
-    urlInput.value = '';
-    titleInput.value = '';
-
-    saveVideosLocal();
-    renderVideos();
-  }
-
-  function removeVideo(index) {
-    if (index < 0 || index >= videoList.length) return;
-
-    if (confirm('¿Eliminar este video de la lista?')) {
-      videoList.splice(index, 1);
+      videoList.push({ id, title: title || 'Video sin título', url });
+      urlInput.value = '';
+      titleInput.value = '';
       saveVideosLocal();
       renderVideos();
     }
-  }
 
-  function renderVideos() {
-    const grid = document.getElementById('videoGrid');
-    const empty = document.getElementById('videosEmpty');
-
-    if (!grid || !empty) {
-      console.error('No se encontraron #videoGrid o #videosEmpty');
-      return;
+    function removeVideo(index) {
+      if (confirm('¿Eliminar este video de la lista?')) {
+        videoList.splice(index, 1);
+        saveVideosLocal();
+        renderVideos();
+      }
     }
 
-    grid.innerHTML = '';
+    function renderVideos() {
+      const grid = document.getElementById('videoGrid');
+      const empty = document.getElementById('videosEmpty');
 
-    if (!Array.isArray(videoList)) {
-      videoList = [];
-    }
+      if (!grid || !empty) {
+        console.error('No se encontraron #videoGrid o #videosEmpty');
+        return;
+      }
 
-    if (videoList.length === 0) {
-      empty.style.display = 'flex';
-      if (window.lucide) lucide.createIcons();
-      return;
-    }
+      grid.innerHTML = '';
 
-    empty.style.display = 'none';
+      if (!Array.isArray(videoList)) {
+        videoList = [];
+      }
 
-    let html = '';
+      if (videoList.length === 0) {
+        empty.style.display = 'flex';
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
 
-    videoList.forEach((v, i) => {
-      const safeTitle = String(v.title || 'Video sin título')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      empty.style.display = 'none';
 
-      const watchUrl = `https://www.youtube.com/watch?v=${v.id}`;
-      const thumbUrl = `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`;
+      let html = '';
 
-      html += `
-        <div class="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-          <a
-            href="${watchUrl}"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="block relative group"
-            title="Abrir video en YouTube"
-          >
-            <img
-              src="${thumbUrl}"
-              alt="${safeTitle}"
-              class="w-full aspect-video object-cover bg-gray-200"
-              loading="lazy"
-            >
-            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-              <div class="bg-white/95 text-red-600 rounded-full p-3 shadow-lg">
-                <i data-lucide="play" class="w-6 h-6 fill-current"></i>
-              </div>
-            </div>
-          </a>
+      videoList.forEach((v, i) => {
+        const safeTitle = String(v.title || 'Video sin título')
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;')
+          .replace(/'/g, '&#39;');
 
-          <div class="p-3 bg-white space-y-2">
-            <div class="flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 min-w-0">
-                <i data-lucide="youtube" class="w-4 h-4 text-red-500 shrink-0"></i>
-                <span class="text-xs font-black text-gray-700 truncate">${safeTitle}</span>
-              </div>
-              <button
-                type="button"
-                onclick="removeVideo(${i})"
-                class="text-red-200 hover:text-red-500 transition-colors shrink-0"
-                title="Eliminar video"
-              >
-                <i data-lucide="trash-2" class="w-4 h-4"></i>
-              </button>
-            </div>
+        const watchUrl = `https://www.youtube.com/watch?v=${v.id}`;
+        const thumbUrl = `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`;
 
+        html += `
+          <div class="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
             <a
               href="${watchUrl}"
               target="_blank"
               rel="noopener noreferrer"
-              class="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-red-600 hover:text-red-700"
+              class="block relative group"
+              title="Abrir video en YouTube"
             >
-              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
-              Abrir en YouTube
+              <img
+                src="${thumbUrl}"
+                alt="${safeTitle}"
+                class="w-full aspect-video object-cover bg-gray-200"
+                loading="lazy"
+              >
+              <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                <div class="bg-white/95 text-red-600 rounded-full p-3 shadow-lg">
+                  <i data-lucide="play" class="w-6 h-6 fill-current"></i>
+                </div>
+              </div>
             </a>
-          </div>
-        </div>
-      `;
-    });
 
-    grid.innerHTML = html;
+            <div class="p-3 bg-white space-y-2">
+              <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <i data-lucide="youtube" class="w-4 h-4 text-red-500 shrink-0"></i>
+                  <span class="text-xs font-black text-gray-700 truncate">${safeTitle}</span>
+                </div>
+                <button
+                  type="button"
+                  onclick="removeVideo(${i})"
+                  class="text-red-200 hover:text-red-500 transition-colors shrink-0"
+                  title="Eliminar video"
+                >
+                  <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+              </div>
 
-    if (window.lucide) lucide.createIcons();
-  }
+              <a
+                href="${watchUrl}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-red-600 hover:text-red-700"
+              >
+                <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                Abrir en YouTube
+              </a>
+            </div>
+          </div>`;
+      });
 
-  function toggleVideoManager() {
-    const content = document.getElementById('video-manager-content');
-    const btn = document.getElementById('video-toggle-btn');
+      grid.innerHTML = html;
 
-    if (!content || !btn) {
-      console.error('No se encontraron #video-manager-content o #video-toggle-btn');
-      return;
+      if (window.lucide) lucide.createIcons();
     }
 
-    if (content.classList.contains('hidden')) {
-      content.classList.remove('hidden');
-      btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
-      renderVideos();
-    } else {
-      content.classList.add('hidden');
-      btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
-    }
-
-    if (window.lucide) lucide.createIcons();
-  }
-
-  function saveVideosLocal() {
-    try {
-      localStorage.setItem('esquina_videos_v1', JSON.stringify(videoList));
-    } catch (e) {
-      console.error('Error guardando videos en localStorage:', e);
-    }
-  }
-
-  function loadVideosLocal() {
-    try {
-      const saved = localStorage.getItem('esquina_videos_v1');
-      if (!saved) {
-        videoList = [];
-        return;
+    function toggleVideoManager() {
+      const content = document.getElementById('video-manager-content');
+      const btn = document.getElementById('video-toggle-btn');
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+        renderVideos();
+      } else {
+        content.classList.add('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
       }
-
-      const parsed = JSON.parse(saved);
-      videoList = Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      console.error('Error cargando videos de localStorage:', e);
-      videoList = [];
+      lucide.createIcons();
     }
-  }
-  // =========================================
+
+    function saveVideosLocal() {
+      try {
+        localStorage.setItem('esquina_videos_v1', JSON.stringify(videoList));
+      } catch (e) {
+        console.error('Error guardando videos en localStorage:', e);
+      }
+    }
+
+    function loadVideosLocal() {
+      try {
+        const saved = localStorage.getItem('esquina_videos_v1');
+        if (!saved) {
+          videoList = [];
+          return;
+        }
+        const parsed = JSON.parse(saved);
+        videoList = Array.isArray(parsed) ? parsed : [];
+      } catch (e) {
+        console.error('Error cargando videos de localStorage:', e);
+        videoList = [];
+      }
+    }
+    // =========================================
+
     // ====== ASISTENTE A GRANEL INTELIGENTE ======
     function toggleBulkAssistant() {
       const content = document.getElementById('bulk-assistant-content');
@@ -805,8 +828,101 @@
     function toggleManualMargin() { document.getElementById('manualMarginWrap').classList.toggle('hidden'); runCalculations(); }
     function toggleExtraCost() { document.getElementById('extraCostWrap').classList.toggle('hidden'); runCalculations(); }
 
+    function updateIepsSelectTheme() {
+      const ieps = document.getElementById('calcIeps');
+      if (!ieps) return;
+
+      const styles = {
+        none: {
+          background: '#ffffff',
+          border: '#d1d5db',
+          color: '#374151',
+          boxShadow: 'none'
+        },
+        azul: {
+          background: '#eff6ff',
+          border: '#93c5fd',
+          color: '#1d4ed8',
+          boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.10)'
+        },
+        amarilla: {
+          background: '#fffbeb',
+          border: '#fcd34d',
+          color: '#b45309',
+          boxShadow: '0 0 0 3px rgba(245, 158, 11, 0.10)'
+        },
+        roja: {
+          background: '#fef2f2',
+          border: '#fca5a5',
+          color: '#b91c1c',
+          boxShadow: '0 0 0 3px rgba(239, 68, 68, 0.10)'
+        }
+      };
+
+      const current = styles[ieps.value] || styles.none;
+      ieps.style.backgroundColor = current.background;
+      ieps.style.borderColor = current.border;
+      ieps.style.color = current.color;
+      ieps.style.boxShadow = current.boxShadow;
+    }
+
+    function handleIepsChange() {
+      updateIepsSelectTheme();
+      runCalculations();
+    }
+
+    function resetBaseCostAddons() {
+      const ieps = document.getElementById('calcIeps');
+      const manualToggle = document.getElementById('calcManualToggle');
+      const manualMargin = document.getElementById('calcManualMargin');
+      const manualWrap = document.getElementById('manualMarginWrap');
+      const ivaToggle = document.getElementById('calcIvaToggle');
+      const extraToggle = document.getElementById('calcExtraToggle');
+      const extraCost = document.getElementById('calcExtraCost');
+      const extraWrap = document.getElementById('extraCostWrap');
+
+      if (ieps) {
+        ieps.value = 'none';
+        updateIepsSelectTheme();
+      }
+
+      if (manualToggle) manualToggle.checked = false;
+      if (manualMargin) manualMargin.value = 20;
+      if (manualWrap) manualWrap.classList.add('hidden');
+
+      if (ivaToggle) ivaToggle.checked = false;
+
+      if (extraToggle) extraToggle.checked = false;
+      if (extraCost) extraCost.value = '0.00';
+      if (extraWrap) extraWrap.classList.add('hidden');
+    }
+
+    function handleBaseCostInput() {
+      const input = document.getElementById('calcBaseCost');
+      if (!input) return;
+
+      const currentValue = input.value;
+      const previousValue = input.dataset.lastValue ?? '';
+
+      if (currentValue !== previousValue) {
+        resetBaseCostAddons();
+        input.dataset.lastValue = currentValue;
+      }
+
+      runCalculations();
+    }
+
     function runCalculations() {
-      const cat = document.getElementById('calcCategory').value;
+      const categorySelect = document.getElementById('calcCategory');
+      if (!categorySelect) return;
+
+      let cat = categorySelect.value;
+      if (!cat && appState.categories.length > 0) {
+        cat = appState.categories[0];
+        categorySelect.value = cat;
+      }
+      if (!cat) return;
+
       const baseCost = parseFloat(document.getElementById('calcBaseCost').value) || 0;
       const isExtra = document.getElementById('calcExtraToggle').checked;
       const extraCost = isExtra ? (parseFloat(document.getElementById('calcExtraCost').value) || 0) : 0;
@@ -881,17 +997,132 @@
       });
     }
 
+    function normalizeText(value) {
+      return String(value || '')
+        .normalize('NFD')
+        .replace(/[̀-ͯ]/g, '')
+        .toLowerCase()
+        .trim();
+    }
+
+    function getFilteredCategories(searchTerm = '') {
+      const normalizedTerm = normalizeText(searchTerm);
+      if (!normalizedTerm) return [...appState.categories];
+      return appState.categories.filter(cat => normalizeText(cat).includes(normalizedTerm));
+    }
+
+    function escapeHtmlAttr(value) {
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
     function renderCategoryManager() {
       const container = document.getElementById('categoryManager');
+      const searchInput = document.getElementById('categoryManagerSearch');
+      const searchTerm = searchInput ? searchInput.value : '';
+
+      if (!container) return;
+
       container.innerHTML = '';
-      appState.categories.forEach((cat, index) => {
+
+      const filteredCategories = appState.categories
+        .map((cat, index) => ({ cat, index }))
+        .filter(({ cat }) => normalizeText(cat).includes(normalizeText(searchTerm)));
+
+      if (filteredCategories.length === 0) {
+        container.innerHTML = `
+          <div class="md:col-span-2 bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-6 text-center">
+            <p class="text-xs font-black uppercase tracking-widest text-gray-400">Sin coincidencias</p>
+            <p class="text-xs text-gray-500 mt-2">Prueba con otro nombre o limpia la búsqueda.</p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        updateCategoryDropdowns();
+        return;
+      }
+
+      filteredCategories.forEach(({ cat, index }) => {
         let meta = { icon: "📦", desc: "", imgs: ["", ""] };
-        if (appState.categoryMetadata && appState.categoryMetadata[cat]) meta = appState.categoryMetadata[cat];
-        else if (CATEGORY_INFO[cat]) meta = { ...CATEGORY_INFO[cat] };
-        container.innerHTML += `<div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3 relative overflow-hidden"><div class="absolute top-0 left-0 w-1 h-full bg-green-400"></div><div class="flex items-center gap-2 pl-2"><input type="text" value="${cat}" onchange="renameCategory(${index}, this.value)" class="bg-transparent font-black text-sm w-full outline-none text-gray-700 focus:text-green-600"><button onclick="removeCategory(${index})" class="text-red-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div><div class="grid grid-cols-2 gap-2 pl-2"><input type="text" placeholder="Icono (ej: 🍎)" value="${meta.icon}" onchange="updateMeta('${cat}', 'icon', this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"><input type="text" placeholder="Descripción corta" value="${meta.desc}" onchange="updateMeta('${cat}', 'desc', this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"></div><div class="pl-2 space-y-2"><input type="text" placeholder="Link de Imagen 1" value="${meta.imgs[0] || ''}" onchange="updateMetaImg('${cat}', 0, this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"><input type="text" placeholder="Link de Imagen 2" value="${meta.imgs[1] || ''}" onchange="updateMetaImg('${cat}', 1, this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"></div></div>`;
+
+        if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
+          meta = appState.categoryMetadata[cat];
+        } else if (CATEGORY_INFO[cat]) {
+          meta = { ...CATEGORY_INFO[cat] };
+        }
+
+        const safeCatJs = JSON.stringify(cat);
+        const safeCatValue = escapeHtmlAttr(cat);
+        const safeIcon = escapeHtmlAttr(meta.icon || '');
+        const safeDesc = escapeHtmlAttr(meta.desc || '');
+        const safeImg1 = escapeHtmlAttr((meta.imgs && meta.imgs[0]) || '');
+        const safeImg2 = escapeHtmlAttr((meta.imgs && meta.imgs[1]) || '');
+
+        container.innerHTML += `
+          <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3 relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-green-400"></div>
+
+            <div class="flex items-center gap-2 pl-2">
+              <input
+                type="text"
+                value="${safeCatValue}"
+                onchange="renameCategory(${index}, this.value)"
+                class="bg-transparent font-black text-sm w-full outline-none text-gray-700 focus:text-green-600"
+              >
+              <button onclick="removeCategory(${index})" class="text-red-300 hover:text-red-500">
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 pl-2">
+              <input
+                type="text"
+                placeholder="Icono (ej: 🍎)"
+                value="${safeIcon}"
+                onchange="updateMeta(${safeCatJs}, 'icon', this.value)"
+                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
+              >
+              <input
+                type="text"
+                placeholder="Descripción corta"
+                value="${safeDesc}"
+                onchange="updateMeta(${safeCatJs}, 'desc', this.value)"
+                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
+              >
+            </div>
+
+            <div class="pl-2 space-y-2">
+              <input
+                type="text"
+                placeholder="Link de Imagen 1"
+                value="${safeImg1}"
+                onchange="updateMetaImg(${safeCatJs}, 0, this.value)"
+                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
+              >
+              <input
+                type="text"
+                placeholder="Link de Imagen 2"
+                value="${safeImg2}"
+                onchange="updateMetaImg(${safeCatJs}, 1, this.value)"
+                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
+              >
+            </div>
+          </div>
+        `;
       });
-      lucide.createIcons();
+
+      if (window.lucide) lucide.createIcons();
       updateCategoryDropdowns();
+    }
+
+    function clearCategoryManagerSearch() {
+      const input = document.getElementById('categoryManagerSearch');
+      if (!input) return;
+      input.value = '';
+      renderCategoryManager();
     }
 
     function updateMeta(cat, field, val) {
@@ -910,15 +1141,28 @@
 
     function addNewCategory() {
       const name = prompt("Nombre:");
-      if (name && !appState.categories.includes(name)) { appState.categories.push(name); appState.margins[name] = [{max: Infinity, m: 20}]; renderCategoryManager(); renderConfigTables(); saveLocal(); }
+      const cleanName = name ? name.trim() : '';
+
+      if (cleanName && !appState.categories.includes(cleanName)) {
+        appState.categories.push(cleanName);
+        appState.margins[cleanName] = [{max: Infinity, m: 20}];
+        sortCategoriesAlphabetically();
+      }
     }
 
     function renameCategory(index, newName) {
       const old = appState.categories[index];
-      if (newName && old !== newName) {
-        appState.categories[index] = newName; appState.margins[newName] = appState.margins[old]; delete appState.margins[old];
-        if (appState.categoryMetadata && appState.categoryMetadata[old]) { appState.categoryMetadata[newName] = appState.categoryMetadata[old]; delete appState.categoryMetadata[old]; }
-        updateCategoryDropdowns(); renderConfigTables(); saveLocal();
+      const cleanName = newName ? newName.trim() : '';
+
+      if (cleanName && old !== cleanName) {
+        appState.categories[index] = cleanName;
+        appState.margins[cleanName] = appState.margins[old];
+        delete appState.margins[old];
+        if (appState.categoryMetadata && appState.categoryMetadata[old]) {
+          appState.categoryMetadata[cleanName] = appState.categoryMetadata[old];
+          delete appState.categoryMetadata[old];
+        }
+        sortCategoriesAlphabetically();
       }
     }
 
@@ -1004,15 +1248,252 @@
     function saveAllConfig() { for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max); saveLocal(); runCalculations(); alert("Guardado."); }
     function resetToDefaults() { if(confirm("¿Restablecer?")) { localStorage.removeItem(CONFIG.LS_KEY); location.reload(); } }
 
-    function updateCategoryDropdowns() {
-      const select = document.getElementById('calcCategory');
-      const currentSelection = select.value;
-      select.innerHTML = '';
-      appState.categories.forEach(cat => { select.innerHTML += `<option value="${cat}">${cat}</option>`; });
-      if (currentSelection && appState.categories.includes(currentSelection)) select.value = currentSelection;
+    let categorySuggestionIndex = -1;
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
-    function handleCategoryChange() { runCalculations(); }
+    function hideCategorySuggestions() {
+      const suggestions = document.getElementById('calcCategorySuggestions');
+      if (!suggestions) return;
+      suggestions.classList.add('hidden');
+      suggestions.innerHTML = '';
+      categorySuggestionIndex = -1;
+    }
+
+    function renderCategorySuggestions(categories = [], highlightedIndex = -1) {
+      const suggestions = document.getElementById('calcCategorySuggestions');
+      if (!suggestions) return;
+
+      const limitedCategories = categories.slice(0, 30);
+
+      if (limitedCategories.length === 0) {
+        suggestions.innerHTML = `
+          <div class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">
+            Sin coincidencias
+          </div>
+        `;
+        suggestions.classList.remove('hidden');
+        categorySuggestionIndex = -1;
+        return;
+      }
+
+      suggestions.innerHTML = limitedCategories.map((cat, index) => {
+        const isActive = index === highlightedIndex;
+        const safeLabel = escapeHtml(cat);
+        const safeValue = encodeURIComponent(cat);
+        return `
+          <button
+            type="button"
+            onmousedown="selectCategorySuggestion(decodeURIComponent('${safeValue}'))"
+            class="w-full text-left px-4 py-3 text-sm font-semibold transition-colors border-b border-gray-50 last:border-b-0 ${isActive ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'}"
+          >
+            ${safeLabel}
+          </button>
+        `;
+      }).join('');
+
+      suggestions.classList.remove('hidden');
+      categorySuggestionIndex = highlightedIndex;
+    }
+
+    function setCurrentCategory(category, shouldRun = true) {
+      const select = document.getElementById('calcCategory');
+      const input = document.getElementById('calcCategorySearch');
+
+      if (!select || !input || !category) return;
+
+      select.value = category;
+      input.value = category;
+      input.dataset.previousValue = category;
+      hideCategorySuggestions();
+
+      if (shouldRun) runCalculations();
+    }
+
+    function selectCategorySuggestion(category) {
+      setCurrentCategory(category, true);
+    }
+
+    function handleCategoryInputFocus() {
+      const input = document.getElementById('calcCategorySearch');
+
+      if (!input) return;
+
+      input.dataset.previousValue = input.value || '';
+
+      if ((input.value || '').trim() !== '') {
+        input.value = '';
+      }
+
+      renderCategorySuggestions(getFilteredCategories(''));
+    }
+
+    function handleCategoryInputBlur() {
+      const input = document.getElementById('calcCategorySearch');
+      const select = document.getElementById('calcCategory');
+
+      if (!input) return;
+
+      setTimeout(() => {
+        hideCategorySuggestions();
+
+        if ((input.value || '').trim() === '') {
+          const fallbackValue = input.dataset.previousValue || (select ? select.value : '') || appState.categories[0] || '';
+          input.value = fallbackValue;
+          input.dataset.previousValue = fallbackValue;
+        }
+      }, 150);
+    }
+
+    function updateCategoryDropdowns() {
+      const select = document.getElementById('calcCategory');
+      const input = document.getElementById('calcCategorySearch');
+
+      if (!select || !input) return;
+
+      const currentSelection = select.value && appState.categories.includes(select.value)
+        ? select.value
+        : (appState.categories[0] || '');
+
+      select.innerHTML = '';
+
+      appState.categories.forEach(cat => {
+        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+      });
+
+      if (currentSelection) {
+        select.value = currentSelection;
+        if (!input.value || !appState.categories.includes(input.value)) {
+          input.value = currentSelection;
+        }
+        input.dataset.previousValue = currentSelection;
+      } else {
+        input.value = '';
+        input.dataset.previousValue = '';
+      }
+
+      hideCategorySuggestions();
+    }
+
+    function syncCategoryFromSearch(term = '') {
+      const select = document.getElementById('calcCategory');
+      const input = document.getElementById('calcCategorySearch');
+
+      if (!select || !input) return;
+
+      const filteredCategories = getFilteredCategories(term);
+      const exactMatch = appState.categories.find(cat =>
+        normalizeText(cat) === normalizeText(term)
+      );
+
+      if (exactMatch) {
+        select.value = exactMatch;
+        input.dataset.previousValue = exactMatch;
+      }
+
+      renderCategorySuggestions(filteredCategories, -1);
+    }
+
+    function handleCategorySearchKeydown(event) {
+      const input = document.getElementById('calcCategorySearch');
+      if (!input) return;
+
+      const filteredCategories = getFilteredCategories(input.value).slice(0, 30);
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (filteredCategories.length === 0) return;
+        categorySuggestionIndex = Math.min(categorySuggestionIndex + 1, filteredCategories.length - 1);
+        renderCategorySuggestions(filteredCategories, categorySuggestionIndex);
+        return;
+      }
+
+      if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (filteredCategories.length === 0) return;
+        categorySuggestionIndex = Math.max(categorySuggestionIndex - 1, 0);
+        renderCategorySuggestions(filteredCategories, categorySuggestionIndex);
+        return;
+      }
+
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (filteredCategories.length === 0) return;
+
+        const selectedCategory =
+          filteredCategories[categorySuggestionIndex] ||
+          appState.categories.find(cat => normalizeText(cat) === normalizeText(input.value)) ||
+          filteredCategories[0];
+
+        if (selectedCategory) {
+          setCurrentCategory(selectedCategory, true);
+        }
+        return;
+      }
+
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        const fallbackValue = input.dataset.previousValue || '';
+        input.value = fallbackValue;
+        hideCategorySuggestions();
+      }
+    }
+
+    function clearCategorySearch() {
+      const select = document.getElementById('calcCategory');
+      const input = document.getElementById('calcCategorySearch');
+
+      if (!select || !input) return;
+
+      const currentCategory = select.value || appState.categories[0] || '';
+      input.value = currentCategory;
+      input.dataset.previousValue = currentCategory;
+      renderCategorySuggestions(getFilteredCategories(''));
+
+      if (currentCategory) runCalculations();
+    }
+
+    function sortCategoriesAlphabetically() {
+      const select = document.getElementById('calcCategory');
+      const currentSelection = select ? select.value : '';
+
+      appState.categories = [...new Set(appState.categories)].sort((a, b) =>
+        String(a).trim().localeCompare(String(b).trim(), 'es', {
+          sensitivity: 'base',
+          numeric: true
+        })
+      );
+
+      saveLocal();
+      updateCategoryDropdowns();
+      renderCategoryManager();
+      renderConfigTables();
+
+      if (select && currentSelection && appState.categories.includes(currentSelection)) {
+        select.value = currentSelection;
+      }
+
+      if (select && select.value) runCalculations();
+    }
+
+    function handleCategoryChange() {
+      const select = document.getElementById('calcCategory');
+      const input = document.getElementById('calcCategorySearch');
+      if (!select || !select.value) return;
+      if (input) {
+        input.value = select.value;
+        input.dataset.previousValue = select.value;
+      }
+      hideCategorySuggestions();
+      runCalculations();
+    }
 
     auth.onAuthStateChanged(user => {
       const actions = document.getElementById('cloud-actions');
@@ -1026,41 +1507,30 @@
     async function syncToCloud() { try { await db.collection('configs').doc('global').set({ data: JSON.stringify(appState), updatedAt: new Date() }); alert("Nube OK"); } catch (e) { alert(e.message); } }
     async function pullFromCloud() { try { const doc = await db.collection('configs').doc('global').get(); if(doc.exists) { appState = JSON.parse(doc.data().data); saveLocal(); renderCategoryManager(); handleCategoryChange(); alert("Bajado."); } } catch (e) { alert(e.message); } }
 
-window.onload = () => {
-  const local = localStorage.getItem(CONFIG.LS_KEY);
-  if (local) {
-    try {
-      const p = JSON.parse(local);
-      if (!p.categories) p.categories = [...CONFIG.DEFAULT_CATS];
-      if (!p.margins) p.margins = {};
-      if (!p.volumeConfig) p.volumeConfig = [
-        { label: "PRECIO 1", qty: 1, discount: 0 },
-        { label: "PRECIO 2", qty: 600, discount: 5 },
-        { label: "PRECIO 3", qty: 700, discount: 8 },
-        { label: "PRECIO 4", qty: 800, discount: 12 }
-      ];
-      if (!p.categoryMetadata) p.categoryMetadata = {};
-      appState = p;
-    } catch (e) {
-      console.error(e);
-    }
-  }
+    window.onload = () => {
+      const local = localStorage.getItem(CONFIG.LS_KEY);
+      if (local) {
+        try {
+          const p = JSON.parse(local);
+          if (!p.categories) p.categories = [...CONFIG.DEFAULT_CATS];
+          if (!p.margins) p.margins = {};
+          if (!p.volumeConfig) p.volumeConfig = [{ label: "PRECIO 1", qty: 1, discount: 0 }, { label: "PRECIO 2", qty: 600, discount: 5 }, { label: "PRECIO 3", qty: 700, discount: 8 }, { label: "PRECIO 4", qty: 800, discount: 12 }];
+          if (!p.categoryMetadata) p.categoryMetadata = {};
+          appState = p;
+        } catch (e) { console.error(e); }
+      }
+      // Cargar videos guardados
+      loadVideosLocal();
 
-  loadVideosLocal();
-  renderVideos();
+      const baseCostInput = document.getElementById('calcBaseCost');
+      if (baseCostInput) baseCostInput.dataset.lastValue = baseCostInput.value || '';
 
-  document.getElementById('calcIeps').innerHTML = `
-    <option value="none">Sin IEPS (0%)</option>
-    <option value="azul" style="color:#2563eb">Etiqueta Azul (6%)</option>
-    <option value="amarilla" style="color:#d97706">Etiqueta Amarilla (7%)</option>
-    <option value="roja" style="color:#dc2626">Etiqueta Roja (9%)</option>
-  `;
-
-  updateCategoryDropdowns();
-  handleCategoryChange();
-
-  if (window.lucide) lucide.createIcons();
-};
+      document.getElementById('calcIeps').innerHTML = `<option value="none">Sin IEPS (0%)</option><option value="azul" style="color:#2563eb">Etiqueta Azul (6%)</option><option value="amarilla" style="color:#d97706">Etiqueta Amarilla (7%)</option><option value="roja" style="color:#dc2626">Etiqueta Roja (9%)</option>`;
+      updateIepsSelectTheme();
+      updateCategoryDropdowns();
+      handleCategoryChange();
+      lucide.createIcons();
+    };
   </script>
 </body>
 </html>
