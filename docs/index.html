@@ -13,7 +13,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
   <script>
-    // CONFIGURACIÓN DE FIREBASE
     const firebaseConfig = {
       apiKey: "AIzaSyBGEiIKYV8MiA8lN3lteHaE1XkYD4GRxug",
       authDomain: "calculadora-esquina.firebaseapp.com",
@@ -23,7 +22,6 @@
       appId: "1:721368379664:web:7dd83fad394c3d909b3595",
       measurementId: "G-MV6X87D4J3"
     };
-
     firebase.initializeApp(firebaseConfig);
     window.auth = firebase.auth();
     window.db   = firebase.firestore();
@@ -169,11 +167,14 @@
               <p id="resCatDesc" class="text-[10px] text-gray-500 leading-tight">Productos para proteger y fortalecer tus cultivos.</p>
             </div>
           </div>
-
-          <div class="grid grid-cols-2 gap-2 mb-6">
-            <img id="resImg1" src="" class="w-full h-20 object-cover rounded-xl border border-gray-50 bg-gray-50">
-            <img id="resImg2" src="" class="w-full h-20 object-cover rounded-xl border border-gray-50 bg-gray-50">
-          </div>
+<div class="grid grid-cols-2 gap-3 mb-6">
+  <div class="w-full h-24 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
+    <img id="resImg1" src="" class="w-full h-full object-cover object-center">
+  </div>
+  <div class="w-full h-24 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
+    <img id="resImg2" src="" class="w-full h-full object-cover object-center">
+  </div>
+</div>
 
           <div class="bg-[#22c55e] rounded-3xl p-6 text-white text-center shadow-lg shadow-green-100 mb-4">
             <p class="text-[10px] font-bold uppercase tracking-widest opacity-90">Precio de Venta Final</p>
@@ -188,8 +189,7 @@
             <h4 class="text-[10px] font-black text-blue-800 uppercase tracking-widest mb-3 flex items-center gap-1">
               <i data-lucide="brain" class="w-4 h-4"></i> Precios Sugeridos
             </h4>
-            <div id="resPsychPrices" class="grid grid-cols-3 gap-2">
-              </div>
+            <div id="resPsychPrices" class="grid grid-cols-3 gap-2"></div>
             <p class="text-[9px] text-blue-500 mt-2 text-center italic leading-tight">Usa estas opciones visuales para aumentar conversiones.</p>
           </div>
 
@@ -258,7 +258,7 @@
         </div>
         
         <div id="bulk-assistant-content" class="hidden transition-all duration-300 mt-6 space-y-6">
-          <p class="text-xs text-blue-700 font-medium">El algoritmo analizará tus límites de precios para sugerirte una curva comercial perfecta. Evitará que vendas volúmenes grandes más caros que el envase completo, garantizando que el cliente prefiera llevarse el granel pero protegiendo tu margen.</p>
+          <p class="text-xs text-blue-700 font-medium">El algoritmo analizará tus límites de precios para sugerirte una curva comercial perfecta.</p>
           
           <div class="grid md:grid-cols-3 gap-4 bg-white p-5 rounded-xl shadow-sm border border-blue-100 mb-2 relative">
             <div>
@@ -282,7 +282,7 @@
               </label>
               <div class="relative mt-2">
                 <span class="absolute left-3 top-3 text-gray-500 font-bold">$</span>
-                <input type="number" id="asstBasePrice" readonly title="Este precio se toma automáticamente de la Calculadora principal" class="w-full pl-8 p-3 border border-gray-200 rounded-xl font-bold text-lg text-gray-600 bg-gray-100 outline-none cursor-not-allowed">
+                <input type="number" id="asstBasePrice" readonly class="w-full pl-8 p-3 border border-gray-200 rounded-xl font-bold text-lg text-gray-600 bg-gray-100 outline-none cursor-not-allowed">
               </div>
             </div>
           </div>
@@ -380,9 +380,71 @@
         </div>
       </div>
 
+      <!-- ====== NUEVO: INSTRUCCIONES EN VIDEO ====== -->
+      <div class="bg-white rounded-3xl p-8 border-2 border-red-50 shadow-sm transition-all duration-300">
+        <div class="flex justify-between items-center cursor-pointer" onclick="toggleVideoManager()">
+          <h2 class="text-xl font-black text-gray-800 uppercase italic flex items-center gap-2">
+            <i data-lucide="youtube" class="text-red-500"></i> Instrucciones en Video
+          </h2>
+          <button id="video-toggle-btn" class="text-gray-400 hover:text-gray-800">
+            <i data-lucide="chevron-down" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <div id="video-manager-content" class="hidden transition-all duration-300 mt-6">
+          <p class="text-xs text-gray-500 font-medium mb-5 leading-relaxed">
+            Agrega URLs de YouTube para mostrar la miniatura del video y abrirlo en YouTube sin errores del reproductor embebido.<br>
+            Soporta links normales <span class="font-black text-gray-600">youtube.com/watch?v=...</span>, cortos <span class="font-black text-gray-600">youtu.be/...</span> y Shorts.
+          </p>
+
+          <!-- Formulario para agregar video -->
+          <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
+            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Agregar nuevo video</p>
+            <div class="flex flex-col md:flex-row gap-3">
+              <div class="flex-1 relative">
+                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-red-400 pointer-events-none">
+                  <i data-lucide="link" class="w-4 h-4"></i>
+                </span>
+                <input
+                  type="text"
+                  id="videoUrlInput"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-200 outline-none bg-white"
+                >
+              </div>
+              <div class="md:w-56">
+                <input
+                  type="text"
+                  id="videoTitleInput"
+                  placeholder="Título (opcional)"
+                  class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-200 outline-none bg-white"
+                >
+              </div>
+              <button
+                onclick="addVideo()"
+                class="bg-red-500 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:bg-red-600 active:scale-95 transition shadow-lg shadow-red-100 flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                <i data-lucide="plus" class="w-4 h-4"></i> Agregar
+              </button>
+            </div>
+          </div>
+
+          <!-- Grid de videos -->
+          <div id="videoGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+
+          <!-- Estado vacío -->
+          <div id="videosEmpty" class="text-center text-gray-300 font-black text-xs uppercase py-10 tracking-widest flex-col items-center" style="display:flex;">
+            <i data-lucide="video-off" class="w-10 h-10 mb-3"></i>
+            Aún no hay videos. Agrega uno arriba.
+          </div>
+        </div>
+      </div>
+      <!-- ====== FIN INSTRUCCIONES EN VIDEO ====== -->
+
     </div>
   </div>
 
+  <!-- Modal Flete -->
   <div id="freightModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-[100] px-4">
     <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
       <h3 class="font-black text-gray-800 uppercase italic mb-4 flex items-center gap-2">
@@ -405,6 +467,7 @@
     </div>
   </div>
 
+  <!-- Cloud Panel -->
   <div id="cloud-panel" class="p-4 transition-all duration-300">
     <div class="flex items-center justify-between cursor-pointer" onclick="toggleCloudPanel()" id="cloud-header">
       <div class="flex items-center gap-2">
@@ -460,14 +523,218 @@
       currentPVP: 0 
     };
 
+  // ====== GESTOR DE VIDEOS DE YOUTUBE ======
+  let videoList = [];
+
+  function extractYouTubeId(url) {
+    if (!url) return null;
+
+    const patterns = [
+      /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([A-Za-z0-9_-]{11})/,
+      /(?:youtube\.com\/watch\?.*?[&?]v=)([A-Za-z0-9_-]{11})/
+    ];
+
+    for (const p of patterns) {
+      const m = url.match(p);
+      if (m) return m[1];
+    }
+
+    return null;
+  }
+
+  function addVideo() {
+    const urlInput = document.getElementById('videoUrlInput');
+    const titleInput = document.getElementById('videoTitleInput');
+
+    if (!urlInput || !titleInput) {
+      console.error('No se encontraron los inputs de video.');
+      return;
+    }
+
+    const url = (urlInput.value || '').trim();
+    const title = (titleInput.value || '').trim();
+
+    const id = extractYouTubeId(url);
+
+    if (!id) {
+      alert(
+        'URL de YouTube no válida.\n\nEjemplos válidos:\n• https://www.youtube.com/watch?v=XXXXXXXXXXX\n• https://youtu.be/XXXXXXXXXXX\n• https://youtube.com/shorts/XXXXXXXXXXX'
+      );
+      return;
+    }
+
+    if (videoList.find(v => v.id === id)) {
+      alert('Este video ya está agregado.');
+      return;
+    }
+
+    videoList.push({
+      id,
+      title: title || 'Video sin título',
+      url
+    });
+
+    urlInput.value = '';
+    titleInput.value = '';
+
+    saveVideosLocal();
+    renderVideos();
+  }
+
+  function removeVideo(index) {
+    if (index < 0 || index >= videoList.length) return;
+
+    if (confirm('¿Eliminar este video de la lista?')) {
+      videoList.splice(index, 1);
+      saveVideosLocal();
+      renderVideos();
+    }
+  }
+
+  function renderVideos() {
+    const grid = document.getElementById('videoGrid');
+    const empty = document.getElementById('videosEmpty');
+
+    if (!grid || !empty) {
+      console.error('No se encontraron #videoGrid o #videosEmpty');
+      return;
+    }
+
+    grid.innerHTML = '';
+
+    if (!Array.isArray(videoList)) {
+      videoList = [];
+    }
+
+    if (videoList.length === 0) {
+      empty.style.display = 'flex';
+      if (window.lucide) lucide.createIcons();
+      return;
+    }
+
+    empty.style.display = 'none';
+
+    let html = '';
+
+    videoList.forEach((v, i) => {
+      const safeTitle = String(v.title || 'Video sin título')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
+      const watchUrl = `https://www.youtube.com/watch?v=${v.id}`;
+      const thumbUrl = `https://img.youtube.com/vi/${v.id}/hqdefault.jpg`;
+
+      html += `
+        <div class="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
+          <a
+            href="${watchUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="block relative group"
+            title="Abrir video en YouTube"
+          >
+            <img
+              src="${thumbUrl}"
+              alt="${safeTitle}"
+              class="w-full aspect-video object-cover bg-gray-200"
+              loading="lazy"
+            >
+            <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+              <div class="bg-white/95 text-red-600 rounded-full p-3 shadow-lg">
+                <i data-lucide="play" class="w-6 h-6 fill-current"></i>
+              </div>
+            </div>
+          </a>
+
+          <div class="p-3 bg-white space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <i data-lucide="youtube" class="w-4 h-4 text-red-500 shrink-0"></i>
+                <span class="text-xs font-black text-gray-700 truncate">${safeTitle}</span>
+              </div>
+              <button
+                type="button"
+                onclick="removeVideo(${i})"
+                class="text-red-200 hover:text-red-500 transition-colors shrink-0"
+                title="Eliminar video"
+              >
+                <i data-lucide="trash-2" class="w-4 h-4"></i>
+              </button>
+            </div>
+
+            <a
+              href="${watchUrl}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-red-600 hover:text-red-700"
+            >
+              <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+              Abrir en YouTube
+            </a>
+          </div>
+        </div>
+      `;
+    });
+
+    grid.innerHTML = html;
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function toggleVideoManager() {
+    const content = document.getElementById('video-manager-content');
+    const btn = document.getElementById('video-toggle-btn');
+
+    if (!content || !btn) {
+      console.error('No se encontraron #video-manager-content o #video-toggle-btn');
+      return;
+    }
+
+    if (content.classList.contains('hidden')) {
+      content.classList.remove('hidden');
+      btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+      renderVideos();
+    } else {
+      content.classList.add('hidden');
+      btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+    }
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  function saveVideosLocal() {
+    try {
+      localStorage.setItem('esquina_videos_v1', JSON.stringify(videoList));
+    } catch (e) {
+      console.error('Error guardando videos en localStorage:', e);
+    }
+  }
+
+  function loadVideosLocal() {
+    try {
+      const saved = localStorage.getItem('esquina_videos_v1');
+      if (!saved) {
+        videoList = [];
+        return;
+      }
+
+      const parsed = JSON.parse(saved);
+      videoList = Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      console.error('Error cargando videos de localStorage:', e);
+      videoList = [];
+    }
+  }
+  // =========================================
     // ====== ASISTENTE A GRANEL INTELIGENTE ======
     function toggleBulkAssistant() {
       const content = document.getElementById('bulk-assistant-content');
       const btn = document.getElementById('bulk-toggle-btn');
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
-        
-        // AUTO-LLENAR CON EL PRECIO REAL DE LA CALCULADORA AL ABRIR
         const priceText = document.getElementById('resFinalPrice').textContent;
         if(priceText && priceText !== "0.00") {
             const cleanPrice = parseFloat(priceText.replace(/,/g, ''));
@@ -483,206 +750,118 @@
       const pUnit = parseFloat(document.getElementById('asstBasePrice').value) || 0;
       const pFull = parseFloat(document.getElementById('asstFullPrice').value) || 0;
       const qFull = parseFloat(document.getElementById('asstFullQty').value) || 0;
-
-      if(pUnit <= 0 || pFull <= 0 || qFull <= 0) {
-        alert("Por favor llena los datos base del envase y precio unitario.");
-        return;
-      }
-
+      if(pUnit <= 0 || pFull <= 0 || qFull <= 0) { alert("Por favor llena los datos base."); return; }
       const unitFull = pFull / qFull;
-
       [2, 3, 4].forEach(i => {
         const q = parseFloat(document.getElementById(`asstQty${i}`).value) || 0;
         if(q > 0) {
           let totalQ = 0;
-          if (q >= qFull) {
-            totalQ = pFull; 
-          } else {
+          if (q >= qFull) { totalQ = pFull; } 
+          else {
             let unitQ = pUnit - (pUnit - unitFull) * (q / qFull);
             totalQ = q * unitQ;
-            if(totalQ >= pFull) {
-              totalQ = pFull - 15; 
-            }
+            if(totalQ >= pFull) totalQ = pFull - 15;
           }
           document.getElementById(`asstTotal${i}`).value = Math.round(totalQ);
         }
       });
-      alert("¡Sugerencias calculadas! Revisa los montos en verde. Si te gustan, da clic en 'Aplicar Curva de Descuentos'.");
+      alert("¡Sugerencias calculadas! Revisa los montos en verde.");
     }
 
     function applyBulkStrategy() {
       const basePrice = parseFloat(document.getElementById('asstBasePrice').value) || 1;
-      
       const q2 = parseFloat(document.getElementById('asstQty2').value) || 600;
       const t2 = parseFloat(document.getElementById('asstTotal2').value) || 0;
       let d2 = 0;
       if(basePrice * q2 > 0 && t2 > 0) d2 = (1 - (t2 / (basePrice * q2))) * 100;
-
       const q3 = parseFloat(document.getElementById('asstQty3').value) || 700;
       const t3 = parseFloat(document.getElementById('asstTotal3').value) || 0;
       let d3 = 0;
       if(basePrice * q3 > 0 && t3 > 0) d3 = (1 - (t3 / (basePrice * q3))) * 100;
-
       const q4 = parseFloat(document.getElementById('asstQty4').value) || 800;
       const t4 = parseFloat(document.getElementById('asstTotal4').value) || 0;
       let d4 = 0;
       if(basePrice * q4 > 0 && t4 > 0) d4 = (1 - (t4 / (basePrice * q4))) * 100;
-
-      if(t2 === 0 || t3 === 0 || t4 === 0) {
-        alert("Parece que tienes montos en $0. Primero da clic en 'Calcular Sugerencias Inteligentes'.");
-        return;
-      }
-
-      if(appState.volumeConfig[1]) {
-        appState.volumeConfig[1].qty = q2;
-        appState.volumeConfig[1].discount = Math.max(0, parseFloat(d2.toFixed(2)));
-      }
-      if(appState.volumeConfig[2]) {
-        appState.volumeConfig[2].qty = q3;
-        appState.volumeConfig[2].discount = Math.max(0, parseFloat(d3.toFixed(2)));
-      }
-      if(appState.volumeConfig[3]) {
-        appState.volumeConfig[3].qty = q4;
-        appState.volumeConfig[3].discount = Math.max(0, parseFloat(d4.toFixed(2)));
-      }
-
-      saveLocal();
-      renderVolumeConfig(); 
-      runCalculations();    
-      
-      alert("¡Listo! Tu estrategia de descuentos ha sido aplicada a tu calculadora principal.");
-    }
-    // =======================================
-
-    function openFreightModal() {
-      document.getElementById('freightModal').classList.remove('hidden');
-      document.getElementById('modalFreightTotal').focus();
+      if(t2 === 0 || t3 === 0 || t4 === 0) { alert("Primero da clic en 'Calcular Sugerencias Inteligentes'."); return; }
+      if(appState.volumeConfig[1]) { appState.volumeConfig[1].qty = q2; appState.volumeConfig[1].discount = Math.max(0, parseFloat(d2.toFixed(2))); }
+      if(appState.volumeConfig[2]) { appState.volumeConfig[2].qty = q3; appState.volumeConfig[2].discount = Math.max(0, parseFloat(d3.toFixed(2))); }
+      if(appState.volumeConfig[3]) { appState.volumeConfig[3].qty = q4; appState.volumeConfig[3].discount = Math.max(0, parseFloat(d4.toFixed(2))); }
+      saveLocal(); renderVolumeConfig(); runCalculations();
+      alert("¡Listo! Tu estrategia de descuentos ha sido aplicada.");
     }
 
-    function closeFreightModal() {
-      document.getElementById('freightModal').classList.add('hidden');
-      document.getElementById('modalFreightTotal').value = '';
-      document.getElementById('modalFreightPieces').value = '';
-    }
-
+    function openFreightModal() { document.getElementById('freightModal').classList.remove('hidden'); document.getElementById('modalFreightTotal').focus(); }
+    function closeFreightModal() { document.getElementById('freightModal').classList.add('hidden'); document.getElementById('modalFreightTotal').value = ''; document.getElementById('modalFreightPieces').value = ''; }
     function applyFreight() {
       const total = parseFloat(document.getElementById('modalFreightTotal').value) || 0;
-      const pieces = parseFloat(document.getElementById('modalFreightPieces').value) || 1; 
+      const pieces = parseFloat(document.getElementById('modalFreightPieces').value) || 1;
       const costPerPiece = total / pieces;
-      
       document.getElementById('calcExtraCost').value = costPerPiece.toFixed(2);
       document.getElementById('calcExtraToggle').checked = true;
       document.getElementById('extraCostWrap').classList.remove('hidden');
-
-      closeFreightModal();
-      runCalculations();
+      closeFreightModal(); runCalculations();
     }
 
-    function toggleManualMargin() { 
-      document.getElementById('manualMarginWrap').classList.toggle('hidden'); 
-      runCalculations(); 
-    }
-
-    function toggleExtraCost() { 
-      document.getElementById('extraCostWrap').classList.toggle('hidden'); 
-      runCalculations(); 
-    }
+    function toggleManualMargin() { document.getElementById('manualMarginWrap').classList.toggle('hidden'); runCalculations(); }
+    function toggleExtraCost() { document.getElementById('extraCostWrap').classList.toggle('hidden'); runCalculations(); }
 
     function runCalculations() {
       const cat = document.getElementById('calcCategory').value;
       const baseCost = parseFloat(document.getElementById('calcBaseCost').value) || 0;
       const isExtra = document.getElementById('calcExtraToggle').checked;
-      const extraCost = isExtra ? (parseFloat(document.getElementById('calcExtraCost').value) || 0) : 0; 
+      const extraCost = isExtra ? (parseFloat(document.getElementById('calcExtraCost').value) || 0) : 0;
       const iepsKey = document.getElementById('calcIeps').value;
       const isManual = document.getElementById('calcManualToggle').checked;
       const includeIva = document.getElementById('calcIvaToggle').checked;
-
       const iepsAmt = baseCost * (CONFIG.IEPS[iepsKey] || 0);
       const ivaAmt = includeIva ? (baseCost + extraCost) * CONFIG.IVA_RATE : 0;
       const totalCost = baseCost + extraCost + iepsAmt + ivaAmt;
-
       let m = 0;
       if(isManual) m = parseFloat(document.getElementById('calcManualMargin').value) || 0;
       else {
         const rules = appState.margins[cat] || [{max: Infinity, m: 20}];
         m = (rules.find(r => totalCost < r.max) || rules[rules.length-1]).m;
       }
-
       const ratio = Math.min(m/100, 0.99);
       const finalPrice = totalCost / (1 - ratio);
-      
-      appState.currentPVP = finalPrice; 
-
+      appState.currentPVP = finalPrice;
       updateMainUI({ finalPrice, profit: finalPrice - totalCost, marginPct: m, totalCost, baseCost, extraCost, iepsAmt, ivaAmt, includeIva });
       updateScales(totalCost, finalPrice);
-      
       const asstBasePriceInput = document.getElementById('asstBasePrice');
-      if(asstBasePriceInput && finalPrice > 0) {
-          asstBasePriceInput.value = finalPrice.toFixed(2);
-      }
-      
+      if(asstBasePriceInput && finalPrice > 0) asstBasePriceInput.value = finalPrice.toFixed(2);
       saveLocal();
     }
 
     function updateMainUI(d) {
       const cat = document.getElementById('calcCategory').value;
       let customMeta = null;
-      if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
-        customMeta = appState.categoryMetadata[cat];
-      }
-
+      if (appState.categoryMetadata && appState.categoryMetadata[cat]) customMeta = appState.categoryMetadata[cat];
       const info = customMeta || CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: ["", ""] };
       const fallbackImg = "https://via.placeholder.com/300x150/f9fafb/9ca3af?text=Sin+Imagen";
-      
       const img1 = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "") ? info.imgs[0] : fallbackImg;
       const img2 = (info.imgs && info.imgs[1] && info.imgs[1].trim() !== "") ? info.imgs[1] : fallbackImg;
-
       document.getElementById('resCatTitle').textContent = cat;
       document.getElementById('resCatIcon').textContent = info.icon || "📦";
       document.getElementById('resCatDesc').textContent = info.desc || "Categoría general";
       document.getElementById('resImg1').src = img1;
       document.getElementById('resImg2').src = img2;
-
       document.getElementById('resFinalPrice').textContent = fmt$(d.finalPrice).replace('$', '');
       document.getElementById('resIvaNote').textContent = d.includeIva ? "(IVA incluido en costo)" : "(Sin IVA en costo)";
-
       const p = d.finalPrice;
-      let charm1 = (Math.floor(p / 10) * 10) - 1; 
-      if(charm1 <= 0) charm1 = 9;
-      let charm2 = (Math.floor(p / 10) * 10) + 5; 
-      let charm3 = (Math.ceil(p / 10) * 10) - 1; 
-      if(charm3 === charm1) charm3 += 10; 
-
+      let charm1 = (Math.floor(p / 10) * 10) - 1; if(charm1 <= 0) charm1 = 9;
+      let charm2 = (Math.floor(p / 10) * 10) + 5;
+      let charm3 = (Math.ceil(p / 10) * 10) - 1; if(charm3 === charm1) charm3 += 10;
       document.getElementById('resPsychPrices').innerHTML = `
-        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
-          <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Agresivo</span>
-          <span class="font-black text-blue-700 text-sm">${fmt$(charm1).replace('$','')}</span>
-        </div>
-        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
-          <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Comercial</span>
-          <span class="font-black text-blue-700 text-sm">${fmt$(charm2).replace('$','')}</span>
-        </div>
-        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
-          <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Margen +</span>
-          <span class="font-black text-blue-700 text-sm">${fmt$(charm3).replace('$','')}</span>
-        </div>
-      `;
-
+        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm"><span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Agresivo</span><span class="font-black text-blue-700 text-sm">${fmt$(charm1).replace('$','')}</span></div>
+        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm"><span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Comercial</span><span class="font-black text-blue-700 text-sm">${fmt$(charm2).replace('$','')}</span></div>
+        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm"><span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Margen +</span><span class="font-black text-blue-700 text-sm">${fmt$(charm3).replace('$','')}</span></div>`;
       const badge = document.getElementById('resBadge');
       if (d.marginPct >= 25) { badge.className = "bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen saludable"; }
       else if (d.marginPct >= 15) { badge.className = "bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen moderado"; }
       else { badge.className = "bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen bajo"; }
-
-      document.getElementById('resSubtotal').textContent = fmt$(d.baseCost); 
-      
+      document.getElementById('resSubtotal').textContent = fmt$(d.baseCost);
       const extraRow = document.getElementById('resExtraRow');
-      if(d.extraCost > 0) {
-        extraRow.classList.remove('hidden');
-        document.getElementById('resExtraCost').textContent = fmt$(d.extraCost);
-      } else {
-        extraRow.classList.add('hidden');
-      }
-
+      if(d.extraCost > 0) { extraRow.classList.remove('hidden'); document.getElementById('resExtraCost').textContent = fmt$(d.extraCost); } else { extraRow.classList.add('hidden'); }
       document.getElementById('resIvaCost').textContent = fmt$(d.ivaAmt);
       document.getElementById('resTotalCost').textContent = fmt$(d.totalCost);
       document.getElementById('resProfit').textContent = fmt$(d.profit);
@@ -693,24 +872,12 @@
     function updateScales(cost, basePVP) {
       const container = document.getElementById('scaleTableBody');
       container.innerHTML = '';
-      
       appState.volumeConfig.forEach(tier => {
         let p = basePVP * (1 - tier.discount / 100);
         let margin = p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0;
-        
-        let totalPrice = p * tier.qty; 
-        let totalProfit = (p - cost) * tier.qty; 
-        
-        container.innerHTML += `
-          <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-            <td class="py-3 text-xs text-green-700 font-black uppercase tracking-wider">${tier.label}</td>
-            <td class="py-3 text-gray-500 font-bold">≥ ${tier.qty} pz</td>
-            <td class="py-3 font-black text-gray-800 text-base">${fmt$(p)}</td>
-            <td class="py-3 font-black text-blue-600">${fmt$(totalPrice)}</td>
-            <td class="py-3 font-black text-green-600">${fmt$(totalProfit)}</td>
-            <td class="py-3 text-right text-gray-400 font-bold">${margin}%</td>
-          </tr>
-        `;
+        let totalPrice = p * tier.qty;
+        let totalProfit = (p - cost) * tier.qty;
+        container.innerHTML += `<tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"><td class="py-3 text-xs text-green-700 font-black uppercase tracking-wider">${tier.label}</td><td class="py-3 text-gray-500 font-bold">≥ ${tier.qty} pz</td><td class="py-3 font-black text-gray-800 text-base">${fmt$(p)}</td><td class="py-3 font-black text-blue-600">${fmt$(totalPrice)}</td><td class="py-3 font-black text-green-600">${fmt$(totalProfit)}</td><td class="py-3 text-right text-gray-400 font-bold">${margin}%</td></tr>`;
       });
     }
 
@@ -719,28 +886,9 @@
       container.innerHTML = '';
       appState.categories.forEach((cat, index) => {
         let meta = { icon: "📦", desc: "", imgs: ["", ""] };
-        if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
-           meta = appState.categoryMetadata[cat];
-        } else if (CATEGORY_INFO[cat]) {
-           meta = { ...CATEGORY_INFO[cat] };
-        }
-
-        container.innerHTML += `
-          <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-1 h-full bg-green-400"></div>
-            <div class="flex items-center gap-2 pl-2">
-              <input type="text" value="${cat}" onchange="renameCategory(${index}, this.value)" class="bg-transparent font-black text-sm w-full outline-none text-gray-700 focus:text-green-600">
-              <button onclick="removeCategory(${index})" class="text-red-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-            </div>
-            <div class="grid grid-cols-2 gap-2 pl-2">
-              <input type="text" placeholder="Icono (ej: 🍎)" value="${meta.icon}" onchange="updateMeta('${cat}', 'icon', this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400">
-              <input type="text" placeholder="Descripción corta" value="${meta.desc}" onchange="updateMeta('${cat}', 'desc', this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400">
-            </div>
-            <div class="pl-2 space-y-2">
-              <input type="text" placeholder="Link de Imagen 1" value="${meta.imgs[0] || ''}" onchange="updateMetaImg('${cat}', 0, this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400">
-              <input type="text" placeholder="Link de Imagen 2" value="${meta.imgs[1] || ''}" onchange="updateMetaImg('${cat}', 1, this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400">
-            </div>
-          </div>`;
+        if (appState.categoryMetadata && appState.categoryMetadata[cat]) meta = appState.categoryMetadata[cat];
+        else if (CATEGORY_INFO[cat]) meta = { ...CATEGORY_INFO[cat] };
+        container.innerHTML += `<div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3 relative overflow-hidden"><div class="absolute top-0 left-0 w-1 h-full bg-green-400"></div><div class="flex items-center gap-2 pl-2"><input type="text" value="${cat}" onchange="renameCategory(${index}, this.value)" class="bg-transparent font-black text-sm w-full outline-none text-gray-700 focus:text-green-600"><button onclick="removeCategory(${index})" class="text-red-300 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button></div><div class="grid grid-cols-2 gap-2 pl-2"><input type="text" placeholder="Icono (ej: 🍎)" value="${meta.icon}" onchange="updateMeta('${cat}', 'icon', this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"><input type="text" placeholder="Descripción corta" value="${meta.desc}" onchange="updateMeta('${cat}', 'desc', this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"></div><div class="pl-2 space-y-2"><input type="text" placeholder="Link de Imagen 1" value="${meta.imgs[0] || ''}" onchange="updateMetaImg('${cat}', 0, this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"><input type="text" placeholder="Link de Imagen 2" value="${meta.imgs[1] || ''}" onchange="updateMetaImg('${cat}', 1, this.value)" class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"></div></div>`;
       });
       lucide.createIcons();
       updateCategoryDropdowns();
@@ -748,22 +896,16 @@
 
     function updateMeta(cat, field, val) {
       if(!appState.categoryMetadata) appState.categoryMetadata = {};
-      if(!appState.categoryMetadata[cat]) {
-        appState.categoryMetadata[cat] = CATEGORY_INFO[cat] ? { ...CATEGORY_INFO[cat] } : { icon: "📦", desc: "", imgs: ["", ""] };
-      }
+      if(!appState.categoryMetadata[cat]) appState.categoryMetadata[cat] = CATEGORY_INFO[cat] ? { ...CATEGORY_INFO[cat] } : { icon: "📦", desc: "", imgs: ["", ""] };
       appState.categoryMetadata[cat][field] = val;
-      saveLocal();
-      runCalculations();
+      saveLocal(); runCalculations();
     }
 
     function updateMetaImg(cat, idx, val) {
       if(!appState.categoryMetadata) appState.categoryMetadata = {};
-      if(!appState.categoryMetadata[cat]) {
-        appState.categoryMetadata[cat] = CATEGORY_INFO[cat] ? { ...CATEGORY_INFO[cat] } : { icon: "📦", desc: "", imgs: ["", ""] };
-      }
+      if(!appState.categoryMetadata[cat]) appState.categoryMetadata[cat] = CATEGORY_INFO[cat] ? { ...CATEGORY_INFO[cat] } : { icon: "📦", desc: "", imgs: ["", ""] };
       appState.categoryMetadata[cat].imgs[idx] = val;
-      saveLocal();
-      runCalculations();
+      saveLocal(); runCalculations();
     }
 
     function addNewCategory() {
@@ -773,31 +915,18 @@
 
     function renameCategory(index, newName) {
       const old = appState.categories[index];
-      if (newName && old !== newName) { 
-        appState.categories[index] = newName; 
-        appState.margins[newName] = appState.margins[old]; 
-        delete appState.margins[old]; 
-        
-        if (appState.categoryMetadata && appState.categoryMetadata[old]) {
-          appState.categoryMetadata[newName] = appState.categoryMetadata[old];
-          delete appState.categoryMetadata[old];
-        }
-
-        updateCategoryDropdowns(); 
-        renderConfigTables(); 
-        saveLocal(); 
+      if (newName && old !== newName) {
+        appState.categories[index] = newName; appState.margins[newName] = appState.margins[old]; delete appState.margins[old];
+        if (appState.categoryMetadata && appState.categoryMetadata[old]) { appState.categoryMetadata[newName] = appState.categoryMetadata[old]; delete appState.categoryMetadata[old]; }
+        updateCategoryDropdowns(); renderConfigTables(); saveLocal();
       }
     }
 
     function removeCategory(index) {
-      if (confirm("¿Borrar?")) { 
-        const name = appState.categories[index]; 
-        appState.categories.splice(index, 1); 
-        delete appState.margins[name]; 
+      if (confirm("¿Borrar?")) {
+        const name = appState.categories[index]; appState.categories.splice(index, 1); delete appState.margins[name];
         if (appState.categoryMetadata) delete appState.categoryMetadata[name];
-        renderCategoryManager(); 
-        renderConfigTables(); 
-        saveLocal(); 
+        renderCategoryManager(); renderConfigTables(); saveLocal();
       }
     }
 
@@ -823,73 +952,41 @@
       const container = document.getElementById('volumeConfigContainer');
       container.innerHTML = '';
       appState.volumeConfig.forEach((tier, idx) => {
-        container.innerHTML += `
-          <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
-            <h4 class="font-black text-gray-800 text-sm mb-3 ml-2">${tier.label}</h4>
-            <div class="space-y-3 ml-2">
-              <div>
-                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">A partir de (Piezas)</label>
-                <input type="number" value="${tier.qty}" onchange="updateVolumeTier(${idx}, 'qty', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs bg-white focus:ring-2 focus:ring-orange-200 outline-none">
-              </div>
-              <div>
-                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">% Descuento</label>
-                <input type="number" value="${tier.discount}" onchange="updateVolumeTier(${idx}, 'discount', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs text-orange-600 bg-white focus:ring-2 focus:ring-orange-200 outline-none">
-              </div>
-            </div>
-          </div>
-        `;
+        container.innerHTML += `<div class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden"><div class="absolute top-0 left-0 w-1 h-full bg-orange-400"></div><h4 class="font-black text-gray-800 text-sm mb-3 ml-2">${tier.label}</h4><div class="space-y-3 ml-2"><div><label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">A partir de (Piezas)</label><input type="number" value="${tier.qty}" onchange="updateVolumeTier(${idx}, 'qty', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs bg-white focus:ring-2 focus:ring-orange-200 outline-none"></div><div><label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">% Descuento</label><input type="number" value="${tier.discount}" onchange="updateVolumeTier(${idx}, 'discount', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs text-orange-600 bg-white focus:ring-2 focus:ring-orange-200 outline-none"></div></div></div>`;
       });
     }
 
-    function updateVolumeTier(idx, field, value) {
-      appState.volumeConfig[idx][field] = parseFloat(value) || 0;
-      saveLocal();
-      runCalculations(); 
-    }
+    function updateVolumeTier(idx, field, value) { appState.volumeConfig[idx][field] = parseFloat(value) || 0; saveLocal(); runCalculations(); }
 
     function switchTab(view) {
       document.getElementById('viewCalc').classList.toggle('hidden', view !== 'calc');
       document.getElementById('viewConfig').classList.toggle('hidden', view !== 'config');
       document.getElementById('btnTabCalc').classList.toggle('active', view === 'calc');
       document.getElementById('btnTabConfig').classList.toggle('active', view === 'config');
-      if(view === 'config') { 
-        renderCategoryManager(); 
-        renderConfigTables(); 
-        renderVolumeConfig();
-      }
+      if(view === 'config') { renderCategoryManager(); renderConfigTables(); renderVolumeConfig(); }
     }
 
     function toggleCategoryManager() {
       const content = document.getElementById('category-manager-content');
       const btn = document.getElementById('cat-toggle-btn');
-      if (content.classList.contains('hidden')) {
-        content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
-      } else {
-        content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
-      }
+      if (content.classList.contains('hidden')) { content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>'; } 
+      else { content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>'; }
       lucide.createIcons();
     }
 
     function toggleVolumeManager() {
       const content = document.getElementById('volume-manager-content');
       const btn = document.getElementById('vol-toggle-btn');
-      if (content.classList.contains('hidden')) {
-        content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
-      } else {
-        content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
-      }
+      if (content.classList.contains('hidden')) { content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>'; }
+      else { content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>'; }
       lucide.createIcons();
     }
 
     function toggleMarginManager() {
       const content = document.getElementById('margin-manager-content');
       const btn = document.getElementById('margin-toggle-btn');
-      if (content.classList.contains('hidden')) {
-        content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
-      } else {
-        content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
-      }
+      if (content.classList.contains('hidden')) { content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>'; }
+      else { content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>'; }
       lucide.createIcons();
     }
 
@@ -897,39 +994,23 @@
       const content = document.getElementById('cloud-panel-content');
       const header = document.getElementById('cloud-header');
       const btn = document.getElementById('cloud-toggle-btn');
-      
-      if (content.classList.contains('hidden')) {
-        content.classList.remove('hidden');
-        header.classList.add('border-b', 'pb-2');
-        btn.innerHTML = '<i data-lucide="chevron-down" class="w-4 h-4"></i>';
-      } else {
-        content.classList.add('hidden');
-        header.classList.remove('border-b', 'pb-2');
-        btn.innerHTML = '<i data-lucide="chevron-up" class="w-4 h-4"></i>';
-      }
+      if (content.classList.contains('hidden')) { content.classList.remove('hidden'); header.classList.add('border-b', 'pb-2'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-4 h-4"></i>'; }
+      else { content.classList.add('hidden'); header.classList.remove('border-b', 'pb-2'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-4 h-4"></i>'; }
       lucide.createIcons();
     }
 
     const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
     function saveLocal() { localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState)); }
     function saveAllConfig() { for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max); saveLocal(); runCalculations(); alert("Guardado."); }
+    function resetToDefaults() { if(confirm("¿Restablecer?")) { localStorage.removeItem(CONFIG.LS_KEY); location.reload(); } }
 
-    // ====== FUNCIÓN CORREGIDA ======
-    function updateCategoryDropdowns() { 
-      const select = document.getElementById('calcCategory'); 
-      const currentSelection = select.value; // Guardamos la categoría actual
-      
-      select.innerHTML = ''; 
-      appState.categories.forEach(cat => { 
-        select.innerHTML += `<option value="${cat}">${cat}</option>`; 
-      }); 
-      
-      // Si la categoría que estaba seleccionada aún existe, la devolvemos
-      if (currentSelection && appState.categories.includes(currentSelection)) {
-        select.value = currentSelection;
-      }
+    function updateCategoryDropdowns() {
+      const select = document.getElementById('calcCategory');
+      const currentSelection = select.value;
+      select.innerHTML = '';
+      appState.categories.forEach(cat => { select.innerHTML += `<option value="${cat}">${cat}</option>`; });
+      if (currentSelection && appState.categories.includes(currentSelection)) select.value = currentSelection;
     }
-    // ===============================
 
     function handleCategoryChange() { runCalculations(); }
 
@@ -945,30 +1026,41 @@
     async function syncToCloud() { try { await db.collection('configs').doc('global').set({ data: JSON.stringify(appState), updatedAt: new Date() }); alert("Nube OK"); } catch (e) { alert(e.message); } }
     async function pullFromCloud() { try { const doc = await db.collection('configs').doc('global').get(); if(doc.exists) { appState = JSON.parse(doc.data().data); saveLocal(); renderCategoryManager(); handleCategoryChange(); alert("Bajado."); } } catch (e) { alert(e.message); } }
 
-    window.onload = () => {
-      const local = localStorage.getItem(CONFIG.LS_KEY);
-      if (local) {
-        try {
-          const p = JSON.parse(local);
-          if (!p.categories) p.categories = [...CONFIG.DEFAULT_CATS];
-          if (!p.margins) p.margins = {};
-          if (!p.volumeConfig) {
-             p.volumeConfig = [
-               { label: "PRECIO 1", qty: 1, discount: 0 },
-               { label: "PRECIO 2", qty: 600, discount: 5 },
-               { label: "PRECIO 3", qty: 700, discount: 8 },
-               { label: "PRECIO 4", qty: 800, discount: 12 }
-             ];
-          }
-          if (!p.categoryMetadata) p.categoryMetadata = {};
-          appState = p;
-        } catch (e) { console.error(e); }
-      }
-      document.getElementById('calcIeps').innerHTML = `<option value="none">Sin IEPS (0%)</option><option value="azul" style="color:#2563eb">Etiqueta Azul (6%)</option><option value="amarilla" style="color:#d97706">Etiqueta Amarilla (7%)</option><option value="roja" style="color:#dc2626">Etiqueta Roja (9%)</option>`;
-      updateCategoryDropdowns();
-      handleCategoryChange();
-      lucide.createIcons();
-    };
+window.onload = () => {
+  const local = localStorage.getItem(CONFIG.LS_KEY);
+  if (local) {
+    try {
+      const p = JSON.parse(local);
+      if (!p.categories) p.categories = [...CONFIG.DEFAULT_CATS];
+      if (!p.margins) p.margins = {};
+      if (!p.volumeConfig) p.volumeConfig = [
+        { label: "PRECIO 1", qty: 1, discount: 0 },
+        { label: "PRECIO 2", qty: 600, discount: 5 },
+        { label: "PRECIO 3", qty: 700, discount: 8 },
+        { label: "PRECIO 4", qty: 800, discount: 12 }
+      ];
+      if (!p.categoryMetadata) p.categoryMetadata = {};
+      appState = p;
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  loadVideosLocal();
+  renderVideos();
+
+  document.getElementById('calcIeps').innerHTML = `
+    <option value="none">Sin IEPS (0%)</option>
+    <option value="azul" style="color:#2563eb">Etiqueta Azul (6%)</option>
+    <option value="amarilla" style="color:#d97706">Etiqueta Amarilla (7%)</option>
+    <option value="roja" style="color:#dc2626">Etiqueta Roja (9%)</option>
+  `;
+
+  updateCategoryDropdowns();
+  handleCategoryChange();
+
+  if (window.lucide) lucide.createIcons();
+};
   </script>
 </body>
 </html>
