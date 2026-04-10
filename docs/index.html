@@ -195,12 +195,9 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 mb-6">
-            <div class="w-full h-24 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
-              <img id="resImg1" src="" class="w-full h-full object-cover object-center">
-            </div>
-            <div class="w-full h-24 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
-              <img id="resImg2" src="" class="w-full h-full object-cover object-center">
+          <div class="mb-6 flex justify-center">
+            <div class="w-[270px] h-[270px] rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm">
+              <img id="resImg1" src="" class="w-full h-full object-cover object-center" alt="Imagen de categoría">
             </div>
           </div>
 
@@ -431,7 +428,6 @@
         </div>
       </div>
 
-      <!-- ====== NUEVO: INSTRUCCIONES EN VIDEO ====== -->
       <div class="bg-white rounded-3xl p-8 border-2 border-red-50 shadow-sm transition-all duration-300">
         <div class="flex justify-between items-center cursor-pointer" onclick="toggleVideoManager()">
           <h2 class="text-xl font-black text-gray-800 uppercase italic flex items-center gap-2">
@@ -448,7 +444,6 @@
             Soporta links normales <span class="font-black text-gray-600">youtube.com/watch?v=...</span>, cortos <span class="font-black text-gray-600">youtu.be/...</span> y Shorts.
           </p>
 
-          <!-- Formulario para agregar video -->
           <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
             <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Agregar nuevo video</p>
             <div class="flex flex-col md:flex-row gap-3">
@@ -480,22 +475,18 @@
             </div>
           </div>
 
-          <!-- Grid de videos -->
           <div id="videoGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
 
-          <!-- Estado vacío -->
           <div id="videosEmpty" class="text-center text-gray-300 font-black text-xs uppercase py-10 tracking-widest flex-col items-center" style="display:flex;">
             <i data-lucide="video-off" class="w-10 h-10 mb-3"></i>
             Aún no hay videos. Agrega uno arriba.
           </div>
         </div>
       </div>
-      <!-- ====== FIN INSTRUCCIONES EN VIDEO ====== -->
 
     </div>
   </div>
 
-  <!-- Modal Flete -->
   <div id="freightModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-[100] px-4">
     <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
       <h3 class="font-black text-gray-800 uppercase italic mb-4 flex items-center gap-2">
@@ -518,7 +509,6 @@
     </div>
   </div>
 
-  <!-- Cloud Panel -->
   <div id="cloud-panel" class="p-4 transition-all duration-300">
     <div class="flex items-center justify-between cursor-pointer" onclick="toggleCloudPanel()" id="cloud-header">
       <div class="flex items-center gap-2">
@@ -547,23 +537,30 @@
   <script>
     const CONFIG = {
       IVA_RATE: 0.16,
-      LS_KEY: 'esquina_agricola_v8_final',
+      LS_KEY: 'esquina_agricola_v9_single_image',
       IEPS: { none: 0, azul: 0.06, amarilla: 0.07, roja: 0.09 },
       DEFAULT_CATS: ["Agroquimicos", "Granel", "KG-LT", "FERTILIZANTES", "INOCUIDAD", "MAQUINARIA"]
     };
 
     const CATEGORY_INFO = {
-      "Agroquimicos": { icon: "🌿", desc: "Productos para proteger y fortalecer tus cultivos.", imgs: ["https://elciudadanovoces.com/wp-content/uploads/2024/06/6-720x406.jpg", "https://datos-bo.com/wp-content/uploads/2021/04/agroqumicos_mujer_fumigando_cbba_DANIEL_JAMES_LOS_TIEMPOS.jpg"] },
-      "Granel": { icon: "🧪", desc: "Insumos vendidos por Mililitro o Gramo.", imgs: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW2oljMgSWqHmnrNObMtJb6sh8nWUovf_Zg&s", "https://www.clikisalud.net/wp-content/uploads/2023/12/productos-biologicos-psoriasis-debes-saber.jpg"] },
-      "KG-LT": { icon: "⚖️", desc: "Presentaciones de venta minorista.", imgs: ["https://media.istockphoto.com/id/1283025593/es/foto/se-est%C3%A1-pesando-az%C3%BAcar-de-la-elaboraci%C3%B3n.jpg?s=170667a&w=0&k=20&c=bJiO4FyI8I-fF3dX7aoJEZaInIjNRThws_6ikzPQSuM=", "https://lamarinamx.vtexassets.com/arquivos/ids/651528-800-800?v=638095861978300000&width=800&height=800&aspect=true"] },
-      "FERTILIZANTES": { icon: "🌱", desc: "Nutrición para suelo y planta.", imgs: ["https://eos.com/wp-content/uploads/2023/11/components-of-different-types-of-fertilizers.jpg.webp", "https://bloglatam.jacto.com/wp-content/uploads/2022/09/jacto_jactomexico_image_563.jpeg"] },
-      "INOCUIDAD": { icon: "🧴", desc: "Seguridad alimentaria.", imgs: ["https://www.senasa.gob.pe/senasacontigo/wp-content/uploads/2019/11/inocuidad2.jpg", "https://www.gob.mx/cms/uploads/press/main_image/262283/post_230927_AGRICULTURA_FRUTILLAS-3.JPG"] },
-      "MAQUINARIA": { icon: "🚜", desc: "Equipos y herramientas.", imgs: ["https://www.defrentealcampo.com.ar/wp-content/uploads/2018/09/drone-pulverizador.jpg", "https://images.pexels.com/photos/2889440/pexels-photo-2889440.jpeg?auto=compress&cs=tinysrgb&w=600"] }
+      "Agroquimicos": { icon: "🌿", desc: "Productos para proteger y fortalecer tus cultivos.", imgs: ["https://elciudadanovoces.com/wp-content/uploads/2024/06/6-720x406.jpg"] },
+      "Granel": { icon: "🧪", desc: "Insumos vendidos por Mililitro o Gramo.", imgs: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW2oljMgSWqHmnrNObMtJb6sh8nWUovf_Zg&s"] },
+      "KG-LT": { icon: "⚖️", desc: "Presentaciones de venta minorista.", imgs: ["https://media.istockphoto.com/id/1283025593/es/foto/se-est%C3%A1-pesando-az%C3%BAcar-de-la-elaboraci%C3%B3n.jpg?s=170667a&w=0&k=20&c=bJiO4FyI8I-fF3dX7aoJEZaInIjNRThws_6ikzPQSuM="] },
+      "FERTILIZANTES": { icon: "🌱", desc: "Nutrición para suelo y planta.", imgs: ["https://eos.com/wp-content/uploads/2023/11/components-of-different-types-of-fertilizers.jpg.webp"] },
+      "INOCUIDAD": { icon: "🧴", desc: "Seguridad alimentaria.", imgs: ["https://www.senasa.gob.pe/senasacontigo/wp-content/uploads/2019/11/inocuidad2.jpg"] },
+      "MAQUINARIA": { icon: "🚜", desc: "Equipos y herramientas.", imgs: ["https://www.defrentealcampo.com.ar/wp-content/uploads/2018/09/drone-pulverizador.jpg"] }
     };
 
     let appState = {
       categories: [...CONFIG.DEFAULT_CATS],
-      margins: { Agroquimicos: [{max: 400, m: 27}, {max: Infinity, m: 17}], Granel: [{max: Infinity, m: 40}], "KG-LT": [{max: Infinity, m: 20}], FERTILIZANTES: [{max: Infinity, m: 15}], INOCUIDAD: [{max: Infinity, m: 20}], MAQUINARIA: [{max: Infinity, m: 10}] },
+      margins: {
+        Agroquimicos: [{max: 400, m: 27}, {max: Infinity, m: 17}],
+        Granel: [{max: Infinity, m: 40}],
+        "KG-LT": [{max: Infinity, m: 20}],
+        FERTILIZANTES: [{max: Infinity, m: 15}],
+        INOCUIDAD: [{max: Infinity, m: 20}],
+        MAQUINARIA: [{max: Infinity, m: 10}]
+      },
       volumeConfig: [
         { label: "PRECIO 1", qty: 1, discount: 0 },
         { label: "PRECIO 2", qty: 600, discount: 5 },
@@ -571,10 +568,9 @@
         { label: "PRECIO 4", qty: 800, discount: 12 }
       ],
       categoryMetadata: {},
-      currentPVP: 0 
+      currentPVP: 0
     };
 
-    // ====== GESTOR DE VIDEOS DE YOUTUBE ======
     let videoList = [];
 
     function extractYouTubeId(url) {
@@ -601,7 +597,6 @@
         return;
       }
 
-      // Evitar duplicados
       if (videoList.find(v => v.id === id)) {
         alert('Este video ya está agregado.');
         return;
@@ -750,21 +745,21 @@
         videoList = [];
       }
     }
-    // =========================================
 
-    // ====== ASISTENTE A GRANEL INTELIGENTE ======
     function toggleBulkAssistant() {
       const content = document.getElementById('bulk-assistant-content');
       const btn = document.getElementById('bulk-toggle-btn');
       if (content.classList.contains('hidden')) {
-        content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+        content.classList.remove('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
         const priceText = document.getElementById('resFinalPrice').textContent;
         if(priceText && priceText !== "0.00") {
-            const cleanPrice = parseFloat(priceText.replace(/,/g, ''));
-            document.getElementById('asstBasePrice').value = cleanPrice.toFixed(2);
+          const cleanPrice = parseFloat(priceText.replace(/,/g, ''));
+          document.getElementById('asstBasePrice').value = cleanPrice.toFixed(2);
         }
       } else {
-        content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+        content.classList.add('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
       }
       lucide.createIcons();
     }
@@ -797,24 +792,32 @@
       const t2 = parseFloat(document.getElementById('asstTotal2').value) || 0;
       let d2 = 0;
       if(basePrice * q2 > 0 && t2 > 0) d2 = (1 - (t2 / (basePrice * q2))) * 100;
+
       const q3 = parseFloat(document.getElementById('asstQty3').value) || 700;
       const t3 = parseFloat(document.getElementById('asstTotal3').value) || 0;
       let d3 = 0;
       if(basePrice * q3 > 0 && t3 > 0) d3 = (1 - (t3 / (basePrice * q3))) * 100;
+
       const q4 = parseFloat(document.getElementById('asstQty4').value) || 800;
       const t4 = parseFloat(document.getElementById('asstTotal4').value) || 0;
       let d4 = 0;
       if(basePrice * q4 > 0 && t4 > 0) d4 = (1 - (t4 / (basePrice * q4))) * 100;
+
       if(t2 === 0 || t3 === 0 || t4 === 0) { alert("Primero da clic en 'Calcular Sugerencias Inteligentes'."); return; }
+
       if(appState.volumeConfig[1]) { appState.volumeConfig[1].qty = q2; appState.volumeConfig[1].discount = Math.max(0, parseFloat(d2.toFixed(2))); }
       if(appState.volumeConfig[2]) { appState.volumeConfig[2].qty = q3; appState.volumeConfig[2].discount = Math.max(0, parseFloat(d3.toFixed(2))); }
       if(appState.volumeConfig[3]) { appState.volumeConfig[3].qty = q4; appState.volumeConfig[3].discount = Math.max(0, parseFloat(d4.toFixed(2))); }
-      saveLocal(); renderVolumeConfig(); runCalculations();
+
+      saveLocal();
+      renderVolumeConfig();
+      runCalculations();
       alert("¡Listo! Tu estrategia de descuentos ha sido aplicada.");
     }
 
     function openFreightModal() { document.getElementById('freightModal').classList.remove('hidden'); document.getElementById('modalFreightTotal').focus(); }
     function closeFreightModal() { document.getElementById('freightModal').classList.add('hidden'); document.getElementById('modalFreightTotal').value = ''; document.getElementById('modalFreightPieces').value = ''; }
+    
     function applyFreight() {
       const total = parseFloat(document.getElementById('modalFreightTotal').value) || 0;
       const pieces = parseFloat(document.getElementById('modalFreightPieces').value) || 1;
@@ -822,7 +825,8 @@
       document.getElementById('calcExtraCost').value = costPerPiece.toFixed(2);
       document.getElementById('calcExtraToggle').checked = true;
       document.getElementById('extraCostWrap').classList.remove('hidden');
-      closeFreightModal(); runCalculations();
+      closeFreightModal();
+      runCalculations();
     }
 
     function toggleManualMargin() { document.getElementById('manualMarginWrap').classList.toggle('hidden'); runCalculations(); }
@@ -833,30 +837,10 @@
       if (!ieps) return;
 
       const styles = {
-        none: {
-          background: '#ffffff',
-          border: '#d1d5db',
-          color: '#374151',
-          boxShadow: 'none'
-        },
-        azul: {
-          background: '#eff6ff',
-          border: '#93c5fd',
-          color: '#1d4ed8',
-          boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.10)'
-        },
-        amarilla: {
-          background: '#fffbeb',
-          border: '#fcd34d',
-          color: '#b45309',
-          boxShadow: '0 0 0 3px rgba(245, 158, 11, 0.10)'
-        },
-        roja: {
-          background: '#fef2f2',
-          border: '#fca5a5',
-          color: '#b91c1c',
-          boxShadow: '0 0 0 3px rgba(239, 68, 68, 0.10)'
-        }
+        none: { background: '#ffffff', border: '#d1d5db', color: '#374151', boxShadow: 'none' },
+        azul: { background: '#eff6ff', border: '#93c5fd', color: '#1d4ed8', boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.10)' },
+        amarilla: { background: '#fffbeb', border: '#fcd34d', color: '#b45309', boxShadow: '0 0 0 3px rgba(245, 158, 11, 0.10)' },
+        roja: { background: '#fef2f2', border: '#fca5a5', color: '#b91c1c', boxShadow: '0 0 0 3px rgba(239, 68, 68, 0.10)' }
       };
 
       const current = styles[ieps.value] || styles.none;
@@ -929,22 +913,30 @@
       const iepsKey = document.getElementById('calcIeps').value;
       const isManual = document.getElementById('calcManualToggle').checked;
       const includeIva = document.getElementById('calcIvaToggle').checked;
+
       const iepsAmt = baseCost * (CONFIG.IEPS[iepsKey] || 0);
       const ivaAmt = includeIva ? (baseCost + extraCost) * CONFIG.IVA_RATE : 0;
       const totalCost = baseCost + extraCost + iepsAmt + ivaAmt;
+
       let m = 0;
-      if(isManual) m = parseFloat(document.getElementById('calcManualMargin').value) || 0;
-      else {
+      if(isManual) {
+        m = parseFloat(document.getElementById('calcManualMargin').value) || 0;
+      } else {
         const rules = appState.margins[cat] || [{max: Infinity, m: 20}];
         m = (rules.find(r => totalCost < r.max) || rules[rules.length-1]).m;
       }
+
       const ratio = Math.min(m/100, 0.99);
       const finalPrice = totalCost / (1 - ratio);
+
       appState.currentPVP = finalPrice;
+
       updateMainUI({ finalPrice, profit: finalPrice - totalCost, marginPct: m, totalCost, baseCost, extraCost, iepsAmt, ivaAmt, includeIva });
       updateScales(totalCost, finalPrice);
+
       const asstBasePriceInput = document.getElementById('asstBasePrice');
       if(asstBasePriceInput && finalPrice > 0) asstBasePriceInput.value = finalPrice.toFixed(2);
+
       saveLocal();
     }
 
@@ -952,36 +944,65 @@
       const cat = document.getElementById('calcCategory').value;
       let customMeta = null;
       if (appState.categoryMetadata && appState.categoryMetadata[cat]) customMeta = appState.categoryMetadata[cat];
-      const info = customMeta || CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: ["", ""] };
-      const fallbackImg = "https://via.placeholder.com/300x150/f9fafb/9ca3af?text=Sin+Imagen";
+
+      const info = customMeta || CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: [""] };
+      const fallbackImg = "https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen";
       const img1 = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "") ? info.imgs[0] : fallbackImg;
-      const img2 = (info.imgs && info.imgs[1] && info.imgs[1].trim() !== "") ? info.imgs[1] : fallbackImg;
+
       document.getElementById('resCatTitle').textContent = cat;
       document.getElementById('resCatIcon').textContent = info.icon || "📦";
       document.getElementById('resCatDesc').textContent = info.desc || "Categoría general";
       document.getElementById('resImg1').src = img1;
-      document.getElementById('resImg2').src = img2;
+
       document.getElementById('resFinalPrice').textContent = fmt$(d.finalPrice).replace('$', '');
       document.getElementById('resIvaNote').textContent = d.includeIva ? "(IVA incluido en costo)" : "(Sin IVA en costo)";
+
       const p = d.finalPrice;
       let charm1 = (Math.floor(p / 10) * 10) - 1; if(charm1 <= 0) charm1 = 9;
       let charm2 = (Math.floor(p / 10) * 10) + 5;
       let charm3 = (Math.ceil(p / 10) * 10) - 1; if(charm3 === charm1) charm3 += 10;
+
       document.getElementById('resPsychPrices').innerHTML = `
-        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm"><span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Agresivo</span><span class="font-black text-blue-700 text-sm">${fmt$(charm1).replace('$','')}</span></div>
-        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm"><span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Comercial</span><span class="font-black text-blue-700 text-sm">${fmt$(charm2).replace('$','')}</span></div>
-        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm"><span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Margen +</span><span class="font-black text-blue-700 text-sm">${fmt$(charm3).replace('$','')}</span></div>`;
+        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
+          <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Agresivo</span>
+          <span class="font-black text-blue-700 text-sm">${fmt$(charm1).replace('$','')}</span>
+        </div>
+        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
+          <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Comercial</span>
+          <span class="font-black text-blue-700 text-sm">${fmt$(charm2).replace('$','')}</span>
+        </div>
+        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
+          <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Margen +</span>
+          <span class="font-black text-blue-700 text-sm">${fmt$(charm3).replace('$','')}</span>
+        </div>`;
+
       const badge = document.getElementById('resBadge');
-      if (d.marginPct >= 25) { badge.className = "bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen saludable"; }
-      else if (d.marginPct >= 15) { badge.className = "bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen moderado"; }
-      else { badge.className = "bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"; badge.textContent = "Margen bajo"; }
+      if (d.marginPct >= 25) {
+        badge.className = "bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider";
+        badge.textContent = "Margen saludable";
+      } else if (d.marginPct >= 15) {
+        badge.className = "bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider";
+        badge.textContent = "Margen moderado";
+      } else {
+        badge.className = "bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider";
+        badge.textContent = "Margen bajo";
+      }
+
       document.getElementById('resSubtotal').textContent = fmt$(d.baseCost);
+
       const extraRow = document.getElementById('resExtraRow');
-      if(d.extraCost > 0) { extraRow.classList.remove('hidden'); document.getElementById('resExtraCost').textContent = fmt$(d.extraCost); } else { extraRow.classList.add('hidden'); }
+      if(d.extraCost > 0) {
+        extraRow.classList.remove('hidden');
+        document.getElementById('resExtraCost').textContent = fmt$(d.extraCost);
+      } else {
+        extraRow.classList.add('hidden');
+      }
+
       document.getElementById('resIvaCost').textContent = fmt$(d.ivaAmt);
       document.getElementById('resTotalCost').textContent = fmt$(d.totalCost);
       document.getElementById('resProfit').textContent = fmt$(d.profit);
       document.getElementById('resMarginPct').textContent = d.marginPct.toFixed(2) + '%';
+
       lucide.createIcons();
     }
 
@@ -993,7 +1014,16 @@
         let margin = p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0;
         let totalPrice = p * tier.qty;
         let totalProfit = (p - cost) * tier.qty;
-        container.innerHTML += `<tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors"><td class="py-3 text-xs text-green-700 font-black uppercase tracking-wider">${tier.label}</td><td class="py-3 text-gray-500 font-bold">≥ ${tier.qty} pz</td><td class="py-3 font-black text-gray-800 text-base">${fmt$(p)}</td><td class="py-3 font-black text-blue-600">${fmt$(totalPrice)}</td><td class="py-3 font-black text-green-600">${fmt$(totalProfit)}</td><td class="py-3 text-right text-gray-400 font-bold">${margin}%</td></tr>`;
+
+        container.innerHTML += `
+          <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
+            <td class="py-3 text-xs text-green-700 font-black uppercase tracking-wider">${tier.label}</td>
+            <td class="py-3 text-gray-500 font-bold">≥ ${tier.qty} pz</td>
+            <td class="py-3 font-black text-gray-800 text-base">${fmt$(p)}</td>
+            <td class="py-3 font-black text-blue-600">${fmt$(totalPrice)}</td>
+            <td class="py-3 font-black text-green-600">${fmt$(totalProfit)}</td>
+            <td class="py-3 text-right text-gray-400 font-bold">${margin}%</td>
+          </tr>`;
       });
     }
 
@@ -1046,7 +1076,7 @@
       }
 
       filteredCategories.forEach(({ cat, index }) => {
-        let meta = { icon: "📦", desc: "", imgs: ["", ""] };
+        let meta = { icon: "📦", desc: "", imgs: [""] };
 
         if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
           meta = appState.categoryMetadata[cat];
@@ -1059,7 +1089,6 @@
         const safeIcon = escapeHtmlAttr(meta.icon || '');
         const safeDesc = escapeHtmlAttr(meta.desc || '');
         const safeImg1 = escapeHtmlAttr((meta.imgs && meta.imgs[0]) || '');
-        const safeImg2 = escapeHtmlAttr((meta.imgs && meta.imgs[1]) || '');
 
         container.innerHTML += `
           <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3 relative overflow-hidden">
@@ -1097,16 +1126,9 @@
             <div class="pl-2 space-y-2">
               <input
                 type="text"
-                placeholder="Link de Imagen 1"
+                placeholder="Link de Imagen 1:1 (270x270)"
                 value="${safeImg1}"
                 onchange="updateMetaImg(${safeCatJs}, 0, this.value)"
-                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
-              >
-              <input
-                type="text"
-                placeholder="Link de Imagen 2"
-                value="${safeImg2}"
-                onchange="updateMetaImg(${safeCatJs}, 1, this.value)"
                 class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
               >
             </div>
@@ -1127,16 +1149,27 @@
 
     function updateMeta(cat, field, val) {
       if(!appState.categoryMetadata) appState.categoryMetadata = {};
-      if(!appState.categoryMetadata[cat]) appState.categoryMetadata[cat] = CATEGORY_INFO[cat] ? { ...CATEGORY_INFO[cat] } : { icon: "📦", desc: "", imgs: ["", ""] };
+      if(!appState.categoryMetadata[cat]) {
+        appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
+          ? { ...CATEGORY_INFO[cat] }
+          : { icon: "📦", desc: "", imgs: [""] };
+      }
       appState.categoryMetadata[cat][field] = val;
-      saveLocal(); runCalculations();
+      saveLocal();
+      runCalculations();
     }
 
     function updateMetaImg(cat, idx, val) {
       if(!appState.categoryMetadata) appState.categoryMetadata = {};
-      if(!appState.categoryMetadata[cat]) appState.categoryMetadata[cat] = CATEGORY_INFO[cat] ? { ...CATEGORY_INFO[cat] } : { icon: "📦", desc: "", imgs: ["", ""] };
+      if(!appState.categoryMetadata[cat]) {
+        appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
+          ? { ...CATEGORY_INFO[cat] }
+          : { icon: "📦", desc: "", imgs: [""] };
+      }
       appState.categoryMetadata[cat].imgs[idx] = val;
-      saveLocal(); runCalculations();
+      appState.categoryMetadata[cat].imgs = [appState.categoryMetadata[cat].imgs[0] || ''];
+      saveLocal();
+      runCalculations();
     }
 
     function addNewCategory() {
@@ -1158,33 +1191,54 @@
         appState.categories[index] = cleanName;
         appState.margins[cleanName] = appState.margins[old];
         delete appState.margins[old];
+
         if (appState.categoryMetadata && appState.categoryMetadata[old]) {
           appState.categoryMetadata[cleanName] = appState.categoryMetadata[old];
           delete appState.categoryMetadata[old];
         }
+
         sortCategoriesAlphabetically();
       }
     }
 
     function removeCategory(index) {
       if (confirm("¿Borrar?")) {
-        const name = appState.categories[index]; appState.categories.splice(index, 1); delete appState.margins[name];
+        const name = appState.categories[index];
+        appState.categories.splice(index, 1);
+        delete appState.margins[name];
         if (appState.categoryMetadata) delete appState.categoryMetadata[name];
-        renderCategoryManager(); renderConfigTables(); saveLocal();
+        renderCategoryManager();
+        renderConfigTables();
+        saveLocal();
       }
     }
 
     function renderConfigTables() {
       const container = document.getElementById('configContainer');
       container.innerHTML = '';
+
       appState.categories.forEach(cat => {
-        let html = `<div class="border rounded-2xl p-6 bg-white shadow-sm border-gray-50"><h3 class="font-black text-green-700 mb-4 uppercase text-[10px] tracking-widest flex items-center gap-2 italic"><i data-lucide="tag" class="w-4 h-4"></i> ${cat}</h3><div class="space-y-3 mb-4">`;
+        let html = `<div class="border rounded-2xl p-6 bg-white shadow-sm border-gray-50">
+          <h3 class="font-black text-green-700 mb-4 uppercase text-[10px] tracking-widest flex items-center gap-2 italic">
+            <i data-lucide="tag" class="w-4 h-4"></i> ${cat}
+          </h3>
+          <div class="space-y-3 mb-4">`;
+
         (appState.margins[cat] || []).forEach((rule, idx) => {
-          html += `<div class="flex items-center gap-2"><input type="number" value="${rule.max === Infinity ? '' : rule.max}" placeholder="Infinito" oninput="updateMarginRule('${cat}', ${idx}, 'max', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner"><input type="number" value="${rule.m}" oninput="updateMarginRule('${cat}', ${idx}, 'm', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs text-green-600 bg-gray-50 shadow-inner"><button onclick="removeMarginRow('${cat}', ${idx})" class="text-red-200 hover:text-red-500"><i data-lucide="x-circle" class="w-4 h-4"></i></button></div>`;
+          html += `<div class="flex items-center gap-2">
+            <input type="number" value="${rule.max === Infinity ? '' : rule.max}" placeholder="Infinito" oninput="updateMarginRule('${cat}', ${idx}, 'max', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner">
+            <input type="number" value="${rule.m}" oninput="updateMarginRule('${cat}', ${idx}, 'm', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs text-green-600 bg-gray-50 shadow-inner">
+            <button onclick="removeMarginRow('${cat}', ${idx})" class="text-red-200 hover:text-red-500"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
+          </div>`;
         });
-        html += `</div><button onclick="addMarginRow('${cat}')" class="w-full border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-green-500">+ Añadir Rango</button></div>`;
+
+        html += `</div>
+          <button onclick="addMarginRow('${cat}')" class="w-full border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-green-500">+ Añadir Rango</button>
+        </div>`;
+
         container.innerHTML += html;
       });
+
       lucide.createIcons();
     }
 
@@ -1196,41 +1250,78 @@
       const container = document.getElementById('volumeConfigContainer');
       container.innerHTML = '';
       appState.volumeConfig.forEach((tier, idx) => {
-        container.innerHTML += `<div class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden"><div class="absolute top-0 left-0 w-1 h-full bg-orange-400"></div><h4 class="font-black text-gray-800 text-sm mb-3 ml-2">${tier.label}</h4><div class="space-y-3 ml-2"><div><label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">A partir de (Piezas)</label><input type="number" value="${tier.qty}" onchange="updateVolumeTier(${idx}, 'qty', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs bg-white focus:ring-2 focus:ring-orange-200 outline-none"></div><div><label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">% Descuento</label><input type="number" value="${tier.discount}" onchange="updateVolumeTier(${idx}, 'discount', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs text-orange-600 bg-white focus:ring-2 focus:ring-orange-200 outline-none"></div></div></div>`;
+        container.innerHTML += `
+          <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
+            <div class="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
+            <h4 class="font-black text-gray-800 text-sm mb-3 ml-2">${tier.label}</h4>
+            <div class="space-y-3 ml-2">
+              <div>
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">A partir de (Piezas)</label>
+                <input type="number" value="${tier.qty}" onchange="updateVolumeTier(${idx}, 'qty', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs bg-white focus:ring-2 focus:ring-orange-200 outline-none">
+              </div>
+              <div>
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">% Descuento</label>
+                <input type="number" value="${tier.discount}" onchange="updateVolumeTier(${idx}, 'discount', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs text-orange-600 bg-white focus:ring-2 focus:ring-orange-200 outline-none">
+              </div>
+            </div>
+          </div>`;
       });
     }
 
-    function updateVolumeTier(idx, field, value) { appState.volumeConfig[idx][field] = parseFloat(value) || 0; saveLocal(); runCalculations(); }
+    function updateVolumeTier(idx, field, value) {
+      appState.volumeConfig[idx][field] = parseFloat(value) || 0;
+      saveLocal();
+      runCalculations();
+    }
 
     function switchTab(view) {
       document.getElementById('viewCalc').classList.toggle('hidden', view !== 'calc');
       document.getElementById('viewConfig').classList.toggle('hidden', view !== 'config');
       document.getElementById('btnTabCalc').classList.toggle('active', view === 'calc');
       document.getElementById('btnTabConfig').classList.toggle('active', view === 'config');
-      if(view === 'config') { renderCategoryManager(); renderConfigTables(); renderVolumeConfig(); }
+      if(view === 'config') {
+        renderCategoryManager();
+        renderConfigTables();
+        renderVolumeConfig();
+      }
     }
 
     function toggleCategoryManager() {
       const content = document.getElementById('category-manager-content');
       const btn = document.getElementById('cat-toggle-btn');
-      if (content.classList.contains('hidden')) { content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>'; } 
-      else { content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>'; }
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+      } else {
+        content.classList.add('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+      }
       lucide.createIcons();
     }
 
     function toggleVolumeManager() {
       const content = document.getElementById('volume-manager-content');
       const btn = document.getElementById('vol-toggle-btn');
-      if (content.classList.contains('hidden')) { content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>'; }
-      else { content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>'; }
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+      } else {
+        content.classList.add('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+      }
       lucide.createIcons();
     }
 
     function toggleMarginManager() {
       const content = document.getElementById('margin-manager-content');
       const btn = document.getElementById('margin-toggle-btn');
-      if (content.classList.contains('hidden')) { content.classList.remove('hidden'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>'; }
-      else { content.classList.add('hidden'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>'; }
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+      } else {
+        content.classList.add('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+      }
       lucide.createIcons();
     }
 
@@ -1238,15 +1329,37 @@
       const content = document.getElementById('cloud-panel-content');
       const header = document.getElementById('cloud-header');
       const btn = document.getElementById('cloud-toggle-btn');
-      if (content.classList.contains('hidden')) { content.classList.remove('hidden'); header.classList.add('border-b', 'pb-2'); btn.innerHTML = '<i data-lucide="chevron-down" class="w-4 h-4"></i>'; }
-      else { content.classList.add('hidden'); header.classList.remove('border-b', 'pb-2'); btn.innerHTML = '<i data-lucide="chevron-up" class="w-4 h-4"></i>'; }
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        header.classList.add('border-b', 'pb-2');
+        btn.innerHTML = '<i data-lucide="chevron-down" class="w-4 h-4"></i>';
+      } else {
+        content.classList.add('hidden');
+        header.classList.remove('border-b', 'pb-2');
+        btn.innerHTML = '<i data-lucide="chevron-up" class="w-4 h-4"></i>';
+      }
       lucide.createIcons();
     }
 
     const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
-    function saveLocal() { localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState)); }
-    function saveAllConfig() { for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max); saveLocal(); runCalculations(); alert("Guardado."); }
-    function resetToDefaults() { if(confirm("¿Restablecer?")) { localStorage.removeItem(CONFIG.LS_KEY); location.reload(); } }
+
+    function saveLocal() {
+      localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState));
+    }
+
+    function saveAllConfig() {
+      for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max);
+      saveLocal();
+      runCalculations();
+      alert("Guardado.");
+    }
+
+    function resetToDefaults() {
+      if(confirm("¿Restablecer?")) {
+        localStorage.removeItem(CONFIG.LS_KEY);
+        location.reload();
+      }
+    }
 
     let categorySuggestionIndex = -1;
 
@@ -1323,7 +1436,6 @@
 
     function handleCategoryInputFocus() {
       const input = document.getElementById('calcCategorySearch');
-
       if (!input) return;
 
       input.dataset.previousValue = input.value || '';
@@ -1487,10 +1599,12 @@
       const select = document.getElementById('calcCategory');
       const input = document.getElementById('calcCategorySearch');
       if (!select || !select.value) return;
+
       if (input) {
         input.value = select.value;
         input.dataset.previousValue = select.value;
       }
+
       hideCategorySuggestions();
       runCalculations();
     }
@@ -1499,33 +1613,114 @@
       const actions = document.getElementById('cloud-actions');
       const form = document.getElementById('auth-form');
       const dot = document.getElementById('auth-status-dot');
-      if (user) { dot.className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-md"; document.getElementById('auth-status-text').textContent = user.email; form.classList.add('hidden'); actions.classList.remove('hidden'); }
-      else { dot.className = "w-2.5 h-2.5 rounded-full bg-gray-300"; document.getElementById('auth-status-text').textContent = "Offline"; form.classList.remove('hidden'); actions.classList.add('hidden'); }
+
+      if (user) {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-md";
+        document.getElementById('auth-status-text').textContent = user.email;
+        form.classList.add('hidden');
+        actions.classList.remove('hidden');
+      } else {
+        dot.className = "w-2.5 h-2.5 rounded-full bg-gray-300";
+        document.getElementById('auth-status-text').textContent = "Offline";
+        form.classList.remove('hidden');
+        actions.classList.add('hidden');
+      }
     });
 
-    async function handleLogin() { try { await auth.signInWithEmailAndPassword(document.getElementById('fb-email').value, document.getElementById('fb-pass').value); } catch (e) { alert(e.message); } }
-    async function syncToCloud() { try { await db.collection('configs').doc('global').set({ data: JSON.stringify(appState), updatedAt: new Date() }); alert("Nube OK"); } catch (e) { alert(e.message); } }
-    async function pullFromCloud() { try { const doc = await db.collection('configs').doc('global').get(); if(doc.exists) { appState = JSON.parse(doc.data().data); saveLocal(); renderCategoryManager(); handleCategoryChange(); alert("Bajado."); } } catch (e) { alert(e.message); } }
+    async function handleLogin() {
+      try {
+        await auth.signInWithEmailAndPassword(
+          document.getElementById('fb-email').value,
+          document.getElementById('fb-pass').value
+        );
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function syncToCloud() {
+      try {
+        await db.collection('configs').doc('global').set({
+          data: JSON.stringify(appState),
+          updatedAt: new Date()
+        });
+        alert("Nube OK");
+      } catch (e) {
+        alert(e.message);
+      }
+    }
+
+    async function pullFromCloud() {
+      try {
+        const doc = await db.collection('configs').doc('global').get();
+        if(doc.exists) {
+          appState = JSON.parse(doc.data().data);
+
+          if (appState.categoryMetadata) {
+            Object.keys(appState.categoryMetadata).forEach(cat => {
+              if (!Array.isArray(appState.categoryMetadata[cat].imgs)) {
+                appState.categoryMetadata[cat].imgs = [''];
+              } else {
+                appState.categoryMetadata[cat].imgs = [appState.categoryMetadata[cat].imgs[0] || ''];
+              }
+            });
+          }
+
+          saveLocal();
+          renderCategoryManager();
+          handleCategoryChange();
+          alert("Bajado.");
+        }
+      } catch (e) {
+        alert(e.message);
+      }
+    }
 
     window.onload = () => {
       const local = localStorage.getItem(CONFIG.LS_KEY);
+
       if (local) {
         try {
           const p = JSON.parse(local);
+
           if (!p.categories) p.categories = [...CONFIG.DEFAULT_CATS];
           if (!p.margins) p.margins = {};
-          if (!p.volumeConfig) p.volumeConfig = [{ label: "PRECIO 1", qty: 1, discount: 0 }, { label: "PRECIO 2", qty: 600, discount: 5 }, { label: "PRECIO 3", qty: 700, discount: 8 }, { label: "PRECIO 4", qty: 800, discount: 12 }];
+          if (!p.volumeConfig) {
+            p.volumeConfig = [
+              { label: "PRECIO 1", qty: 1, discount: 0 },
+              { label: "PRECIO 2", qty: 600, discount: 5 },
+              { label: "PRECIO 3", qty: 700, discount: 8 },
+              { label: "PRECIO 4", qty: 800, discount: 12 }
+            ];
+          }
           if (!p.categoryMetadata) p.categoryMetadata = {};
+
+          Object.keys(p.categoryMetadata).forEach(cat => {
+            if (!Array.isArray(p.categoryMetadata[cat].imgs)) {
+              p.categoryMetadata[cat].imgs = [''];
+            } else {
+              p.categoryMetadata[cat].imgs = [p.categoryMetadata[cat].imgs[0] || ''];
+            }
+          });
+
           appState = p;
-        } catch (e) { console.error(e); }
+        } catch (e) {
+          console.error(e);
+        }
       }
-      // Cargar videos guardados
+
       loadVideosLocal();
 
       const baseCostInput = document.getElementById('calcBaseCost');
       if (baseCostInput) baseCostInput.dataset.lastValue = baseCostInput.value || '';
 
-      document.getElementById('calcIeps').innerHTML = `<option value="none">Sin IEPS (0%)</option><option value="azul" style="color:#2563eb">Etiqueta Azul (6%)</option><option value="amarilla" style="color:#d97706">Etiqueta Amarilla (7%)</option><option value="roja" style="color:#dc2626">Etiqueta Roja (9%)</option>`;
+      document.getElementById('calcIeps').innerHTML = `
+        <option value="none">Sin IEPS (0%)</option>
+        <option value="azul" style="color:#2563eb">Etiqueta Azul (6%)</option>
+        <option value="amarilla" style="color:#d97706">Etiqueta Amarilla (7%)</option>
+        <option value="roja" style="color:#dc2626">Etiqueta Roja (9%)</option>
+      `;
+
       updateIepsSelectTheme();
       updateCategoryDropdowns();
       handleCategoryChange();
