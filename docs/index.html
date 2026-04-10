@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Calculadora Pro | La Esquina del Agricultor</title>
-  
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -29,25 +29,96 @@
 
   <style>
     .form-select {
-      appearance: none; min-width: 200px; width: 100%;
+      appearance: none;
+      min-width: 200px;
+      width: 100%;
       padding: 0.5rem 2.5rem 0.5rem 0.75rem;
-      border: 1px solid #d1d5db; border-radius: .5rem;
+      border: 1px solid #d1d5db;
+      border-radius: .5rem;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right .75rem center; background-size: 1.25rem;
+      background-repeat: no-repeat;
+      background-position: right .75rem center;
+      background-size: 1.25rem;
     }
-    .tab-btn { border-bottom: 3px solid transparent; transition: all 0.3s; color: #6b7280; font-size: 0.875rem; font-weight: 700; }
-    .tab-btn.active { border-color: #22c55e; color: #16a34a; }
-    .input-field { border: 1px solid #d1d5db; border-radius: .5rem; padding: 0.5rem 0.75rem; width: 100%; }
-    .animate-fade-in { animation: fadeIn 0.3s ease-in; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .tab-btn {
+      border-bottom: 3px solid transparent;
+      transition: all 0.3s;
+      color: #6b7280;
+      font-size: 0.875rem;
+      font-weight: 700;
+    }
+
+    .tab-btn.active {
+      border-color: #22c55e;
+      color: #16a34a;
+    }
+
+    .input-field {
+      border: 1px solid #d1d5db;
+      border-radius: .5rem;
+      padding: 0.5rem 0.75rem;
+      width: 100%;
+    }
+
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     #resFinalPrice { letter-spacing: -2px; }
-    #cloud-panel { position: fixed; right: 20px; bottom: 20px; z-index: 50; width: 300px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
+
+    #cloud-panel {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 50;
+      width: 300px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 1px solid #e5e7eb;
+    }
+
+    .toast-enter {
+      animation: toastIn 0.25s ease-out;
+    }
+
+    .toast-exit {
+      animation: toastOut 0.2s ease-in forwards;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(-8px) scale(0.98);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes toastOut {
+      from {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+      to {
+        opacity: 0;
+        transform: translateY(-6px) scale(0.98);
+      }
+    }
   </style>
 </head>
 
 <body class="bg-gray-50 min-h-screen pb-20 font-sans">
   <div class="mx-auto w-full max-w-6xl px-4 py-8">
-    
+
     <header class="flex items-center justify-between pb-4 mb-6 border-b">
       <div>
         <h1 class="text-2xl font-extrabold text-green-700 flex items-center gap-2">
@@ -65,7 +136,7 @@
     <main id="viewCalc" class="grid lg:grid-cols-3 gap-8 animate-fade-in">
       <section class="lg:col-span-2 space-y-6">
         <div class="bg-white shadow-sm rounded-3xl p-8 border border-gray-100">
-          
+
           <div class="grid md:grid-cols-2 gap-6">
             <div>
               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Categoría</label>
@@ -98,7 +169,7 @@
                 </div>
               </div>
             </div>
-            
+
             <div>
               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Costo Base</label>
               <div class="relative mt-1">
@@ -114,7 +185,7 @@
           </div>
 
           <div class="mt-8 p-4 bg-green-50 rounded-2xl space-y-4 border border-green-100">
-            
+
             <div>
               <label class="flex items-center gap-3 cursor-pointer">
                 <input type="checkbox" id="calcManualToggle" onchange="toggleManualMargin()" class="w-4 h-4 rounded text-green-600">
@@ -142,7 +213,7 @@
                     <input type="number" id="calcExtraCost" value="0.00" step="0.01" class="input-field pl-8 w-24 font-bold text-blue-700 bg-blue-50 border-blue-200" oninput="runCalculations()">
                   </div>
                   <span class="text-sm font-bold text-blue-700">x pieza</span>
-                  
+
                   <button onclick="openFreightModal()" class="text-blue-500 hover:text-white hover:bg-blue-500 bg-white border border-blue-200 p-2 rounded-lg transition-colors shadow-sm ml-2" title="Calculadora de Flete">
                     <i data-lucide="truck" class="w-4 h-4"></i>
                   </button>
@@ -156,7 +227,7 @@
               <input type="checkbox" id="calcIvaToggle" onchange="runCalculations()" class="w-4 h-4 rounded text-green-600">
               <span class="text-sm font-bold text-green-800 uppercase">Incluir IVA en costo base</span>
             </label>
-            
+
           </div>
         </div>
 
@@ -197,7 +268,13 @@
 
           <div class="mb-6 flex justify-center">
             <div class="w-[270px] h-[270px] rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm">
-              <img id="resImg1" src="" class="w-full h-full object-cover object-center" alt="Imagen de categoría">
+              <img
+                id="resImg1"
+                src=""
+                class="w-full h-full object-cover object-center"
+                alt="Imagen de categoría"
+                onerror="this.src='https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen';"
+              >
             </div>
           </div>
 
@@ -223,7 +300,7 @@
               <span class="text-gray-400 font-medium">Subtotal (antes de IVA)</span>
               <span id="resSubtotal" class="text-gray-800">$0.00</span>
             </div>
-            
+
             <div id="resExtraRow" class="flex justify-between items-center text-blue-500 hidden">
               <span class="font-medium">Flete / Extra por pieza</span>
               <span id="resExtraCost">$0.00</span>
@@ -256,7 +333,7 @@
     </main>
 
     <div id="viewConfig" class="hidden animate-fade-in space-y-10">
-      
+
       <div class="bg-white rounded-3xl p-8 border-2 border-green-50 shadow-sm transition-all duration-300">
         <div class="flex justify-between items-center cursor-pointer" onclick="toggleCategoryManager()">
           <h2 class="text-xl font-black text-gray-800 uppercase italic flex items-center gap-2">
@@ -304,10 +381,10 @@
             <i data-lucide="chevron-down" class="w-5 h-5"></i>
           </button>
         </div>
-        
+
         <div id="bulk-assistant-content" class="hidden transition-all duration-300 mt-6 space-y-6">
           <p class="text-xs text-blue-700 font-medium">El algoritmo analizará tus límites de precios para sugerirte una curva comercial perfecta.</p>
-          
+
           <div class="grid md:grid-cols-3 gap-4 bg-white p-5 rounded-xl shadow-sm border border-blue-100 mb-2 relative">
             <div>
               <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tamaño Envase Completo</label>
@@ -420,10 +497,32 @@
           </button>
         </div>
         <div id="margin-manager-content" class="hidden transition-all duration-300 mt-8">
+          <div class="relative mb-5">
+            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <i data-lucide="search" class="w-4 h-4"></i>
+            </span>
+            <input
+              type="text"
+              id="marginManagerSearch"
+              placeholder="Buscar en editor de márgenes..."
+              oninput="renderConfigTables()"
+              class="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-700 bg-white focus:ring-2 focus:ring-green-100 outline-none"
+            >
+            <button
+              type="button"
+              onclick="clearMarginManagerSearch()"
+              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
+              title="Limpiar búsqueda"
+            >
+              <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+          </div>
+
           <div class="flex gap-3 mb-6">
             <button onclick="saveAllConfig()" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:bg-green-700 transition"><i data-lucide="save" class="w-4 h-4"></i> Guardar Todo</button>
             <button onclick="resetToDefaults()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold border border-red-100 text-xs hover:bg-red-100 transition">Restablecer</button>
           </div>
+
           <div id="configContainer" class="grid md:grid-cols-2 gap-8"></div>
         </div>
       </div>
@@ -519,7 +618,7 @@
         <i data-lucide="chevron-up" class="w-4 h-4"></i>
       </button>
     </div>
-    
+
     <div id="cloud-panel-content" class="mt-4 hidden transition-all duration-300">
       <div id="auth-form" class="space-y-3">
         <input type="email" id="fb-email" placeholder="Email" class="text-xs border w-full p-2.5 rounded-lg">
@@ -534,21 +633,87 @@
     </div>
   </div>
 
+  <!-- TOASTS -->
+  <div id="toastContainer" class="fixed top-4 right-4 z-[200] flex flex-col gap-3 pointer-events-none"></div>
+
+  <!-- MODAL DE CONFIRMACIÓN -->
+  <div id="confirmModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center z-[210] px-4">
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
+      <div class="p-6">
+        <div class="flex items-start gap-3">
+          <div id="confirmModalIconWrap" class="w-11 h-11 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center shrink-0">
+            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1">
+            <h3 id="confirmModalTitle" class="text-base font-black text-gray-800 uppercase tracking-wide">
+              Confirmar acción
+            </h3>
+            <p id="confirmModalMessage" class="text-sm text-gray-500 mt-2 leading-relaxed">
+              ¿Estás seguro de continuar?
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-3 mt-6">
+          <button
+            type="button"
+            onclick="closeConfirmModal(false)"
+            class="w-full py-3 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-black uppercase transition"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            id="confirmModalAcceptBtn"
+            onclick="closeConfirmModal(true)"
+            class="w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase transition shadow-lg shadow-red-100"
+          >
+            Confirmar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     const CONFIG = {
       IVA_RATE: 0.16,
-      LS_KEY: 'esquina_agricola_v9_single_image',
+      LS_KEY: 'esquina_agricola_v12_refactor_preview_margin_search',
       IEPS: { none: 0, azul: 0.06, amarilla: 0.07, roja: 0.09 },
       DEFAULT_CATS: ["Agroquimicos", "Granel", "KG-LT", "FERTILIZANTES", "INOCUIDAD", "MAQUINARIA"]
     };
 
     const CATEGORY_INFO = {
-      "Agroquimicos": { icon: "🌿", desc: "Productos para proteger y fortalecer tus cultivos.", imgs: ["https://elciudadanovoces.com/wp-content/uploads/2024/06/6-720x406.jpg"] },
-      "Granel": { icon: "🧪", desc: "Insumos vendidos por Mililitro o Gramo.", imgs: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW2oljMgSWqHmnrNObMtJb6sh8nWUovf_Zg&s"] },
-      "KG-LT": { icon: "⚖️", desc: "Presentaciones de venta minorista.", imgs: ["https://media.istockphoto.com/id/1283025593/es/foto/se-est%C3%A1-pesando-az%C3%BAcar-de-la-elaboraci%C3%B3n.jpg?s=170667a&w=0&k=20&c=bJiO4FyI8I-fF3dX7aoJEZaInIjNRThws_6ikzPQSuM="] },
-      "FERTILIZANTES": { icon: "🌱", desc: "Nutrición para suelo y planta.", imgs: ["https://eos.com/wp-content/uploads/2023/11/components-of-different-types-of-fertilizers.jpg.webp"] },
-      "INOCUIDAD": { icon: "🧴", desc: "Seguridad alimentaria.", imgs: ["https://www.senasa.gob.pe/senasacontigo/wp-content/uploads/2019/11/inocuidad2.jpg"] },
-      "MAQUINARIA": { icon: "🚜", desc: "Equipos y herramientas.", imgs: ["https://www.defrentealcampo.com.ar/wp-content/uploads/2018/09/drone-pulverizador.jpg"] }
+      "Agroquimicos": {
+        icon: "🌿",
+        desc: "Productos para proteger y fortalecer tus cultivos.",
+        imgs: ["https://elciudadanovoces.com/wp-content/uploads/2024/06/6-720x406.jpg"]
+      },
+      "Granel": {
+        icon: "🧪",
+        desc: "Insumos vendidos por Mililitro o Gramo.",
+        imgs: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW2oljMgSWqHmnrNObMtJb6sh8nWUovf_Zg&s"]
+      },
+      "KG-LT": {
+        icon: "⚖️",
+        desc: "Presentaciones de venta minorista.",
+        imgs: ["https://media.istockphoto.com/id/1283025593/es/foto/se-est%C3%A1-pesando-az%C3%BAcar-de-la-elaboraci%C3%B3n.jpg?s=170667a&w=0&k=20&c=bJiO4FyI8I-fF3dX7aoJEZaInIjNRThws_6ikzPQSuM="]
+      },
+      "FERTILIZANTES": {
+        icon: "🌱",
+        desc: "Nutrición para suelo y planta.",
+        imgs: ["https://eos.com/wp-content/uploads/2023/11/components-of-different-types-of-fertilizers.jpg.webp"]
+      },
+      "INOCUIDAD": {
+        icon: "🧴",
+        desc: "Seguridad alimentaria.",
+        imgs: ["https://www.senasa.gob.pe/senasacontigo/wp-content/uploads/2019/11/inocuidad2.jpg"]
+      },
+      "MAQUINARIA": {
+        icon: "🚜",
+        desc: "Equipos y herramientas.",
+        imgs: ["https://www.defrentealcampo.com.ar/wp-content/uploads/2018/09/drone-pulverizador.jpg"]
+      }
     };
 
     let appState = {
@@ -572,6 +737,154 @@
     };
 
     let videoList = [];
+    let categorySuggestionIndex = -1;
+    let confirmResolver = null;
+
+    const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
+
+    function showToast(message, type = 'info', duration = 2600) {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+
+      const styles = {
+        success: {
+          wrap: 'bg-green-600 text-white shadow-green-100',
+          icon: 'check-circle'
+        },
+        error: {
+          wrap: 'bg-red-600 text-white shadow-red-100',
+          icon: 'x-circle'
+        },
+        warning: {
+          wrap: 'bg-amber-500 text-white shadow-amber-100',
+          icon: 'alert-triangle'
+        },
+        info: {
+          wrap: 'bg-gray-900 text-white shadow-gray-200',
+          icon: 'info'
+        }
+      };
+
+      const current = styles[type] || styles.info;
+
+      const toast = document.createElement('div');
+      toast.className = `
+        pointer-events-auto min-w-[280px] max-w-sm rounded-2xl px-4 py-3
+        shadow-xl border border-white/10 toast-enter ${current.wrap}
+      `;
+
+      toast.innerHTML = `
+        <div class="flex items-start gap-3">
+          <div class="shrink-0 mt-0.5">
+            <i data-lucide="${current.icon}" class="w-5 h-5"></i>
+          </div>
+          <div class="flex-1">
+            <p class="text-sm font-bold leading-snug">${escapeHtml(message)}</p>
+          </div>
+          <button
+            type="button"
+            class="opacity-70 hover:opacity-100 transition"
+            onclick="removeToast(this.closest('.toast-item'))"
+          >
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+        </div>
+      `;
+
+      toast.classList.add('toast-item');
+      container.appendChild(toast);
+      lucide.createIcons();
+
+      setTimeout(() => {
+        removeToast(toast);
+      }, duration);
+    }
+
+    function removeToast(toast) {
+      if (!toast || toast.dataset.removing === '1') return;
+      toast.dataset.removing = '1';
+      toast.classList.remove('toast-enter');
+      toast.classList.add('toast-exit');
+      setTimeout(() => {
+        toast.remove();
+      }, 180);
+    }
+
+    function showConfirm({
+      title = 'Confirmar acción',
+      message = '¿Estás seguro de continuar?',
+      confirmText = 'Confirmar',
+      cancelText = 'Cancelar',
+      type = 'danger'
+    } = {}) {
+      return new Promise(resolve => {
+        confirmResolver = resolve;
+
+        const modal = document.getElementById('confirmModal');
+        const titleEl = document.getElementById('confirmModalTitle');
+        const messageEl = document.getElementById('confirmModalMessage');
+        const acceptBtn = document.getElementById('confirmModalAcceptBtn');
+        const iconWrap = document.getElementById('confirmModalIconWrap');
+
+        if (!modal || !titleEl || !messageEl || !acceptBtn || !iconWrap) {
+          resolve(false);
+          return;
+        }
+
+        titleEl.textContent = title;
+        messageEl.textContent = message;
+        acceptBtn.textContent = confirmText;
+
+        const cancelBtn = modal.querySelector('button[onclick="closeConfirmModal(false)"]');
+        if (cancelBtn) cancelBtn.textContent = cancelText;
+
+        if (type === 'danger') {
+          iconWrap.className = 'w-11 h-11 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center shrink-0';
+          acceptBtn.className = 'w-full py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black uppercase transition shadow-lg shadow-red-100';
+          iconWrap.innerHTML = `<i data-lucide="alert-triangle" class="w-5 h-5"></i>`;
+        } else if (type === 'warning') {
+          iconWrap.className = 'w-11 h-11 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center shrink-0';
+          acceptBtn.className = 'w-full py-3 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-black uppercase transition shadow-lg shadow-amber-100';
+          iconWrap.innerHTML = `<i data-lucide="shield-alert" class="w-5 h-5"></i>`;
+        } else {
+          iconWrap.className = 'w-11 h-11 rounded-2xl bg-blue-50 text-blue-500 flex items-center justify-center shrink-0';
+          acceptBtn.className = 'w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase transition shadow-lg shadow-blue-100';
+          iconWrap.innerHTML = `<i data-lucide="help-circle" class="w-5 h-5"></i>`;
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        lucide.createIcons();
+      });
+    }
+
+    function closeConfirmModal(result) {
+      const modal = document.getElementById('confirmModal');
+      if (modal) {
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+      }
+
+      if (confirmResolver) {
+        confirmResolver(result);
+        confirmResolver = null;
+      }
+    }
+
+    function getReadableErrorMessage(error) {
+      const code = error?.code || '';
+
+      const map = {
+        'auth/invalid-login-credentials': 'Correo o contraseña incorrectos.',
+        'auth/user-not-found': 'No se encontró esa cuenta.',
+        'auth/wrong-password': 'Contraseña incorrecta.',
+        'auth/invalid-email': 'El correo no es válido.',
+        'auth/network-request-failed': 'No hay conexión a internet.',
+        'permission-denied': 'No tienes permisos para esta acción.'
+      };
+
+      return map[code] || error?.message || 'Ocurrió un error inesperado.';
+    }
 
     function extractYouTubeId(url) {
       if (!url) return null;
@@ -593,12 +906,12 @@
 
       const id = extractYouTubeId(url);
       if (!id) {
-        alert('URL de YouTube no válida.\n\nEjemplos válidos:\n• https://www.youtube.com/watch?v=XXXXXXXXXXX\n• https://youtu.be/XXXXXXXXXXX\n• https://youtube.com/shorts/XXXXXXXXXXX');
+        showToast('URL de YouTube no válida.', 'error');
         return;
       }
 
       if (videoList.find(v => v.id === id)) {
-        alert('Este video ya está agregado.');
+        showToast('Este video ya está agregado.', 'warning');
         return;
       }
 
@@ -607,30 +920,35 @@
       titleInput.value = '';
       saveVideosLocal();
       renderVideos();
+      showToast('Video agregado correctamente.', 'success');
     }
 
-    function removeVideo(index) {
-      if (confirm('¿Eliminar este video de la lista?')) {
-        videoList.splice(index, 1);
-        saveVideosLocal();
-        renderVideos();
-      }
+    async function removeVideo(index) {
+      const ok = await showConfirm({
+        title: 'Eliminar video',
+        message: 'Este video se quitará de la lista configurada.',
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        type: 'danger'
+      });
+
+      if (!ok) return;
+
+      videoList.splice(index, 1);
+      saveVideosLocal();
+      renderVideos();
+      showToast('Video eliminado correctamente.', 'success');
     }
 
     function renderVideos() {
       const grid = document.getElementById('videoGrid');
       const empty = document.getElementById('videosEmpty');
 
-      if (!grid || !empty) {
-        console.error('No se encontraron #videoGrid o #videosEmpty');
-        return;
-      }
+      if (!grid || !empty) return;
 
       grid.innerHTML = '';
 
-      if (!Array.isArray(videoList)) {
-        videoList = [];
-      }
+      if (!Array.isArray(videoList)) videoList = [];
 
       if (videoList.length === 0) {
         empty.style.display = 'flex';
@@ -655,19 +973,8 @@
 
         html += `
           <div class="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-            <a
-              href="${watchUrl}"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="block relative group"
-              title="Abrir video en YouTube"
-            >
-              <img
-                src="${thumbUrl}"
-                alt="${safeTitle}"
-                class="w-full aspect-video object-cover bg-gray-200"
-                loading="lazy"
-              >
+            <a href="${watchUrl}" target="_blank" rel="noopener noreferrer" class="block relative group" title="Abrir video en YouTube">
+              <img src="${thumbUrl}" alt="${safeTitle}" class="w-full aspect-video object-cover bg-gray-200" loading="lazy">
               <div class="absolute inset-0 bg-black/20 group-hover:bg-black/30 transition-colors flex items-center justify-center">
                 <div class="bg-white/95 text-red-600 rounded-full p-3 shadow-lg">
                   <i data-lucide="play" class="w-6 h-6 fill-current"></i>
@@ -681,22 +988,12 @@
                   <i data-lucide="youtube" class="w-4 h-4 text-red-500 shrink-0"></i>
                   <span class="text-xs font-black text-gray-700 truncate">${safeTitle}</span>
                 </div>
-                <button
-                  type="button"
-                  onclick="removeVideo(${i})"
-                  class="text-red-200 hover:text-red-500 transition-colors shrink-0"
-                  title="Eliminar video"
-                >
+                <button type="button" onclick="removeVideo(${i})" class="text-red-200 hover:text-red-500 transition-colors shrink-0" title="Eliminar video">
                   <i data-lucide="trash-2" class="w-4 h-4"></i>
                 </button>
               </div>
 
-              <a
-                href="${watchUrl}"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-red-600 hover:text-red-700"
-              >
+              <a href="${watchUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-red-600 hover:text-red-700">
                 <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
                 Abrir en YouTube
               </a>
@@ -705,13 +1002,13 @@
       });
 
       grid.innerHTML = html;
-
       if (window.lucide) lucide.createIcons();
     }
 
     function toggleVideoManager() {
       const content = document.getElementById('video-manager-content');
       const btn = document.getElementById('video-toggle-btn');
+
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden');
         btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
@@ -720,6 +1017,7 @@
         content.classList.add('hidden');
         btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
       }
+
       lucide.createIcons();
     }
 
@@ -749,11 +1047,12 @@
     function toggleBulkAssistant() {
       const content = document.getElementById('bulk-assistant-content');
       const btn = document.getElementById('bulk-toggle-btn');
+
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden');
         btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
         const priceText = document.getElementById('resFinalPrice').textContent;
-        if(priceText && priceText !== "0.00") {
+        if (priceText && priceText !== "0.00") {
           const cleanPrice = parseFloat(priceText.replace(/,/g, ''));
           document.getElementById('asstBasePrice').value = cleanPrice.toFixed(2);
         }
@@ -761,6 +1060,7 @@
         content.classList.add('hidden');
         btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
       }
+
       lucide.createIcons();
     }
 
@@ -768,69 +1068,107 @@
       const pUnit = parseFloat(document.getElementById('asstBasePrice').value) || 0;
       const pFull = parseFloat(document.getElementById('asstFullPrice').value) || 0;
       const qFull = parseFloat(document.getElementById('asstFullQty').value) || 0;
-      if(pUnit <= 0 || pFull <= 0 || qFull <= 0) { alert("Por favor llena los datos base."); return; }
+
+      if (pUnit <= 0 || pFull <= 0 || qFull <= 0) {
+        showToast('Completa primero los datos base del envase.', 'warning');
+        return;
+      }
+
       const unitFull = pFull / qFull;
+
       [2, 3, 4].forEach(i => {
         const q = parseFloat(document.getElementById(`asstQty${i}`).value) || 0;
-        if(q > 0) {
+        if (q > 0) {
           let totalQ = 0;
-          if (q >= qFull) { totalQ = pFull; } 
-          else {
+          if (q >= qFull) {
+            totalQ = pFull;
+          } else {
             let unitQ = pUnit - (pUnit - unitFull) * (q / qFull);
             totalQ = q * unitQ;
-            if(totalQ >= pFull) totalQ = pFull - 15;
+            if (totalQ >= pFull) totalQ = pFull - 15;
           }
           document.getElementById(`asstTotal${i}`).value = Math.round(totalQ);
         }
       });
-      alert("¡Sugerencias calculadas! Revisa los montos en verde.");
+
+      showToast('Sugerencias calculadas. Revisa los montos en verde.', 'success');
     }
 
     function applyBulkStrategy() {
       const basePrice = parseFloat(document.getElementById('asstBasePrice').value) || 1;
+
       const q2 = parseFloat(document.getElementById('asstQty2').value) || 600;
       const t2 = parseFloat(document.getElementById('asstTotal2').value) || 0;
       let d2 = 0;
-      if(basePrice * q2 > 0 && t2 > 0) d2 = (1 - (t2 / (basePrice * q2))) * 100;
+      if (basePrice * q2 > 0 && t2 > 0) d2 = (1 - (t2 / (basePrice * q2))) * 100;
 
       const q3 = parseFloat(document.getElementById('asstQty3').value) || 700;
       const t3 = parseFloat(document.getElementById('asstTotal3').value) || 0;
       let d3 = 0;
-      if(basePrice * q3 > 0 && t3 > 0) d3 = (1 - (t3 / (basePrice * q3))) * 100;
+      if (basePrice * q3 > 0 && t3 > 0) d3 = (1 - (t3 / (basePrice * q3))) * 100;
 
       const q4 = parseFloat(document.getElementById('asstQty4').value) || 800;
       const t4 = parseFloat(document.getElementById('asstTotal4').value) || 0;
       let d4 = 0;
-      if(basePrice * q4 > 0 && t4 > 0) d4 = (1 - (t4 / (basePrice * q4))) * 100;
+      if (basePrice * q4 > 0 && t4 > 0) d4 = (1 - (t4 / (basePrice * q4))) * 100;
 
-      if(t2 === 0 || t3 === 0 || t4 === 0) { alert("Primero da clic en 'Calcular Sugerencias Inteligentes'."); return; }
+      if (t2 === 0 || t3 === 0 || t4 === 0) {
+        showToast('Primero calcula las sugerencias inteligentes.', 'warning');
+        return;
+      }
 
-      if(appState.volumeConfig[1]) { appState.volumeConfig[1].qty = q2; appState.volumeConfig[1].discount = Math.max(0, parseFloat(d2.toFixed(2))); }
-      if(appState.volumeConfig[2]) { appState.volumeConfig[2].qty = q3; appState.volumeConfig[2].discount = Math.max(0, parseFloat(d3.toFixed(2))); }
-      if(appState.volumeConfig[3]) { appState.volumeConfig[3].qty = q4; appState.volumeConfig[3].discount = Math.max(0, parseFloat(d4.toFixed(2))); }
+      if (appState.volumeConfig[1]) {
+        appState.volumeConfig[1].qty = q2;
+        appState.volumeConfig[1].discount = Math.max(0, parseFloat(d2.toFixed(2)));
+      }
+      if (appState.volumeConfig[2]) {
+        appState.volumeConfig[2].qty = q3;
+        appState.volumeConfig[2].discount = Math.max(0, parseFloat(d3.toFixed(2)));
+      }
+      if (appState.volumeConfig[3]) {
+        appState.volumeConfig[3].qty = q4;
+        appState.volumeConfig[3].discount = Math.max(0, parseFloat(d4.toFixed(2)));
+      }
 
       saveLocal();
       renderVolumeConfig();
       runCalculations();
-      alert("¡Listo! Tu estrategia de descuentos ha sido aplicada.");
+      showToast('Estrategia de descuentos aplicada correctamente.', 'success');
     }
 
-    function openFreightModal() { document.getElementById('freightModal').classList.remove('hidden'); document.getElementById('modalFreightTotal').focus(); }
-    function closeFreightModal() { document.getElementById('freightModal').classList.add('hidden'); document.getElementById('modalFreightTotal').value = ''; document.getElementById('modalFreightPieces').value = ''; }
-    
+    function openFreightModal() {
+      document.getElementById('freightModal').classList.remove('hidden');
+      document.getElementById('modalFreightTotal').focus();
+    }
+
+    function closeFreightModal() {
+      document.getElementById('freightModal').classList.add('hidden');
+      document.getElementById('modalFreightTotal').value = '';
+      document.getElementById('modalFreightPieces').value = '';
+    }
+
     function applyFreight() {
       const total = parseFloat(document.getElementById('modalFreightTotal').value) || 0;
       const pieces = parseFloat(document.getElementById('modalFreightPieces').value) || 1;
       const costPerPiece = total / pieces;
+
       document.getElementById('calcExtraCost').value = costPerPiece.toFixed(2);
       document.getElementById('calcExtraToggle').checked = true;
       document.getElementById('extraCostWrap').classList.remove('hidden');
+
       closeFreightModal();
       runCalculations();
     }
 
-    function toggleManualMargin() { document.getElementById('manualMarginWrap').classList.toggle('hidden'); runCalculations(); }
-    function toggleExtraCost() { document.getElementById('extraCostWrap').classList.toggle('hidden'); runCalculations(); }
+    function toggleManualMargin() {
+      document.getElementById('manualMarginWrap').classList.toggle('hidden');
+      runCalculations();
+    }
+
+    function toggleExtraCost() {
+      document.getElementById('extraCostWrap').classList.toggle('hidden');
+      runCalculations();
+    }
 
     function updateIepsSelectTheme() {
       const ieps = document.getElementById('calcIeps');
@@ -896,17 +1234,45 @@
       runCalculations();
     }
 
-    function runCalculations() {
+    function getSelectedCategory() {
       const categorySelect = document.getElementById('calcCategory');
-      if (!categorySelect) return;
+      if (!categorySelect) return '';
 
       let cat = categorySelect.value;
       if (!cat && appState.categories.length > 0) {
         cat = appState.categories[0];
         categorySelect.value = cat;
       }
-      if (!cat) return;
 
+      return cat || '';
+    }
+
+    function getCategoryInfo(cat) {
+      let customMeta = null;
+
+      if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
+        customMeta = appState.categoryMetadata[cat];
+      }
+
+      const info = customMeta || CATEGORY_INFO[cat] || {
+        icon: "📦",
+        desc: "Categoría general",
+        imgs: [""]
+      };
+
+      const fallbackImg = "https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen";
+      const image = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "")
+        ? info.imgs[0]
+        : fallbackImg;
+
+      return {
+        icon: info.icon || "📦",
+        desc: info.desc || "Categoría general",
+        image
+      };
+    }
+
+    function getCalculationData(cat) {
       const baseCost = parseFloat(document.getElementById('calcBaseCost').value) || 0;
       const isExtra = document.getElementById('calcExtraToggle').checked;
       const extraCost = isExtra ? (parseFloat(document.getElementById('calcExtraCost').value) || 0) : 0;
@@ -918,49 +1284,50 @@
       const ivaAmt = includeIva ? (baseCost + extraCost) * CONFIG.IVA_RATE : 0;
       const totalCost = baseCost + extraCost + iepsAmt + ivaAmt;
 
-      let m = 0;
-      if(isManual) {
-        m = parseFloat(document.getElementById('calcManualMargin').value) || 0;
+      let marginPct = 0;
+
+      if (isManual) {
+        marginPct = parseFloat(document.getElementById('calcManualMargin').value) || 0;
       } else {
-        const rules = appState.margins[cat] || [{max: Infinity, m: 20}];
-        m = (rules.find(r => totalCost < r.max) || rules[rules.length-1]).m;
+        const rules = appState.margins[cat] || [{ max: Infinity, m: 20 }];
+        marginPct = (rules.find(r => totalCost < r.max) || rules[rules.length - 1]).m;
       }
 
-      const ratio = Math.min(m/100, 0.99);
+      const ratio = Math.min(marginPct / 100, 0.99);
       const finalPrice = totalCost / (1 - ratio);
+      const profit = finalPrice - totalCost;
 
-      appState.currentPVP = finalPrice;
-
-      updateMainUI({ finalPrice, profit: finalPrice - totalCost, marginPct: m, totalCost, baseCost, extraCost, iepsAmt, ivaAmt, includeIva });
-      updateScales(totalCost, finalPrice);
-
-      const asstBasePriceInput = document.getElementById('asstBasePrice');
-      if(asstBasePriceInput && finalPrice > 0) asstBasePriceInput.value = finalPrice.toFixed(2);
-
-      saveLocal();
+      return {
+        cat,
+        baseCost,
+        extraCost,
+        iepsAmt,
+        ivaAmt,
+        totalCost,
+        marginPct,
+        finalPrice,
+        profit,
+        includeIva
+      };
     }
 
-    function updateMainUI(d) {
-      const cat = document.getElementById('calcCategory').value;
-      let customMeta = null;
-      if (appState.categoryMetadata && appState.categoryMetadata[cat]) customMeta = appState.categoryMetadata[cat];
+    function renderSummary(calcData, categoryInfo) {
+      document.getElementById('resCatTitle').textContent = calcData.cat;
+      document.getElementById('resCatIcon').textContent = categoryInfo.icon;
+      document.getElementById('resCatDesc').textContent = categoryInfo.desc;
+      document.getElementById('resImg1').src = categoryInfo.image;
 
-      const info = customMeta || CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: [""] };
-      const fallbackImg = "https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen";
-      const img1 = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "") ? info.imgs[0] : fallbackImg;
+      document.getElementById('resFinalPrice').textContent = fmt$(calcData.finalPrice).replace('$', '');
+      document.getElementById('resIvaNote').textContent = calcData.includeIva ? "(IVA incluido en costo)" : "(Sin IVA en costo)";
 
-      document.getElementById('resCatTitle').textContent = cat;
-      document.getElementById('resCatIcon').textContent = info.icon || "📦";
-      document.getElementById('resCatDesc').textContent = info.desc || "Categoría general";
-      document.getElementById('resImg1').src = img1;
+      const p = calcData.finalPrice;
+      let charm1 = (Math.floor(p / 10) * 10) - 1;
+      if (charm1 <= 0) charm1 = 9;
 
-      document.getElementById('resFinalPrice').textContent = fmt$(d.finalPrice).replace('$', '');
-      document.getElementById('resIvaNote').textContent = d.includeIva ? "(IVA incluido en costo)" : "(Sin IVA en costo)";
-
-      const p = d.finalPrice;
-      let charm1 = (Math.floor(p / 10) * 10) - 1; if(charm1 <= 0) charm1 = 9;
       let charm2 = (Math.floor(p / 10) * 10) + 5;
-      let charm3 = (Math.ceil(p / 10) * 10) - 1; if(charm3 === charm1) charm3 += 10;
+
+      let charm3 = (Math.ceil(p / 10) * 10) - 1;
+      if (charm3 === charm1) charm3 += 10;
 
       document.getElementById('resPsychPrices').innerHTML = `
         <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
@@ -974,13 +1341,14 @@
         <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
           <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Margen +</span>
           <span class="font-black text-blue-700 text-sm">${fmt$(charm3).replace('$','')}</span>
-        </div>`;
+        </div>
+      `;
 
       const badge = document.getElementById('resBadge');
-      if (d.marginPct >= 25) {
+      if (calcData.marginPct >= 25) {
         badge.className = "bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider";
         badge.textContent = "Margen saludable";
-      } else if (d.marginPct >= 15) {
+      } else if (calcData.marginPct >= 15) {
         badge.className = "bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider";
         badge.textContent = "Margen moderado";
       } else {
@@ -988,49 +1356,74 @@
         badge.textContent = "Margen bajo";
       }
 
-      document.getElementById('resSubtotal').textContent = fmt$(d.baseCost);
+      document.getElementById('resSubtotal').textContent = fmt$(calcData.baseCost);
 
       const extraRow = document.getElementById('resExtraRow');
-      if(d.extraCost > 0) {
+      if (calcData.extraCost > 0) {
         extraRow.classList.remove('hidden');
-        document.getElementById('resExtraCost').textContent = fmt$(d.extraCost);
+        document.getElementById('resExtraCost').textContent = fmt$(calcData.extraCost);
       } else {
         extraRow.classList.add('hidden');
       }
 
-      document.getElementById('resIvaCost').textContent = fmt$(d.ivaAmt);
-      document.getElementById('resTotalCost').textContent = fmt$(d.totalCost);
-      document.getElementById('resProfit').textContent = fmt$(d.profit);
-      document.getElementById('resMarginPct').textContent = d.marginPct.toFixed(2) + '%';
+      document.getElementById('resIvaCost').textContent = fmt$(calcData.ivaAmt);
+      document.getElementById('resTotalCost').textContent = fmt$(calcData.totalCost);
+      document.getElementById('resProfit').textContent = fmt$(calcData.profit);
+      document.getElementById('resMarginPct').textContent = calcData.marginPct.toFixed(2) + '%';
 
       lucide.createIcons();
     }
 
-    function updateScales(cost, basePVP) {
+    function renderScaleTable(totalCost, basePVP) {
       const container = document.getElementById('scaleTableBody');
       container.innerHTML = '';
+
       appState.volumeConfig.forEach(tier => {
-        let p = basePVP * (1 - tier.discount / 100);
-        let margin = p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0;
-        let totalPrice = p * tier.qty;
-        let totalProfit = (p - cost) * tier.qty;
+        const unitPrice = basePVP * (1 - tier.discount / 100);
+        const margin = unitPrice > 0 ? (((unitPrice - totalCost) / unitPrice) * 100).toFixed(1) : 0;
+        const totalPrice = unitPrice * tier.qty;
+        const totalProfit = (unitPrice - totalCost) * tier.qty;
 
         container.innerHTML += `
           <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
             <td class="py-3 text-xs text-green-700 font-black uppercase tracking-wider">${tier.label}</td>
             <td class="py-3 text-gray-500 font-bold">≥ ${tier.qty} pz</td>
-            <td class="py-3 font-black text-gray-800 text-base">${fmt$(p)}</td>
+            <td class="py-3 font-black text-gray-800 text-base">${fmt$(unitPrice)}</td>
             <td class="py-3 font-black text-blue-600">${fmt$(totalPrice)}</td>
             <td class="py-3 font-black text-green-600">${fmt$(totalProfit)}</td>
             <td class="py-3 text-right text-gray-400 font-bold">${margin}%</td>
-          </tr>`;
+          </tr>
+        `;
       });
+    }
+
+    function syncBulkAssistantPrice(finalPrice) {
+      const asstBasePriceInput = document.getElementById('asstBasePrice');
+      if (asstBasePriceInput && finalPrice > 0) {
+        asstBasePriceInput.value = finalPrice.toFixed(2);
+      }
+    }
+
+    function runCalculations() {
+      const cat = getSelectedCategory();
+      if (!cat) return;
+
+      const categoryInfo = getCategoryInfo(cat);
+      const calcData = getCalculationData(cat);
+
+      appState.currentPVP = calcData.finalPrice;
+
+      renderSummary(calcData, categoryInfo);
+      renderScaleTable(calcData.totalCost, calcData.finalPrice);
+      syncBulkAssistantPrice(calcData.finalPrice);
+
+      saveLocal();
     }
 
     function normalizeText(value) {
       return String(value || '')
         .normalize('NFD')
-        .replace(/[̀-ͯ]/g, '')
+        .replace(/[\u0300-\u036f]/g, '')
         .toLowerCase()
         .trim();
     }
@@ -1048,6 +1441,15 @@
         .replace(/'/g, '&#39;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+    }
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
     }
 
     function renderCategoryManager() {
@@ -1089,6 +1491,7 @@
         const safeIcon = escapeHtmlAttr(meta.icon || '');
         const safeDesc = escapeHtmlAttr(meta.desc || '');
         const safeImg1 = escapeHtmlAttr((meta.imgs && meta.imgs[0]) || '');
+        const previewImg = safeImg1 || 'https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen';
 
         container.innerHTML += `
           <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3 relative overflow-hidden">
@@ -1111,26 +1514,38 @@
                 type="text"
                 placeholder="Icono (ej: 🍎)"
                 value="${safeIcon}"
-                onchange="updateMeta(${safeCatJs}, 'icon', this.value)"
+                oninput="updateMeta(${safeCatJs}, 'icon', this.value)"
                 class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
               >
               <input
                 type="text"
                 placeholder="Descripción corta"
                 value="${safeDesc}"
-                onchange="updateMeta(${safeCatJs}, 'desc', this.value)"
+                oninput="updateMeta(${safeCatJs}, 'desc', this.value)"
                 class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
               >
             </div>
 
-            <div class="pl-2 space-y-2">
+            <div class="pl-2 space-y-3">
               <input
                 type="text"
                 placeholder="Link de Imagen 1:1 (270x270)"
                 value="${safeImg1}"
-                onchange="updateMetaImg(${safeCatJs}, 0, this.value)"
+                oninput="updateMetaImg(${safeCatJs}, 0, this.value)"
                 class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
               >
+
+              <div class="bg-white border border-gray-200 rounded-xl p-3">
+                <p class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2">Preview</p>
+                <div class="w-[140px] h-[140px] rounded-xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm">
+                  <img
+                    src="${previewImg}"
+                    alt="Preview ${escapeHtml(safeCatValue)}"
+                    class="w-full h-full object-cover object-center"
+                    onerror="this.src='https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen';"
+                  >
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -1140,6 +1555,79 @@
       updateCategoryDropdowns();
     }
 
+    function renderConfigTables() {
+      const container = document.getElementById('configContainer');
+      const searchInput = document.getElementById('marginManagerSearch');
+      const searchTerm = searchInput ? searchInput.value : '';
+
+      if (!container) return;
+
+      container.innerHTML = '';
+
+      const filteredCategories = appState.categories.filter(cat =>
+        normalizeText(cat).includes(normalizeText(searchTerm))
+      );
+
+      if (filteredCategories.length === 0) {
+        container.innerHTML = `
+          <div class="md:col-span-2 bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-6 text-center">
+            <p class="text-xs font-black uppercase tracking-widest text-gray-400">Sin coincidencias</p>
+            <p class="text-xs text-gray-500 mt-2">Prueba con otro nombre o limpia la búsqueda.</p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      filteredCategories.forEach(cat => {
+        let html = `
+          <div class="border rounded-2xl p-6 bg-white shadow-sm border-gray-50">
+            <h3 class="font-black text-green-700 mb-4 uppercase text-[10px] tracking-widest flex items-center gap-2 italic">
+              <i data-lucide="tag" class="w-4 h-4"></i> ${cat}
+            </h3>
+            <div class="space-y-3 mb-4">
+        `;
+
+        (appState.margins[cat] || []).forEach((rule, idx) => {
+          html += `
+            <div class="flex items-center gap-2">
+              <input
+                type="number"
+                value="${rule.max === Infinity ? '' : rule.max}"
+                placeholder="Infinito"
+                oninput="updateMarginRule('${cat}', ${idx}, 'max', this.value)"
+                class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner"
+              >
+              <input
+                type="number"
+                value="${rule.m}"
+                oninput="updateMarginRule('${cat}', ${idx}, 'm', this.value)"
+                class="w-full p-2 border rounded-lg font-bold text-xs text-green-600 bg-gray-50 shadow-inner"
+              >
+              <button onclick="removeMarginRow('${cat}', ${idx})" class="text-red-200 hover:text-red-500">
+                <i data-lucide="x-circle" class="w-4 h-4"></i>
+              </button>
+            </div>
+          `;
+        });
+
+        html += `
+            </div>
+            <button
+              onclick="addMarginRow('${cat}')"
+              class="w-full border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-green-500"
+            >
+              + Añadir Rango
+            </button>
+          </div>
+        `;
+
+        container.innerHTML += html;
+      });
+
+      lucide.createIcons();
+    }
+
     function clearCategoryManagerSearch() {
       const input = document.getElementById('categoryManagerSearch');
       if (!input) return;
@@ -1147,28 +1635,42 @@
       renderCategoryManager();
     }
 
+    function clearMarginManagerSearch() {
+      const input = document.getElementById('marginManagerSearch');
+      if (!input) return;
+      input.value = '';
+      renderConfigTables();
+    }
+
     function updateMeta(cat, field, val) {
-      if(!appState.categoryMetadata) appState.categoryMetadata = {};
-      if(!appState.categoryMetadata[cat]) {
+      if (!appState.categoryMetadata) appState.categoryMetadata = {};
+
+      if (!appState.categoryMetadata[cat]) {
         appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
           ? { ...CATEGORY_INFO[cat] }
           : { icon: "📦", desc: "", imgs: [""] };
       }
+
       appState.categoryMetadata[cat][field] = val;
       saveLocal();
+      renderCategoryManager();
       runCalculations();
     }
 
     function updateMetaImg(cat, idx, val) {
-      if(!appState.categoryMetadata) appState.categoryMetadata = {};
-      if(!appState.categoryMetadata[cat]) {
+      if (!appState.categoryMetadata) appState.categoryMetadata = {};
+
+      if (!appState.categoryMetadata[cat]) {
         appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
           ? { ...CATEGORY_INFO[cat] }
           : { icon: "📦", desc: "", imgs: [""] };
       }
+
       appState.categoryMetadata[cat].imgs[idx] = val;
       appState.categoryMetadata[cat].imgs = [appState.categoryMetadata[cat].imgs[0] || ''];
+
       saveLocal();
+      renderCategoryManager();
       runCalculations();
     }
 
@@ -1201,54 +1703,51 @@
       }
     }
 
-    function removeCategory(index) {
-      if (confirm("¿Borrar?")) {
-        const name = appState.categories[index];
-        appState.categories.splice(index, 1);
-        delete appState.margins[name];
-        if (appState.categoryMetadata) delete appState.categoryMetadata[name];
-        renderCategoryManager();
-        renderConfigTables();
-        saveLocal();
-      }
-    }
+    async function removeCategory(index) {
+      const name = appState.categories[index];
 
-    function renderConfigTables() {
-      const container = document.getElementById('configContainer');
-      container.innerHTML = '';
-
-      appState.categories.forEach(cat => {
-        let html = `<div class="border rounded-2xl p-6 bg-white shadow-sm border-gray-50">
-          <h3 class="font-black text-green-700 mb-4 uppercase text-[10px] tracking-widest flex items-center gap-2 italic">
-            <i data-lucide="tag" class="w-4 h-4"></i> ${cat}
-          </h3>
-          <div class="space-y-3 mb-4">`;
-
-        (appState.margins[cat] || []).forEach((rule, idx) => {
-          html += `<div class="flex items-center gap-2">
-            <input type="number" value="${rule.max === Infinity ? '' : rule.max}" placeholder="Infinito" oninput="updateMarginRule('${cat}', ${idx}, 'max', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner">
-            <input type="number" value="${rule.m}" oninput="updateMarginRule('${cat}', ${idx}, 'm', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs text-green-600 bg-gray-50 shadow-inner">
-            <button onclick="removeMarginRow('${cat}', ${idx})" class="text-red-200 hover:text-red-500"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
-          </div>`;
-        });
-
-        html += `</div>
-          <button onclick="addMarginRow('${cat}')" class="w-full border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-green-500">+ Añadir Rango</button>
-        </div>`;
-
-        container.innerHTML += html;
+      const ok = await showConfirm({
+        title: 'Eliminar categoría',
+        message: `Se eliminará "${name}" junto con sus márgenes y metadatos.`,
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+        type: 'danger'
       });
 
-      lucide.createIcons();
+      if (!ok) return;
+
+      appState.categories.splice(index, 1);
+      delete appState.margins[name];
+      if (appState.categoryMetadata) delete appState.categoryMetadata[name];
+
+      renderCategoryManager();
+      renderConfigTables();
+      saveLocal();
+
+      updateCategoryDropdowns();
+      handleCategoryChange();
+
+      showToast('Categoría eliminada correctamente.', 'success');
     }
 
-    function addMarginRow(cat) { appState.margins[cat].push({max: 2000, m: 15}); renderConfigTables(); }
-    function removeMarginRow(cat, idx) { appState.margins[cat].splice(idx, 1); renderConfigTables(); }
-    function updateMarginRule(cat, idx, field, val) { appState.margins[cat][idx][field] = val === '' ? Infinity : parseFloat(val); }
+    function addMarginRow(cat) {
+      appState.margins[cat].push({max: 2000, m: 15});
+      renderConfigTables();
+    }
+
+    function removeMarginRow(cat, idx) {
+      appState.margins[cat].splice(idx, 1);
+      renderConfigTables();
+    }
+
+    function updateMarginRule(cat, idx, field, val) {
+      appState.margins[cat][idx][field] = val === '' ? Infinity : parseFloat(val);
+    }
 
     function renderVolumeConfig() {
       const container = document.getElementById('volumeConfigContainer');
       container.innerHTML = '';
+
       appState.volumeConfig.forEach((tier, idx) => {
         container.innerHTML += `
           <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
@@ -1264,7 +1763,8 @@
                 <input type="number" value="${tier.discount}" onchange="updateVolumeTier(${idx}, 'discount', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs text-orange-600 bg-white focus:ring-2 focus:ring-orange-200 outline-none">
               </div>
             </div>
-          </div>`;
+          </div>
+        `;
       });
     }
 
@@ -1279,7 +1779,8 @@
       document.getElementById('viewConfig').classList.toggle('hidden', view !== 'config');
       document.getElementById('btnTabCalc').classList.toggle('active', view === 'calc');
       document.getElementById('btnTabConfig').classList.toggle('active', view === 'config');
-      if(view === 'config') {
+
+      if (view === 'config') {
         renderCategoryManager();
         renderConfigTables();
         renderVolumeConfig();
@@ -1289,6 +1790,7 @@
     function toggleCategoryManager() {
       const content = document.getElementById('category-manager-content');
       const btn = document.getElementById('cat-toggle-btn');
+
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden');
         btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
@@ -1296,12 +1798,14 @@
         content.classList.add('hidden');
         btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
       }
+
       lucide.createIcons();
     }
 
     function toggleVolumeManager() {
       const content = document.getElementById('volume-manager-content');
       const btn = document.getElementById('vol-toggle-btn');
+
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden');
         btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
@@ -1309,12 +1813,14 @@
         content.classList.add('hidden');
         btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
       }
+
       lucide.createIcons();
     }
 
     function toggleMarginManager() {
       const content = document.getElementById('margin-manager-content');
       const btn = document.getElementById('margin-toggle-btn');
+
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden');
         btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
@@ -1322,6 +1828,7 @@
         content.classList.add('hidden');
         btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
       }
+
       lucide.createIcons();
     }
 
@@ -1329,6 +1836,7 @@
       const content = document.getElementById('cloud-panel-content');
       const header = document.getElementById('cloud-header');
       const btn = document.getElementById('cloud-toggle-btn');
+
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden');
         header.classList.add('border-b', 'pb-2');
@@ -1338,38 +1846,37 @@
         header.classList.remove('border-b', 'pb-2');
         btn.innerHTML = '<i data-lucide="chevron-up" class="w-4 h-4"></i>';
       }
+
       lucide.createIcons();
     }
-
-    const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 
     function saveLocal() {
       localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState));
     }
 
     function saveAllConfig() {
-      for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max);
+      for (let cat in appState.margins) {
+        appState.margins[cat].sort((a, b) => a.max - b.max);
+      }
       saveLocal();
       runCalculations();
-      alert("Guardado.");
+      showToast('Configuración guardada.', 'success');
     }
 
-    function resetToDefaults() {
-      if(confirm("¿Restablecer?")) {
-        localStorage.removeItem(CONFIG.LS_KEY);
-        location.reload();
-      }
-    }
+    async function resetToDefaults() {
+      const ok = await showConfirm({
+        title: 'Restablecer configuración',
+        message: 'Se borrarán tus cambios locales y la aplicación volverá al estado original.',
+        confirmText: 'Restablecer',
+        cancelText: 'Cancelar',
+        type: 'warning'
+      });
 
-    let categorySuggestionIndex = -1;
+      if (!ok) return;
 
-    function escapeHtml(value) {
-      return String(value || '')
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+      localStorage.removeItem(CONFIG.LS_KEY);
+      showToast('Configuración restablecida. Recargando...', 'warning', 1200);
+      setTimeout(() => location.reload(), 900);
     }
 
     function hideCategorySuggestions() {
@@ -1450,7 +1957,6 @@
     function handleCategoryInputBlur() {
       const input = document.getElementById('calcCategorySearch');
       const select = document.getElementById('calcCategory');
-
       if (!input) return;
 
       setTimeout(() => {
@@ -1633,8 +2139,9 @@
           document.getElementById('fb-email').value,
           document.getElementById('fb-pass').value
         );
+        showToast('Sesión iniciada correctamente.', 'success');
       } catch (e) {
-        alert(e.message);
+        showToast(getReadableErrorMessage(e), 'error', 3500);
       }
     }
 
@@ -1644,16 +2151,16 @@
           data: JSON.stringify(appState),
           updatedAt: new Date()
         });
-        alert("Nube OK");
+        showToast('Configuración subida a la nube.', 'success');
       } catch (e) {
-        alert(e.message);
+        showToast(getReadableErrorMessage(e), 'error', 3500);
       }
     }
 
     async function pullFromCloud() {
       try {
         const doc = await db.collection('configs').doc('global').get();
-        if(doc.exists) {
+        if (doc.exists) {
           appState = JSON.parse(doc.data().data);
 
           if (appState.categoryMetadata) {
@@ -1668,11 +2175,14 @@
 
           saveLocal();
           renderCategoryManager();
+          renderConfigTables();
           handleCategoryChange();
-          alert("Bajado.");
+          showToast('Configuración descargada desde la nube.', 'success');
+        } else {
+          showToast('No se encontró configuración en la nube.', 'warning');
         }
       } catch (e) {
-        alert(e.message);
+        showToast(getReadableErrorMessage(e), 'error', 3500);
       }
     }
 
@@ -1723,9 +2233,12 @@
 
       updateIepsSelectTheme();
       updateCategoryDropdowns();
+      renderConfigTables();
       handleCategoryChange();
       lucide.createIcons();
     };
   </script>
+</body>
+</html>
 </body>
 </html>
