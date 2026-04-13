@@ -197,7 +197,14 @@
 
           <div class="mb-6 flex justify-center">
             <div class="w-[270px] h-[270px] rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm">
-              <img id="resImg1" src="" class="w-full h-full object-cover object-center" alt="Imagen de categoría">
+              <img
+                id="resImg1"
+                src=""
+                class="w-full h-full object-cover object-center"
+                alt="Imagen de categoría"
+                referrerpolicy="no-referrer"
+                onerror="this.onerror=null;this.src='https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen';"
+              >
             </div>
           </div>
 
@@ -1053,6 +1060,7 @@
     const CATEGORY_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen';
     let categoryImageDrafts = {};
     let categoryImageValidationTimers = {};
+    let categoryImageAutosaveTimers = {};
 
     function slugifyDomId(value) {
       return String(value || 'cat')
@@ -1073,18 +1081,22 @@
       };
     }
 
-    function ensureCategoryImageDraft(cat) {
-      const savedUrl = String(
+    function getSavedCategoryImage(cat) {
+      return String(
         appState.categoryMetadata?.[cat]?.imgs?.[0] ??
         CATEGORY_INFO?.[cat]?.imgs?.[0] ??
         ''
       ).trim();
+    }
+
+    function ensureCategoryImageDraft(cat) {
+      const savedUrl = getSavedCategoryImage(cat);
 
       if (!categoryImageDrafts[cat]) {
         categoryImageDrafts[cat] = {
           url: savedUrl,
           savedUrl,
-          valid: savedUrl === '' ? true : null,
+          lastValidation: null,
           validating: false
         };
       }
@@ -1120,7 +1132,7 @@
       previewEl.src = (url && String(url).trim() !== '') ? String(url).trim() : CATEGORY_IMAGE_PLACEHOLDER;
     }
 
-    function setCategoryImageSaveState(cat, enabled) {
+    function setCategoryImageSaveState(cat, enabled = true) {
       const ids = getCategoryImageFieldIds(cat);
       const btn = document.getElementById(ids.save);
       if (!btn) return;
@@ -1138,33 +1150,34 @@
       const isChanged = currentUrl !== savedUrl;
 
       setCategoryImagePreview(cat, currentUrl || savedUrl || '');
+      setCategoryImageSaveState(cat, true);
 
       if (draft.validating) {
         setCategoryImageStatus(cat, 'Validando URL...', 'loading');
-        setCategoryImageSaveState(cat, false);
         return;
       }
 
-      if (currentUrl === '') {
-        setCategoryImageStatus(cat, isChanged ? 'Lista para limpiar' : 'Sin imagen', isChanged ? 'warning' : 'neutral');
-        setCategoryImageSaveState(cat, true);
+      if (!currentUrl) {
+        setCategoryImageStatus(cat, isChanged ? 'Lista para limpiar y guardar' : 'Sin imagen', isChanged ? 'warning' : 'neutral');
         return;
       }
 
-      if (draft.valid === true) {
-        setCategoryImageStatus(cat, isChanged ? 'URL valida. Lista para guardar' : 'Imagen guardada', 'success');
-        setCategoryImageSaveState(cat, true);
+      if (isChanged) {
+        if (draft.lastValidation === true) {
+          setCategoryImageStatus(cat, 'Vista previa cargada. Falta guardar', 'success');
+        } else if (draft.lastValidation === false) {
+          setCategoryImageStatus(cat, 'URL inestable o bloqueada. Se puede guardar', 'error');
+        } else {
+          setCategoryImageStatus(cat, 'Vista previa actualizada. Falta guardar', 'warning');
+        }
         return;
       }
 
-      if (draft.valid === false) {
-        setCategoryImageStatus(cat, 'URL invalida o bloqueada', 'error');
-        setCategoryImageSaveState(cat, false);
-        return;
+      if (draft.lastValidation === false) {
+        setCategoryImageStatus(cat, 'Guardada, pero la fuente es inestable', 'error');
+      } else {
+        setCategoryImageStatus(cat, 'Imagen guardada', 'success');
       }
-
-      setCategoryImageStatus(cat, isChanged ? 'Pendiente de validacion' : 'Imagen guardada', isChanged ? 'warning' : 'success');
-      setCategoryImageSaveState(cat, !isChanged);
     }
 
     function validateImageUrl(url) {
@@ -1185,8 +1198,9 @@
           resolve(result);
         };
 
-        const timer = setTimeout(() => finish(false), 6000);
+        const timer = setTimeout(() => finish(false), 8000);
 
+        img.referrerPolicy = 'no-referrer';
         img.onload = () => finish(true);
         img.onerror = () => finish(false);
         img.src = cleanUrl;
@@ -1199,13 +1213,13 @@
 
       if (!urlAtStart) {
         draft.validating = false;
-        draft.valid = true;
+        draft.lastValidation = true;
         syncCategoryImageEditorUI(cat);
         return;
       }
 
       draft.validating = true;
-      draft.valid = null;
+      draft.lastValidation = null;
       syncCategoryImageEditorUI(cat);
 
       const isValid = await validateImageUrl(urlAtStart);
@@ -1214,66 +1228,74 @@
       if (String(categoryImageDrafts[cat].url || '').trim() !== urlAtStart) return;
 
       categoryImageDrafts[cat].validating = false;
-      categoryImageDrafts[cat].valid = isValid;
+      categoryImageDrafts[cat].lastValidation = isValid;
       syncCategoryImageEditorUI(cat);
     }
 
     function scheduleCategoryImageValidation(cat) {
-      if (categoryImageValidationTimers[cat]) {
-        clearTimeout(categoryImageValidationTimers[cat]);
-      }
+      if (categoryImageValidationTimers[cat]) clearTimeout(categoryImageValidationTimers[cat]);
+      categoryImageValidationTimers[cat] = setTimeout(() => validateCategoryImageDraft(cat), 350);
+    }
 
-      categoryImageValidationTimers[cat] = setTimeout(() => {
-        validateCategoryImageDraft(cat);
-      }, 450);
+    function scheduleCategoryImageAutosave(cat) {
+      if (categoryImageAutosaveTimers[cat]) clearTimeout(categoryImageAutosaveTimers[cat]);
+      categoryImageAutosaveTimers[cat] = setTimeout(() => saveCategoryImage(cat, true), 900);
     }
 
     function handleCategoryImageDraftInput(cat, value) {
       const draft = ensureCategoryImageDraft(cat);
       draft.url = String(value || '').trim();
-      draft.valid = draft.url === '' ? true : null;
       draft.validating = false;
+      draft.lastValidation = draft.url === '' ? true : null;
 
       syncCategoryImageEditorUI(cat);
 
-      if (draft.url !== '') {
-        scheduleCategoryImageValidation(cat);
-      }
+      if (draft.url !== '') scheduleCategoryImageValidation(cat);
+      scheduleCategoryImageAutosave(cat);
     }
 
-    function saveCategoryImage(cat) {
+    function saveCategoryImage(cat, silent = false) {
       const draft = ensureCategoryImageDraft(cat);
       const cleanUrl = String(draft.url || '').trim();
-
-      if (cleanUrl !== '' && draft.valid !== true) {
-        alert('La imagen no se puede guardar porque la URL no es válida o el servidor bloquea su carga.');
-        return;
-      }
 
       updateMetaImg(cat, 0, cleanUrl);
 
       draft.savedUrl = cleanUrl;
       draft.url = cleanUrl;
-      draft.valid = true;
       draft.validating = false;
+      if (draft.lastValidation === null) {
+        draft.lastValidation = cleanUrl === '' ? true : draft.lastValidation;
+      }
 
       syncCategoryImageEditorUI(cat);
-      alert(cleanUrl ? 'Imagen guardada correctamente.' : 'Imagen eliminada correctamente.');
+
+      if (silent) return;
+
+      if (cleanUrl === '') {
+        alert('Imagen eliminada correctamente.');
+        return;
+      }
+
+      if (draft.lastValidation === false) {
+        alert('Imagen guardada. La URL puede ser inestable o el servidor puede bloquearla.');
+        return;
+      }
+
+      alert('Imagen guardada correctamente.');
     }
 
     function initializeCategoryImageEditors(categories = []) {
       categories.forEach(cat => {
         const draft = ensureCategoryImageDraft(cat);
-        const savedUrl = String(
-          appState.categoryMetadata?.[cat]?.imgs?.[0] ??
-          CATEGORY_INFO?.[cat]?.imgs?.[0] ??
-          ''
-        ).trim();
+        const savedUrl = getSavedCategoryImage(cat);
+
+        if (String(draft.savedUrl || '').trim() !== savedUrl && String(draft.url || '').trim() === String(draft.savedUrl || '').trim()) {
+          draft.url = savedUrl;
+        }
 
         draft.savedUrl = savedUrl;
-        if (draft.url === undefined || draft.url === null) draft.url = savedUrl;
         if (String(draft.url || '').trim() === savedUrl) {
-          draft.valid = savedUrl === '' ? true : true;
+          draft.lastValidation = savedUrl === '' ? true : draft.lastValidation;
           draft.validating = false;
         }
 
@@ -1323,7 +1345,7 @@
         const currentImgValue = String(draft.url ?? (meta.imgs && meta.imgs[0]) ?? '').trim();
         const ids = getCategoryImageFieldIds(cat);
 
-        const safeCatJs = JSON.stringify(cat);
+        const safeCatAction = `decodeURIComponent('${encodeURIComponent(cat)}')`;
         const safeCatValue = escapeHtmlAttr(cat);
         const safeIcon = escapeHtmlAttr(meta.icon || '');
         const safeDesc = escapeHtmlAttr(meta.desc || '');
@@ -1350,14 +1372,14 @@
                 type="text"
                 placeholder="Icono (ej: 🍎)"
                 value="${safeIcon}"
-                onchange="updateMeta(${safeCatJs}, 'icon', this.value)"
+                onchange="updateMeta(${safeCatAction}, 'icon', this.value)"
                 class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
               >
               <input
                 type="text"
                 placeholder="Descripción corta"
                 value="${safeDesc}"
-                onchange="updateMeta(${safeCatJs}, 'desc', this.value)"
+                onchange="updateMeta(${safeCatAction}, 'desc', this.value)"
                 class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
               >
             </div>
@@ -1370,7 +1392,8 @@
                   id="${ids.input}"
                   placeholder="https://..."
                   value="${safeImg1}"
-                  oninput="handleCategoryImageDraftInput(${safeCatJs}, this.value)"
+                  oninput="handleCategoryImageDraftInput(${safeCatAction}, this.value)"
+                  onblur="saveCategoryImage(${safeCatAction}, true)"
                   class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
                 >
               </div>
@@ -1383,6 +1406,7 @@
                       src="${escapeHtmlAttr(currentImgValue || CATEGORY_IMAGE_PLACEHOLDER)}"
                       alt="Vista previa de imagen"
                       class="w-full h-full object-cover object-center"
+                      referrerpolicy="no-referrer"
                       onerror="this.onerror=null;this.src='${CATEGORY_IMAGE_PLACEHOLDER}';"
                     >
                   </div>
@@ -1393,16 +1417,15 @@
                     <span id="${ids.status}" class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-50 text-gray-600 border border-gray-200">
                       Pendiente
                     </span>
-                    <span class="text-[10px] text-gray-400 font-semibold">La URL debe cargar visualmente antes de guardarse.</span>
+                    <span class="text-[10px] text-gray-400 font-semibold">La vista previa cambia al instante. Al salir del campo también se guarda sola.</span>
                   </div>
 
                   <div class="flex flex-wrap gap-2">
                     <button
                       type="button"
                       id="${ids.save}"
-                      onclick="saveCategoryImage(${safeCatJs})"
-                      class="px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-gray-100 text-gray-400 cursor-not-allowed transition"
-                      disabled
+                      onclick="saveCategoryImage(${safeCatAction})"
+                      class="px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-green-600 text-white hover:bg-green-700 transition shadow-sm"
                     >
                       Guardar imagen
                     </button>
@@ -1457,18 +1480,24 @@
 
       const cleanUrl = String(val || "").trim();
       appState.categoryMetadata[cat].imgs[0] = cleanUrl;
-      appState.categoryMetadata[cat].imgs = [appState.categoryMetadata[cat].imgs[0] || ''];
+      appState.categoryMetadata[cat].imgs = [cleanUrl];
 
       if (categoryImageDrafts[cat]) {
         categoryImageDrafts[cat].savedUrl = cleanUrl;
         categoryImageDrafts[cat].url = cleanUrl;
-        categoryImageDrafts[cat].valid = true;
         categoryImageDrafts[cat].validating = false;
       }
 
+      const ids = getCategoryImageFieldIds(cat);
+      const input = document.getElementById(ids.input);
+      if (input && input.value !== cleanUrl) input.value = cleanUrl;
+      setCategoryImagePreview(cat, cleanUrl);
+      syncCategoryImageEditorUI(cat);
+
       saveLocal();
 
-      if (document.getElementById('calcCategory')?.value === cat) {
+      const currentCategory = document.getElementById('calcCategory')?.value || '';
+      if (currentCategory === cat) {
         runCalculations();
       }
     }
