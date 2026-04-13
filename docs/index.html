@@ -197,13 +197,7 @@
 
           <div class="mb-6 flex justify-center">
             <div class="w-[270px] h-[270px] rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm">
-              <img
-                id="resImg1"
-                src=""
-                class="w-full h-full object-cover object-center"
-                alt="Imagen de categoría"
-                onerror="this.onerror=null;this.src='https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen';"
-              >
+              <img id="resImg1" src="" class="w-full h-full object-cover object-center" alt="Imagen de categoría">
             </div>
           </div>
 
@@ -953,7 +947,7 @@
 
       const info = customMeta || CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: [""] };
       const fallbackImg = "https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen";
-      const img1 = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "") ? info.imgs[0].trim() : fallbackImg;
+      const img1 = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "") ? info.imgs[0] : fallbackImg;
 
       document.getElementById('resCatTitle').textContent = cat;
       document.getElementById('resCatIcon').textContent = info.icon || "📦";
@@ -1044,7 +1038,7 @@
     function getFilteredCategories(searchTerm = '') {
       const normalizedTerm = normalizeText(searchTerm);
       if (!normalizedTerm) return [...appState.categories];
-      return appState.categories.filter(cat => normalizeText(cat).includes(normalizeText(searchTerm)));
+      return appState.categories.filter(cat => normalizeText(cat).includes(normalizedTerm));
     }
 
     function escapeHtmlAttr(value) {
@@ -1054,6 +1048,241 @@
         .replace(/'/g, '&#39;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
+    }
+
+    const CATEGORY_IMAGE_PLACEHOLDER = 'https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen';
+    let categoryImageDrafts = {};
+    let categoryImageValidationTimers = {};
+
+    function slugifyDomId(value) {
+      return String(value || 'cat')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9]+/g, '-')
+        .replace(/^-+|-+$/g, '')
+        .toLowerCase() || 'cat';
+    }
+
+    function getCategoryImageFieldIds(cat) {
+      const slug = slugifyDomId(cat);
+      return {
+        input: `cat-img-input-${slug}`,
+        preview: `cat-img-preview-${slug}`,
+        status: `cat-img-status-${slug}`,
+        save: `cat-img-save-${slug}`
+      };
+    }
+
+    function ensureCategoryImageDraft(cat) {
+      const savedUrl = String(
+        appState.categoryMetadata?.[cat]?.imgs?.[0] ??
+        CATEGORY_INFO?.[cat]?.imgs?.[0] ??
+        ''
+      ).trim();
+
+      if (!categoryImageDrafts[cat]) {
+        categoryImageDrafts[cat] = {
+          url: savedUrl,
+          savedUrl,
+          valid: savedUrl === '' ? true : null,
+          validating: false
+        };
+      }
+
+      return categoryImageDrafts[cat];
+    }
+
+    function getCategoryImageStatusClasses(type) {
+      const map = {
+        success: 'bg-green-50 text-green-700 border border-green-200',
+        error: 'bg-red-50 text-red-700 border border-red-200',
+        warning: 'bg-amber-50 text-amber-700 border border-amber-200',
+        neutral: 'bg-gray-50 text-gray-600 border border-gray-200',
+        loading: 'bg-blue-50 text-blue-700 border border-blue-200'
+      };
+      return map[type] || map.neutral;
+    }
+
+    function setCategoryImageStatus(cat, text, type = 'neutral') {
+      const ids = getCategoryImageFieldIds(cat);
+      const statusEl = document.getElementById(ids.status);
+      if (!statusEl) return;
+
+      statusEl.className = `inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest ${getCategoryImageStatusClasses(type)}`;
+      statusEl.textContent = text;
+    }
+
+    function setCategoryImagePreview(cat, url) {
+      const ids = getCategoryImageFieldIds(cat);
+      const previewEl = document.getElementById(ids.preview);
+      if (!previewEl) return;
+
+      previewEl.src = (url && String(url).trim() !== '') ? String(url).trim() : CATEGORY_IMAGE_PLACEHOLDER;
+    }
+
+    function setCategoryImageSaveState(cat, enabled) {
+      const ids = getCategoryImageFieldIds(cat);
+      const btn = document.getElementById(ids.save);
+      if (!btn) return;
+
+      btn.disabled = !enabled;
+      btn.className = enabled
+        ? 'px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-green-600 text-white hover:bg-green-700 transition shadow-sm'
+        : 'px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-gray-100 text-gray-400 cursor-not-allowed transition';
+    }
+
+    function syncCategoryImageEditorUI(cat) {
+      const draft = ensureCategoryImageDraft(cat);
+      const currentUrl = String(draft.url || '').trim();
+      const savedUrl = String(draft.savedUrl || '').trim();
+      const isChanged = currentUrl !== savedUrl;
+
+      setCategoryImagePreview(cat, currentUrl || savedUrl || '');
+
+      if (draft.validating) {
+        setCategoryImageStatus(cat, 'Validando URL...', 'loading');
+        setCategoryImageSaveState(cat, false);
+        return;
+      }
+
+      if (currentUrl === '') {
+        setCategoryImageStatus(cat, isChanged ? 'Lista para limpiar' : 'Sin imagen', isChanged ? 'warning' : 'neutral');
+        setCategoryImageSaveState(cat, true);
+        return;
+      }
+
+      if (draft.valid === true) {
+        setCategoryImageStatus(cat, isChanged ? 'URL valida. Lista para guardar' : 'Imagen guardada', 'success');
+        setCategoryImageSaveState(cat, true);
+        return;
+      }
+
+      if (draft.valid === false) {
+        setCategoryImageStatus(cat, 'URL invalida o bloqueada', 'error');
+        setCategoryImageSaveState(cat, false);
+        return;
+      }
+
+      setCategoryImageStatus(cat, isChanged ? 'Pendiente de validacion' : 'Imagen guardada', isChanged ? 'warning' : 'success');
+      setCategoryImageSaveState(cat, !isChanged);
+    }
+
+    function validateImageUrl(url) {
+      return new Promise(resolve => {
+        const cleanUrl = String(url || '').trim();
+        if (!cleanUrl) {
+          resolve(true);
+          return;
+        }
+
+        const img = new Image();
+        let completed = false;
+
+        const finish = (result) => {
+          if (completed) return;
+          completed = true;
+          clearTimeout(timer);
+          resolve(result);
+        };
+
+        const timer = setTimeout(() => finish(false), 6000);
+
+        img.onload = () => finish(true);
+        img.onerror = () => finish(false);
+        img.src = cleanUrl;
+      });
+    }
+
+    async function validateCategoryImageDraft(cat) {
+      const draft = ensureCategoryImageDraft(cat);
+      const urlAtStart = String(draft.url || '').trim();
+
+      if (!urlAtStart) {
+        draft.validating = false;
+        draft.valid = true;
+        syncCategoryImageEditorUI(cat);
+        return;
+      }
+
+      draft.validating = true;
+      draft.valid = null;
+      syncCategoryImageEditorUI(cat);
+
+      const isValid = await validateImageUrl(urlAtStart);
+
+      if (!categoryImageDrafts[cat]) return;
+      if (String(categoryImageDrafts[cat].url || '').trim() !== urlAtStart) return;
+
+      categoryImageDrafts[cat].validating = false;
+      categoryImageDrafts[cat].valid = isValid;
+      syncCategoryImageEditorUI(cat);
+    }
+
+    function scheduleCategoryImageValidation(cat) {
+      if (categoryImageValidationTimers[cat]) {
+        clearTimeout(categoryImageValidationTimers[cat]);
+      }
+
+      categoryImageValidationTimers[cat] = setTimeout(() => {
+        validateCategoryImageDraft(cat);
+      }, 450);
+    }
+
+    function handleCategoryImageDraftInput(cat, value) {
+      const draft = ensureCategoryImageDraft(cat);
+      draft.url = String(value || '').trim();
+      draft.valid = draft.url === '' ? true : null;
+      draft.validating = false;
+
+      syncCategoryImageEditorUI(cat);
+
+      if (draft.url !== '') {
+        scheduleCategoryImageValidation(cat);
+      }
+    }
+
+    function saveCategoryImage(cat) {
+      const draft = ensureCategoryImageDraft(cat);
+      const cleanUrl = String(draft.url || '').trim();
+
+      if (cleanUrl !== '' && draft.valid !== true) {
+        alert('La imagen no se puede guardar porque la URL no es válida o el servidor bloquea su carga.');
+        return;
+      }
+
+      updateMetaImg(cat, 0, cleanUrl);
+
+      draft.savedUrl = cleanUrl;
+      draft.url = cleanUrl;
+      draft.valid = true;
+      draft.validating = false;
+
+      syncCategoryImageEditorUI(cat);
+      alert(cleanUrl ? 'Imagen guardada correctamente.' : 'Imagen eliminada correctamente.');
+    }
+
+    function initializeCategoryImageEditors(categories = []) {
+      categories.forEach(cat => {
+        const draft = ensureCategoryImageDraft(cat);
+        const savedUrl = String(
+          appState.categoryMetadata?.[cat]?.imgs?.[0] ??
+          CATEGORY_INFO?.[cat]?.imgs?.[0] ??
+          ''
+        ).trim();
+
+        draft.savedUrl = savedUrl;
+        if (draft.url === undefined || draft.url === null) draft.url = savedUrl;
+        if (String(draft.url || '').trim() === savedUrl) {
+          draft.valid = savedUrl === '' ? true : true;
+          draft.validating = false;
+        }
+
+        const ids = getCategoryImageFieldIds(cat);
+        const input = document.getElementById(ids.input);
+        if (input && input.value !== draft.url) input.value = draft.url;
+
+        syncCategoryImageEditorUI(cat);
+      });
     }
 
     function renderCategoryManager() {
@@ -1090,14 +1319,18 @@
           meta = { ...CATEGORY_INFO[cat] };
         }
 
+        const draft = ensureCategoryImageDraft(cat);
+        const currentImgValue = String(draft.url ?? (meta.imgs && meta.imgs[0]) ?? '').trim();
+        const ids = getCategoryImageFieldIds(cat);
+
         const safeCatJs = JSON.stringify(cat);
         const safeCatValue = escapeHtmlAttr(cat);
         const safeIcon = escapeHtmlAttr(meta.icon || '');
         const safeDesc = escapeHtmlAttr(meta.desc || '');
-        const safeImg1 = escapeHtmlAttr((meta.imgs && meta.imgs[0]) || '');
+        const safeImg1 = escapeHtmlAttr(currentImgValue);
 
         container.innerHTML += `
-          <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-3 relative overflow-hidden">
+          <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-green-400"></div>
 
             <div class="flex items-center gap-2 pl-2">
@@ -1129,14 +1362,53 @@
               >
             </div>
 
-            <div class="pl-2 space-y-2">
-              <input
-                type="text"
-                placeholder="Link de Imagen 1:1 (270x270)"
-                value="${safeImg1}"
-                oninput="updateMetaImg(${safeCatJs}, 0, this.value)"
-                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
-              >
+            <div class="pl-2 space-y-3">
+              <div>
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest block mb-2">Link de Imagen 1:1 (270x270)</label>
+                <input
+                  type="text"
+                  id="${ids.input}"
+                  placeholder="https://..."
+                  value="${safeImg1}"
+                  oninput="handleCategoryImageDraftInput(${safeCatJs}, this.value)"
+                  class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
+                >
+              </div>
+
+              <div class="flex flex-col lg:flex-row gap-4 items-start">
+                <div class="w-full max-w-[160px]">
+                  <div class="aspect-square rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+                    <img
+                      id="${ids.preview}"
+                      src="${escapeHtmlAttr(currentImgValue || CATEGORY_IMAGE_PLACEHOLDER)}"
+                      alt="Vista previa de imagen"
+                      class="w-full h-full object-cover object-center"
+                      onerror="this.onerror=null;this.src='${CATEGORY_IMAGE_PLACEHOLDER}';"
+                    >
+                  </div>
+                </div>
+
+                <div class="flex-1 w-full space-y-3">
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span id="${ids.status}" class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest bg-gray-50 text-gray-600 border border-gray-200">
+                      Pendiente
+                    </span>
+                    <span class="text-[10px] text-gray-400 font-semibold">La URL debe cargar visualmente antes de guardarse.</span>
+                  </div>
+
+                  <div class="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      id="${ids.save}"
+                      onclick="saveCategoryImage(${safeCatJs})"
+                      class="px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-gray-100 text-gray-400 cursor-not-allowed transition"
+                      disabled
+                    >
+                      Guardar imagen
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         `;
@@ -1144,6 +1416,7 @@
 
       if (window.lucide) lucide.createIcons();
       updateCategoryDropdowns();
+      initializeCategoryImageEditors(filteredCategories.map(item => item.cat));
     }
 
     function clearCategoryManagerSearch() {
@@ -1157,11 +1430,7 @@
       if(!appState.categoryMetadata) appState.categoryMetadata = {};
       if(!appState.categoryMetadata[cat]) {
         appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
-          ? {
-              icon: CATEGORY_INFO[cat].icon || "📦",
-              desc: CATEGORY_INFO[cat].desc || "",
-              imgs: [CATEGORY_INFO[cat].imgs?.[0] || ""]
-            }
+          ? { ...CATEGORY_INFO[cat] }
           : { icon: "📦", desc: "", imgs: [""] };
       }
       appState.categoryMetadata[cat][field] = val;
@@ -1189,6 +1458,13 @@
       const cleanUrl = String(val || "").trim();
       appState.categoryMetadata[cat].imgs[0] = cleanUrl;
       appState.categoryMetadata[cat].imgs = [appState.categoryMetadata[cat].imgs[0] || ''];
+
+      if (categoryImageDrafts[cat]) {
+        categoryImageDrafts[cat].savedUrl = cleanUrl;
+        categoryImageDrafts[cat].url = cleanUrl;
+        categoryImageDrafts[cat].valid = true;
+        categoryImageDrafts[cat].validating = false;
+      }
 
       saveLocal();
 
