@@ -197,7 +197,13 @@
 
           <div class="mb-6 flex justify-center">
             <div class="w-[270px] h-[270px] rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm">
-              <img id="resImg1" src="" class="w-full h-full object-cover object-center" alt="Imagen de categoría">
+              <img
+                id="resImg1"
+                src=""
+                class="w-full h-full object-cover object-center"
+                alt="Imagen de categoría"
+                onerror="this.onerror=null;this.src='https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen';"
+              >
             </div>
           </div>
 
@@ -947,7 +953,7 @@
 
       const info = customMeta || CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: [""] };
       const fallbackImg = "https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen";
-      const img1 = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "") ? info.imgs[0] : fallbackImg;
+      const img1 = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "") ? info.imgs[0].trim() : fallbackImg;
 
       document.getElementById('resCatTitle').textContent = cat;
       document.getElementById('resCatIcon').textContent = info.icon || "📦";
@@ -1038,7 +1044,7 @@
     function getFilteredCategories(searchTerm = '') {
       const normalizedTerm = normalizeText(searchTerm);
       if (!normalizedTerm) return [...appState.categories];
-      return appState.categories.filter(cat => normalizeText(cat).includes(normalizedTerm));
+      return appState.categories.filter(cat => normalizeText(cat).includes(normalizeText(searchTerm)));
     }
 
     function escapeHtmlAttr(value) {
@@ -1128,7 +1134,7 @@
                 type="text"
                 placeholder="Link de Imagen 1:1 (270x270)"
                 value="${safeImg1}"
-                onchange="updateMetaImg(${safeCatJs}, 0, this.value)"
+                oninput="updateMetaImg(${safeCatJs}, 0, this.value)"
                 class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
               >
             </div>
@@ -1151,7 +1157,11 @@
       if(!appState.categoryMetadata) appState.categoryMetadata = {};
       if(!appState.categoryMetadata[cat]) {
         appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
-          ? { ...CATEGORY_INFO[cat] }
+          ? {
+              icon: CATEGORY_INFO[cat].icon || "📦",
+              desc: CATEGORY_INFO[cat].desc || "",
+              imgs: [CATEGORY_INFO[cat].imgs?.[0] || ""]
+            }
           : { icon: "📦", desc: "", imgs: [""] };
       }
       appState.categoryMetadata[cat][field] = val;
@@ -1160,16 +1170,31 @@
     }
 
     function updateMetaImg(cat, idx, val) {
-      if(!appState.categoryMetadata) appState.categoryMetadata = {};
-      if(!appState.categoryMetadata[cat]) {
+      if (!appState.categoryMetadata) appState.categoryMetadata = {};
+
+      if (!appState.categoryMetadata[cat]) {
         appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
-          ? { ...CATEGORY_INFO[cat] }
+          ? {
+              icon: CATEGORY_INFO[cat].icon || "📦",
+              desc: CATEGORY_INFO[cat].desc || "",
+              imgs: [CATEGORY_INFO[cat].imgs?.[0] || ""]
+            }
           : { icon: "📦", desc: "", imgs: [""] };
       }
-      appState.categoryMetadata[cat].imgs[idx] = val;
+
+      if (!Array.isArray(appState.categoryMetadata[cat].imgs)) {
+        appState.categoryMetadata[cat].imgs = [""];
+      }
+
+      const cleanUrl = String(val || "").trim();
+      appState.categoryMetadata[cat].imgs[0] = cleanUrl;
       appState.categoryMetadata[cat].imgs = [appState.categoryMetadata[cat].imgs[0] || ''];
+
       saveLocal();
-      runCalculations();
+
+      if (document.getElementById('calcCategory')?.value === cat) {
+        runCalculations();
+      }
     }
 
     function addNewCategory() {
