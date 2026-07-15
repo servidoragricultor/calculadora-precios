@@ -648,7 +648,7 @@
       color: rgba(255, 255, 255, 0.76);
       border: 0;
       border-radius: 999px;
-      padding: 0.7rem 1rem;
+      padding: 0.45rem 0.85rem;
     }
 
     body.theme-harvest .tab-btn.active {

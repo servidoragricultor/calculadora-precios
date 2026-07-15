@@ -21,7 +21,11 @@
   </div>
 
   <div class="mx-auto w-full max-w-6xl px-4 py-8">
-    <div class="mb-3 flex justify-end gap-2">
+    <div class="mb-3 flex items-center justify-between gap-3">
+      <nav class="flex gap-2 border-b">
+        <button onclick="switchTab('calc')" id="btnTabCalc" class="tab-btn active px-3 py-2 uppercase">Calculadora</button>
+        <button onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-3 py-2 uppercase">Configuración</button>
+      </nav>
       <button
         type="button"
         onclick="openCloudConfig()"
@@ -41,11 +45,6 @@
         <p class="text-xs text-gray-500 font-medium tracking-widest uppercase">Sistema Profesional de Precios</p>
       </div>
     </header>
-
-    <nav class="flex gap-8 mb-8 border-b">
-      <button onclick="switchTab('calc')" id="btnTabCalc" class="tab-btn active px-2 py-3 uppercase">Calculadora</button>
-      <button onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-2 py-3 uppercase">Configuración</button>
-    </nav>
 
     <main id="viewCalc" class="grid lg:grid-cols-3 gap-8 animate-fade-in">
       <section class="lg:col-span-2 space-y-6">
