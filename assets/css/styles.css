@@ -1,0 +1,823 @@
+﻿.form-select {
+      appearance: none; min-width: 200px; width: 100%;
+      padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+      border: 1px solid #d1d5db; border-radius: .5rem;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right .75rem center; background-size: 1.25rem;
+    }
+    .tab-btn { border-bottom: 3px solid transparent; transition: all 0.3s; color: #6b7280; font-size: 0.875rem; font-weight: 700; }
+    .tab-btn.active { border-color: #6b7280; color: #374151; }
+    .input-field { border: 1px solid #d1d5db; border-radius: .5rem; padding: 0.5rem 0.75rem; width: 100%; }
+    .animate-fade-in { animation: fadeIn 0.3s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    #resFinalPrice { letter-spacing: -2px; }
+    #cloud-panel { background: white; }
+
+    #calcInputCard {
+      overflow: visible !important;
+      z-index: 40;
+    }
+
+    #calcCategorySuggestions {
+      position: fixed !important;
+      z-index: 300 !important;
+      max-height: 18rem;
+      background: #f3f4f6 !important;
+      border-color: #d1d5db !important;
+    }
+
+    #calcIepsSuggestions {
+      position: fixed !important;
+      z-index: 300 !important;
+      max-height: 18rem;
+      background: #f3f4f6 !important;
+      border-color: #d1d5db !important;
+    }
+
+    body:not(.theme-xp) {
+      background-color: #f8fbff;
+      background-image:
+        linear-gradient(90deg, rgba(66, 133, 244, 0.045) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(66, 133, 244, 0.035) 1px, transparent 1px);
+      background-size: 38px 38px;
+      background-position: center top;
+    }
+
+    body:not(.theme-xp),
+    body:not(.theme-xp) input,
+    body:not(.theme-xp) select,
+    body:not(.theme-xp) button {
+      font-family: Inter, Roboto, "Segoe UI", Arial, sans-serif;
+    }
+
+    body:not(.theme-xp) header {
+      background: rgba(255, 255, 255, 0.26);
+      border: 1px solid rgba(66, 133, 244, 0.12);
+      border-radius: 28px;
+      padding: 1rem 1.25rem;
+      box-shadow: 0 22px 55px rgba(60, 64, 67, 0.14);
+      backdrop-filter: blur(30px) saturate(190%);
+      -webkit-backdrop-filter: blur(30px) saturate(190%);
+    }
+
+    body:not(.theme-xp) header h1 {
+      color: #1f1f1f;
+      letter-spacing: -0.03em;
+    }
+
+    body:not(.theme-xp) header h1 i {
+      color: #6b7280;
+    }
+
+    body:not(.theme-xp) header p {
+      color: #5f6368;
+    }
+
+    body:not(.theme-xp) nav {
+      background: rgba(255, 255, 255, 0.24);
+      border: 1px solid rgba(66, 133, 244, 0.12);
+      border-radius: 999px;
+      padding: 0.35rem;
+      width: fit-content;
+      box-shadow: 0 14px 34px rgba(60, 64, 67, 0.10);
+      backdrop-filter: blur(22px) saturate(160%);
+      -webkit-backdrop-filter: blur(22px) saturate(160%);
+    }
+
+    body:not(.theme-xp) .tab-btn {
+      border: 0;
+      border-radius: 999px;
+      color: #5f6368;
+      padding: 0.7rem 1rem;
+    }
+
+    body:not(.theme-xp) .tab-btn.active {
+      background: #e8f0fe;
+      color: #1967d2;
+      box-shadow: inset 0 0 0 1px rgba(66, 133, 244, 0.12);
+    }
+
+    body:not(.theme-xp) .bg-white,
+    body:not(.theme-xp) #cloud-panel {
+      position: relative;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.10) !important;
+      border: 1px solid rgba(255, 255, 255, 0.18) !important;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.18) !important;
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+    }
+
+    body:not(.theme-xp) .bg-white::before,
+    body:not(.theme-xp) #cloud-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.18), rgba(255,255,255,0));
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body:not(.theme-xp) .bg-white > *,
+    body:not(.theme-xp) #cloud-panel > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    body:not(.theme-xp) .border,
+    body:not(.theme-xp) .border-2,
+    body:not(.theme-xp) .border-gray-100,
+    body:not(.theme-xp) .border-green-50,
+    body:not(.theme-xp) .border-orange-50,
+    body:not(.theme-xp) .border-blue-100,
+    body:not(.theme-xp) .border-red-50 {
+      border-color: rgba(66, 133, 244, 0.10) !important;
+    }
+
+    body:not(.theme-xp) section > div,
+    body:not(.theme-xp) aside > div,
+    body:not(.theme-xp) #viewConfig > div {
+      border-width: 0 !important;
+    }
+
+    body:not(.theme-xp) .rounded-3xl,
+    body:not(.theme-xp) .rounded-\[2rem\] {
+      border-radius: 18px !important;
+    }
+
+    body:not(.theme-xp) .input-field,
+    body:not(.theme-xp) .form-select,
+    body:not(.theme-xp) input[type="text"],
+    body:not(.theme-xp) input[type="number"],
+    body:not(.theme-xp) input[type="email"],
+    body:not(.theme-xp) input[type="password"] {
+      border-color: #dadce0 !important;
+      border-radius: 14px !important;
+      background-color: #fff !important;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5);
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+    }
+
+    body:not(.theme-xp) .input-field:focus,
+    body:not(.theme-xp) .form-select:focus,
+    body:not(.theme-xp) input:focus,
+    body:not(.theme-xp) select:focus {
+      outline: none;
+      border-color: #4285f4 !important;
+      box-shadow: 0 0 0 4px rgba(66, 133, 244, 0.14) !important;
+    }
+
+    body:not(.theme-xp) button {
+      transition: transform 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+    }
+
+    body:not(.theme-xp) button:hover {
+      transform: translateY(-1px);
+    }
+
+    body:not(.theme-xp) #themeToggleBtn {
+      background: #e8f0fe !important;
+      color: #1967d2 !important;
+      border-color: #d2e3fc !important;
+      border-radius: 999px !important;
+    }
+
+    body:not(.theme-xp) #resBadge {
+      border-radius: 999px;
+      background: #f3f4f6 !important;
+      color: #374151 !important;
+    }
+
+    body:not(.theme-xp) #resFinalPrice {
+      letter-spacing: -0.055em;
+    }
+
+    body:not(.theme-xp) #scaleTableWrap {
+      border-radius: 22px;
+      background: rgba(255,255,255,0.24);
+      border: 1px solid rgba(66, 133, 244, 0.10);
+      padding: 0 0.75rem;
+      backdrop-filter: blur(16px) saturate(160%);
+      -webkit-backdrop-filter: blur(16px) saturate(160%);
+    }
+
+    body:not(.theme-xp) table thead tr {
+      color: #5f6368;
+    }
+
+    body:not(.theme-xp) table tbody tr:hover {
+      background: rgba(248, 250, 253, 0.72) !important;
+    }
+
+    body:not(.theme-xp) input,
+    body:not(.theme-xp) select,
+    body:not(.theme-xp) textarea {
+      background-color: rgba(255,255,255,0.88) !important;
+    }
+
+    body:not(.theme-xp) #resPsychPrices > div,
+    body:not(.theme-xp) #volumeConfigContainer > div {
+      background: rgba(255,255,255,0.26) !important;
+      border-color: rgba(66, 133, 244, 0.10) !important;
+      box-shadow: 0 10px 28px rgba(60, 64, 67, 0.10);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
+    }
+
+    body:not(.theme-xp) #calcOptionsPanel {
+      background: rgba(255, 255, 255, 0.10) !important;
+      border-color: rgba(255, 255, 255, 0.18) !important;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
+      backdrop-filter: blur(30px);
+      -webkit-backdrop-filter: blur(30px);
+    }
+
+    #welcomeOverlay {
+      position: fixed !important;
+      inset: 0 !important;
+      z-index: 300 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background:
+        radial-gradient(circle at 18% 20%, rgba(66, 133, 244, 0.12), transparent 18rem),
+        radial-gradient(circle at 85% 18%, rgba(251, 188, 5, 0.15), transparent 16rem),
+        radial-gradient(circle at 78% 84%, rgba(52, 168, 83, 0.12), transparent 18rem),
+        #ffffff !important;
+      border: 0 !important;
+      box-shadow: none !important;
+      overflow: hidden !important;
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    #welcomeOverlay.welcome-hidden {
+      opacity: 0;
+      transform: scale(1.02);
+      pointer-events: none;
+    }
+
+    @media (max-width: 768px) {
+      body { padding-bottom: 7rem; }
+      .summary-image { max-width: 150px; }
+      #resFinalPrice { font-size: 2.25rem; }
+    }
+
+    body.theme-xp {
+      background:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,0.22), transparent 18rem),
+        linear-gradient(135deg, #1f7ee8 0%, #1b62c9 42%, #3ab54a 100%);
+      color: #111827;
+      font-family: Tahoma, Verdana, Segoe UI, sans-serif;
+    }
+
+    body.theme-xp::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, transparent 0 72%, rgba(63, 172, 54, 0.82) 72% 100%),
+        radial-gradient(circle at 15% 83%, rgba(255,255,255,0.25), transparent 10rem);
+      opacity: 0.85;
+      z-index: -1;
+    }
+
+    body.theme-xp header,
+    body.theme-xp nav,
+    body.theme-xp .bg-white,
+    body.theme-xp #cloud-panel {
+      border: 2px solid #0b4ea2 !important;
+      border-radius: 8px !important;
+      box-shadow: 4px 5px 0 rgba(0, 0, 0, 0.22), inset 1px 1px 0 rgba(255,255,255,0.75) !important;
+      background: linear-gradient(180deg, #ffffff 0%, #eef4ff 100%) !important;
+    }
+
+    body.theme-xp header {
+      padding: 0.75rem 1rem;
+      background: linear-gradient(180deg, #2f8cff 0%, #0454c7 55%, #003f9f 100%) !important;
+      color: white;
+    }
+
+    body.theme-xp header h1,
+    body.theme-xp header p {
+      color: white !important;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.45);
+    }
+
+    body.theme-xp nav {
+      padding: 0.35rem;
+      background: linear-gradient(180deg, #d9ecff 0%, #99c4ff 100%) !important;
+    }
+
+    body.theme-xp .tab-btn {
+      color: #123f85;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding-left: 0.75rem;
+      padding-right: 0.75rem;
+    }
+
+    body.theme-xp .tab-btn.active {
+      background: linear-gradient(180deg, #fff7c4 0%, #f0b43c 100%);
+      border-color: #a36900;
+      color: #3d2b00;
+      box-shadow: inset 1px 1px 0 rgba(255,255,255,0.8);
+    }
+
+    body.theme-xp h2,
+    body.theme-xp h3,
+    body.theme-xp h4 {
+      font-family: Tahoma, Verdana, Segoe UI, sans-serif;
+    }
+
+    body.theme-xp section > .bg-white > div:first-child,
+    body.theme-xp aside > .bg-white > div:first-child,
+    body.theme-xp #viewConfig > .bg-white > div:first-child,
+    body.theme-xp #viewConfig > div > div:first-child {
+      margin: -1.5rem -1.5rem 1rem;
+      padding: 0.65rem 1rem;
+      border-radius: 5px 5px 0 0;
+      background: linear-gradient(180deg, #2f8cff 0%, #075cd5 55%, #0042a4 100%);
+      color: white;
+    }
+
+    body.theme-xp section > .bg-white > div:first-child h2,
+    body.theme-xp section > .bg-white > div:first-child h3,
+    body.theme-xp aside > .bg-white > div:first-child span,
+    body.theme-xp #viewConfig > .bg-white > div:first-child h2,
+    body.theme-xp #viewConfig > div > div:first-child h2 {
+      color: white !important;
+      text-shadow: 1px 1px 0 rgba(0,0,0,0.45);
+    }
+
+    body.theme-xp .input-field,
+    body.theme-xp .form-select,
+    body.theme-xp input,
+    body.theme-xp select {
+      border: 2px inset #d4d0c8 !important;
+      border-radius: 2px !important;
+      background-color: #ffffff !important;
+      box-shadow: none !important;
+      font-family: Tahoma, Verdana, Segoe UI, sans-serif;
+    }
+
+    body.theme-xp button {
+      border-radius: 4px !important;
+      box-shadow: inset 1px 1px 0 rgba(255,255,255,0.75), 1px 1px 0 rgba(0,0,0,0.25);
+    }
+
+    body.theme-xp #themeToggleBtn {
+      background: linear-gradient(180deg, #fff7c4 0%, #f0b43c 100%) !important;
+      border-color: #8f6200 !important;
+      color: #2d2100 !important;
+    }
+
+    body.theme-xp #resBadge {
+      background: #fff7c4 !important;
+      color: #3d2b00 !important;
+      border: 1px solid #a36900;
+    }
+
+    body.theme-xp #resFinalPrice {
+      font-family: Tahoma, Verdana, Segoe UI, sans-serif;
+      letter-spacing: -1px;
+    }
+
+    body.theme-xp #resPsychPrices > div,
+    body.theme-xp #volumeConfigContainer > div,
+    body.theme-xp #categoryManager > div,
+    body.theme-xp #configContainer > div {
+      border: 2px solid #7da2ce !important;
+      border-radius: 6px !important;
+      background: linear-gradient(180deg, #ffffff 0%, #edf5ff 100%) !important;
+    }
+
+    body.theme-xp table thead tr {
+      background: linear-gradient(180deg, #d9ecff 0%, #b8d6ff 100%);
+    }
+
+    body.theme-xp table tbody tr:hover {
+      background: #fff7c4 !important;
+    }
+
+    body.theme-xp #scaleTableWrap {
+      border: 1px solid #e5e7eb;
+      border-radius: 1rem;
+      background: #ffffff;
+      padding: 0 0.75rem;
+    }
+
+    body.theme-xp #scaleTableWrap table thead tr {
+      background: transparent;
+    }
+
+    body.theme-xp #scaleTableWrap table tbody tr:hover {
+      background: #f9fafb !important;
+    }
+
+    body.theme-brand {
+      background-color: #F7F8FA !important;
+      background-image: none !important;
+      color: #001524;
+    }
+
+    body.theme-brand,
+    body.theme-brand input,
+    body.theme-brand select,
+    body.theme-brand button {
+      font-family: Inter, Roboto, "Segoe UI", Arial, sans-serif;
+    }
+
+    body.theme-brand header,
+    body.theme-brand nav,
+    body.theme-brand .bg-white,
+    body.theme-brand #cloud-panel {
+      background: #FFFFFF !important;
+      border: 1px solid #E5E7EB !important;
+      box-shadow: 0 12px 30px rgba(0, 21, 36, 0.08) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      color: #001524;
+    }
+
+    body.theme-brand .bg-white::before,
+    body.theme-brand #cloud-panel::before {
+      display: none !important;
+    }
+
+    body.theme-brand header {
+      border-radius: 18px;
+    }
+
+    body.theme-brand header h1,
+    body.theme-brand h1,
+    body.theme-brand h2,
+    body.theme-brand h3,
+    body.theme-brand h4 {
+      color: #001524 !important;
+    }
+
+    body.theme-brand header p,
+    body.theme-brand .text-gray-400,
+    body.theme-brand .text-gray-500 {
+      color: #5B6470 !important;
+    }
+
+    body.theme-brand nav {
+      background: #001524 !important;
+      width: fit-content;
+      padding: 0.35rem;
+      border-radius: 999px;
+    }
+
+    body.theme-brand .tab-btn {
+      color: rgba(255, 255, 255, 0.72);
+      border: 0;
+      border-radius: 999px;
+      padding: 0.7rem 1rem;
+    }
+
+    body.theme-brand .tab-btn.active {
+      background: #F4A261 !important;
+      color: #FFFFFF !important;
+      box-shadow: none;
+    }
+
+    body.theme-brand #themeToggleBtn,
+    body.theme-brand #cloudQuickBtn {
+      border-color: #E5E7EB !important;
+    }
+
+    body.theme-brand .input-field,
+    body.theme-brand .form-select,
+    body.theme-brand input[type="text"],
+    body.theme-brand input[type="number"],
+    body.theme-brand input[type="email"],
+    body.theme-brand input[type="password"],
+    body.theme-brand select {
+      background: #FFFFFF !important;
+      border-color: #E5E7EB !important;
+      color: #001524 !important;
+      box-shadow: none !important;
+    }
+
+    body.theme-brand .input-field:focus,
+    body.theme-brand input:focus,
+    body.theme-brand select:focus {
+      border-color: #15616D !important;
+      box-shadow: 0 0 0 4px rgba(21, 97, 109, 0.14) !important;
+    }
+
+    body.theme-brand #resFinalPrice,
+    body.theme-brand #resCatTitle,
+    body.theme-brand #resTotalCost,
+    body.theme-brand #resProfit,
+    body.theme-brand #resMarginPct {
+      color: inherit;
+    }
+
+    body.theme-brand #resBadge {
+      background: rgba(21, 97, 109, 0.10) !important;
+      color: #15616D !important;
+      border: 1px solid rgba(21, 97, 109, 0.18);
+    }
+
+    body.theme-brand #scaleTableWrap,
+    body.theme-brand #calcOptionsPanel,
+    body.theme-brand #resPsychPrices > div,
+    body.theme-brand #volumeConfigContainer > div {
+      background: #FFFFFF !important;
+      border-color: #E5E7EB !important;
+      box-shadow: 0 8px 24px rgba(0, 21, 36, 0.06) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    body.theme-brand table tbody tr:hover {
+      background: rgba(21, 97, 109, 0.08) !important;
+    }
+
+    body.theme-brand button.bg-blue-600,
+    body.theme-brand button.bg-indigo-600,
+    body.theme-brand button.bg-gray-800,
+    body.theme-brand button.bg-red-500 {
+      background: #F4A261 !important;
+      border-color: #F4A261 !important;
+      color: #FFFFFF !important;
+    }
+
+    body.theme-brand button.bg-blue-600:hover,
+    body.theme-brand button.bg-indigo-600:hover,
+    body.theme-brand button.bg-gray-800:hover,
+    body.theme-brand button.bg-red-500:hover {
+      background: #15616D !important;
+      border-color: #15616D !important;
+    }
+
+    body.theme-brand button.bg-blue-50,
+    body.theme-brand button.bg-gray-100,
+    body.theme-brand button.bg-orange-50,
+    body.theme-brand button.bg-amber-500 {
+      background: rgba(21, 97, 109, 0.10) !important;
+      border-color: rgba(21, 97, 109, 0.18) !important;
+      color: #15616D !important;
+    }
+
+    body.theme-brand .text-blue-600,
+    body.theme-brand .text-blue-700,
+    body.theme-brand .text-indigo-700,
+    body.theme-brand .text-orange-500,
+    body.theme-brand .text-orange-700 {
+      color: #15616D !important;
+    }
+
+    body.theme-brand .bg-red-50,
+    body.theme-brand .text-red-500,
+    body.theme-brand .text-red-600 {
+      color: #78290F !important;
+    }
+
+    body.theme-brand #resFinalPrice {
+      color: #FFFFFF !important;
+    }
+
+    body.theme-brand aside .bg-gray-800,
+    body.theme-brand .bg-gray-800.rounded-3xl {
+      background: #001524 !important;
+    }
+
+    body.theme-harvest {
+      background-color: #F8FAF8 !important;
+      background-image:
+        linear-gradient(90deg, rgba(26, 59, 42, 0.035) 1px, transparent 1px),
+        linear-gradient(180deg, rgba(26, 59, 42, 0.028) 1px, transparent 1px) !important;
+      background-size: 38px 38px;
+      color: #1F2937;
+    }
+
+    body.theme-harvest,
+    body.theme-harvest input,
+    body.theme-harvest select,
+    body.theme-harvest button {
+      font-family: Inter, Roboto, "Segoe UI", Arial, sans-serif;
+    }
+
+    body.theme-harvest header,
+    body.theme-harvest nav,
+    body.theme-harvest .bg-white,
+    body.theme-harvest #cloud-panel {
+      background: #FFFFFF !important;
+      border: 1px solid #E5E7EB !important;
+      box-shadow: 0 14px 34px rgba(26, 59, 42, 0.08) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      color: #1F2937;
+    }
+
+    body.theme-harvest .bg-white::before,
+    body.theme-harvest #cloud-panel::before {
+      display: none !important;
+    }
+
+    body.theme-harvest header {
+      border-radius: 18px;
+    }
+
+    body.theme-harvest header h1,
+    body.theme-harvest h1,
+    body.theme-harvest h2,
+    body.theme-harvest h3,
+    body.theme-harvest h4 {
+      color: #1A3B2A !important;
+    }
+
+    body.theme-harvest header p,
+    body.theme-harvest .text-gray-400,
+    body.theme-harvest .text-gray-500 {
+      color: #3F6B54 !important;
+    }
+
+    body.theme-harvest nav {
+      background: #1A3B2A !important;
+      width: fit-content;
+      padding: 0.35rem;
+      border-radius: 999px;
+    }
+
+    body.theme-harvest .tab-btn {
+      color: rgba(255, 255, 255, 0.76);
+      border: 0;
+      border-radius: 999px;
+      padding: 0.7rem 1rem;
+    }
+
+    body.theme-harvest .tab-btn.active {
+      background: #F4A261 !important;
+      color: #1A3B2A !important;
+      box-shadow: none;
+    }
+
+    body.theme-harvest .input-field,
+    body.theme-harvest .form-select,
+    body.theme-harvest input[type="text"],
+    body.theme-harvest input[type="number"],
+    body.theme-harvest input[type="email"],
+    body.theme-harvest input[type="password"],
+    body.theme-harvest select {
+      background: #FFFFFF !important;
+      border-color: #E5E7EB !important;
+      color: #1F2937 !important;
+      box-shadow: none !important;
+    }
+
+    body.theme-harvest .input-field:focus,
+    body.theme-harvest input:focus,
+    body.theme-harvest select:focus {
+      border-color: #3F6B54 !important;
+      box-shadow: 0 0 0 4px rgba(63, 107, 84, 0.15) !important;
+    }
+
+    body.theme-harvest #resBadge {
+      background: #FFFFFF !important;
+      color: #3F6B54 !important;
+      border: 1px solid #E5E7EB;
+    }
+
+    body.theme-harvest #calcCategorySuggestions,
+    body.theme-harvest #calcIepsSuggestions {
+      background: #FFFFFF !important;
+      border-color: #E5E7EB !important;
+    }
+
+    body.theme-harvest #scaleTableWrap,
+    body.theme-harvest #calcOptionsPanel,
+    body.theme-harvest #resPsychPrices > div,
+    body.theme-harvest #volumeConfigContainer > div {
+      background: #FFFFFF !important;
+      border-color: #E5E7EB !important;
+      box-shadow: 0 8px 24px rgba(26, 59, 42, 0.06) !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    body.theme-harvest .bg-orange-50,
+    body.theme-harvest .bg-amber-50,
+    body.theme-harvest .bg-blue-50,
+    body.theme-harvest .bg-indigo-50,
+    body.theme-harvest .bg-gray-50,
+    body.theme-harvest .bg-gray-100,
+    body.theme-harvest .bg-red-50,
+    body.theme-harvest .bg-white\/80,
+    body.theme-harvest .bg-white\/90,
+    body.theme-harvest .bg-white\/10,
+    body.theme-harvest .bg-orange-50\/50,
+    body.theme-harvest .bg-blue-50\/50 {
+      background-color: #FFFFFF !important;
+      background-image: none !important;
+    }
+
+    body.theme-harvest .bg-gradient-to-br {
+      background: #FFFFFF !important;
+    }
+
+    body.theme-harvest .text-orange-400,
+    body.theme-harvest .text-orange-500,
+    body.theme-harvest .text-orange-600,
+    body.theme-harvest .text-orange-700,
+    body.theme-harvest .text-orange-800,
+    body.theme-harvest .hover\:text-orange-800:hover {
+      color: #F4A261 !important;
+    }
+
+    body.theme-harvest .bg-orange-400,
+    body.theme-harvest .bg-orange-500,
+    body.theme-harvest .bg-orange-600,
+    body.theme-harvest .bg-orange-700,
+    body.theme-harvest .hover\:bg-orange-100:hover,
+    body.theme-harvest .hover\:bg-orange-500:hover,
+    body.theme-harvest .hover\:bg-orange-700:hover,
+    body.theme-harvest button.bg-amber-500,
+    body.theme-harvest button.bg-amber-500:hover {
+      background-color: #F4A261 !important;
+      background-image: none !important;
+    }
+
+    body.theme-harvest .border-orange-50,
+    body.theme-harvest .border-orange-100,
+    body.theme-harvest .border-orange-200,
+    body.theme-harvest .border-orange-500,
+    body.theme-harvest .focus\:border-orange-300:focus {
+      border-color: #F4A261 !important;
+    }
+
+    body.theme-harvest .focus\:ring-orange-200:focus,
+    body.theme-harvest .focus\:ring-orange-300:focus {
+      --tw-ring-color: rgba(244, 162, 97, 0.28) !important;
+    }
+
+    body.theme-harvest .shadow-orange-50,
+    body.theme-harvest .shadow-orange-100,
+    body.theme-harvest .shadow-orange-200 {
+      --tw-shadow-color: rgba(244, 162, 97, 0.28) !important;
+    }
+
+    body.theme-harvest table tbody tr:hover {
+      background: rgba(132, 169, 140, 0.12) !important;
+    }
+
+    body.theme-harvest button.bg-blue-600,
+    body.theme-harvest button.bg-indigo-600,
+    body.theme-harvest button.bg-gray-800,
+    body.theme-harvest button.bg-red-500 {
+      background: #F4A261 !important;
+      border-color: #F4A261 !important;
+      color: #1A3B2A !important;
+    }
+
+    body.theme-harvest button.bg-blue-600:hover,
+    body.theme-harvest button.bg-indigo-600:hover,
+    body.theme-harvest button.bg-gray-800:hover,
+    body.theme-harvest button.bg-red-500:hover {
+      background: #3F6B54 !important;
+      border-color: #3F6B54 !important;
+      color: #FFFFFF !important;
+    }
+
+    body.theme-harvest button.bg-blue-50,
+    body.theme-harvest button.bg-gray-100,
+    body.theme-harvest button.bg-orange-50,
+    body.theme-harvest button.bg-amber-500 {
+      background: rgba(132, 169, 140, 0.18) !important;
+      border-color: rgba(132, 169, 140, 0.35) !important;
+      color: #3F6B54 !important;
+    }
+
+    body.theme-harvest .text-blue-600,
+    body.theme-harvest .text-blue-700,
+    body.theme-harvest .text-indigo-700,
+    body.theme-harvest .text-orange-500,
+    body.theme-harvest .text-orange-700 {
+      color: #3F6B54 !important;
+    }
+
+    body.theme-harvest .bg-red-50,
+    body.theme-harvest .text-red-500,
+    body.theme-harvest .text-red-600 {
+      color: #C0392B !important;
+    }
+
+    body.theme-harvest .bg-amber-100,
+    body.theme-harvest .text-amber-700,
+    body.theme-harvest .bg-amber-500 {
+      color: #78290F !important;
+      background: #E9C46A !important;
+    }
+
+    body.theme-harvest aside .bg-gray-800,
+    body.theme-harvest .bg-gray-800.rounded-3xl {
+      background: #1A3B2A !important;
+    }
+
+    body.theme-harvest #resFinalPrice {
+      color: #FFFFFF !important;
+    }

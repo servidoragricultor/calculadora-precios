@@ -1,548 +1,4 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Calculadora Pro | La Esquina del Agricultor</title>
-  
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyBGEiIKYV8MiA8lN3lteHaE1XkYD4GRxug",
-      authDomain: "calculadora-esquina.firebaseapp.com",
-      projectId: "calculadora-esquina",
-      storageBucket: "calculadora-esquina.firebasestorage.app",
-      messagingSenderId: "721368379664",
-      appId: "1:721368379664:web:7dd83fad394c3d909b3595",
-      measurementId: "G-MV6X87D4J3"
-    };
-    firebase.initializeApp(firebaseConfig);
-    window.auth = firebase.auth();
-    window.db   = firebase.firestore();
-  </script>
-
-  <style>
-    .form-select {
-      appearance: none; min-width: 200px; width: 100%;
-      padding: 0.5rem 2.5rem 0.5rem 0.75rem;
-      border: 1px solid #d1d5db; border-radius: .5rem;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%236B7280'%3E%3Cpath fill-rule='evenodd' d='M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z' clip-rule='evenodd' /%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right .75rem center; background-size: 1.25rem;
-    }
-    .tab-btn { border-bottom: 3px solid transparent; transition: all 0.3s; color: #6b7280; font-size: 0.875rem; font-weight: 700; }
-    .tab-btn.active { border-color: #22c55e; color: #16a34a; }
-    .input-field { border: 1px solid #d1d5db; border-radius: .5rem; padding: 0.5rem 0.75rem; width: 100%; }
-    .animate-fade-in { animation: fadeIn 0.3s ease-in; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
-    #resFinalPrice { letter-spacing: -2px; }
-    #cloud-panel { position: fixed; right: 20px; bottom: 20px; z-index: 50; width: 300px; background: white; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid #e5e7eb; }
-  </style>
-</head>
-
-<body class="bg-gray-50 min-h-screen pb-20 font-sans">
-  <div class="mx-auto w-full max-w-6xl px-4 py-8">
-    
-    <header class="flex items-center justify-between pb-4 mb-6 border-b">
-      <div>
-        <h1 class="text-2xl font-extrabold text-green-700 flex items-center gap-2">
-          <i data-lucide="leaf" class="text-green-500"></i> Calculadora La Esquina
-        </h1>
-        <p class="text-xs text-gray-500 font-medium tracking-widest uppercase">Sistema Profesional de Precios</p>
-      </div>
-    </header>
-
-    <nav class="flex gap-8 mb-8 border-b">
-      <button onclick="switchTab('calc')" id="btnTabCalc" class="tab-btn active px-2 py-3 uppercase">Calculadora</button>
-      <button onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-2 py-3 uppercase">Configuración</button>
-    </nav>
-
-    <main id="viewCalc" class="grid lg:grid-cols-3 gap-8 animate-fade-in">
-      <section class="lg:col-span-2 space-y-6">
-        <div class="bg-white shadow-sm rounded-3xl p-8 border border-gray-100">
-          
-          <div class="grid md:grid-cols-2 gap-6">
-            <div>
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Categoría</label>
-              <div class="mt-1">
-                <div class="relative">
-                  <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-                    <i data-lucide="search" class="w-4 h-4"></i>
-                  </span>
-                  <input
-                    type="text"
-                    id="calcCategorySearch"
-                    placeholder="Buscar o seleccionar categoría..."
-                    onfocus="handleCategoryInputFocus()"
-                    onblur="handleCategoryInputBlur()"
-                    oninput="syncCategoryFromSearch(this.value)"
-                    onkeydown="handleCategorySearchKeydown(event)"
-                    class="input-field pl-10 pr-10 text-sm font-semibold text-gray-700"
-                    autocomplete="off"
-                  >
-                  <button
-                    type="button"
-                    onclick="clearCategorySearch()"
-                    class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
-                    title="Restablecer categoría"
-                  >
-                    <i data-lucide="x" class="w-4 h-4"></i>
-                  </button>
-                  <div id="calcCategorySuggestions" class="absolute left-0 right-0 top-full mt-2 bg-white border border-gray-200 rounded-xl shadow-xl z-30 max-h-64 overflow-auto hidden"></div>
-                  <select id="calcCategory" onchange="handleCategoryChange()" class="hidden"></select>
-                </div>
-              </div>
-            </div>
-            
-            <div>
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Costo Base</label>
-              <div class="relative mt-1">
-                <span class="absolute left-3 top-2 text-gray-400 font-bold">$</span>
-                <input type="number" id="calcBaseCost" value="0.00" step="0.01" class="input-field pl-8 text-lg font-bold text-gray-800" oninput="handleBaseCostInput()">
-              </div>
-            </div>
-          </div>
-
-          <div class="mt-6">
-            <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Etiqueta IEPS</label>
-            <select id="calcIeps" onchange="handleIepsChange()" class="form-select mt-1 font-bold text-gray-700 transition-all duration-200"></select>
-          </div>
-
-          <div class="mt-8 p-4 bg-green-50 rounded-2xl space-y-4 border border-green-100">
-            
-            <div>
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" id="calcManualToggle" onchange="toggleManualMargin()" class="w-4 h-4 rounded text-green-600">
-                <span class="text-sm font-bold text-green-800 uppercase">Margen Manual</span>
-              </label>
-              <div id="manualMarginWrap" class="hidden animate-fade-in pl-7 mt-2">
-                <div class="flex items-center gap-3">
-                  <input type="number" id="calcManualMargin" value="20" class="input-field w-24 font-bold" oninput="runCalculations()">
-                  <span class="text-sm font-bold text-green-700">% Ganancia</span>
-                </div>
-              </div>
-            </div>
-
-            <hr class="border-green-100 my-2">
-
-            <div>
-              <label class="flex items-center gap-3 cursor-pointer">
-                <input type="checkbox" id="calcExtraToggle" onchange="toggleExtraCost()" class="w-4 h-4 rounded text-green-600">
-                <span class="text-sm font-bold text-green-800 uppercase">Agregar Flete / Costo Extra</span>
-              </label>
-              <div id="extraCostWrap" class="hidden animate-fade-in pl-7 mt-2">
-                <div class="flex items-center gap-3">
-                  <div class="relative">
-                    <span class="absolute left-3 top-2 text-blue-400 font-bold">$</span>
-                    <input type="number" id="calcExtraCost" value="0.00" step="0.01" class="input-field pl-8 w-24 font-bold text-blue-700 bg-blue-50 border-blue-200" oninput="runCalculations()">
-                  </div>
-                  <span class="text-sm font-bold text-blue-700">x pieza</span>
-                  
-                  <button onclick="openFreightModal()" class="text-blue-500 hover:text-white hover:bg-blue-500 bg-white border border-blue-200 p-2 rounded-lg transition-colors shadow-sm ml-2" title="Calculadora de Flete">
-                    <i data-lucide="truck" class="w-4 h-4"></i>
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <hr class="border-green-100 my-2">
-
-            <label class="flex items-center gap-3 cursor-pointer">
-              <input type="checkbox" id="calcIvaToggle" onchange="runCalculations()" class="w-4 h-4 rounded text-green-600">
-              <span class="text-sm font-bold text-green-800 uppercase">Incluir IVA en costo base</span>
-            </label>
-            
-          </div>
-        </div>
-
-        <div class="bg-white shadow-sm rounded-3xl p-8 border border-gray-100">
-          <div class="flex justify-between items-center mb-6">
-            <h3 class="font-black text-gray-800 uppercase text-xs tracking-widest">Escalas de Volumen (Precios)</h3>
-          </div>
-          <table class="w-full text-sm">
-            <thead>
-              <tr class="text-gray-400 border-b uppercase text-[10px] text-left font-black">
-                <th class="pb-3">Nivel</th>
-                <th class="pb-3">Cant. Min.</th>
-                <th class="pb-3">Unitario</th>
-                <th class="pb-3">Precio Total</th>
-                <th class="pb-3">Ganancia Total</th>
-                <th class="pb-3 text-right">Margen %</th>
-              </tr>
-            </thead>
-            <tbody id="scaleTableBody" class="font-bold text-gray-700"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <aside class="space-y-4 animate-fade-in">
-        <div class="bg-white rounded-[2rem] p-6 shadow-sm border border-gray-100">
-          <div class="flex justify-between items-center mb-4">
-            <span class="text-gray-400 font-black text-[10px] uppercase tracking-widest">Resumen</span>
-            <span id="resBadge" class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">Margen saludable</span>
-          </div>
-
-          <div class="bg-white border border-gray-50 rounded-2xl p-4 flex items-center gap-4 shadow-sm mb-4">
-            <div id="resCatIcon" class="text-3xl">🌿</div>
-            <div>
-              <h4 id="resCatTitle" class="font-bold text-gray-800 text-sm italic">Agroquímicos</h4>
-              <p id="resCatDesc" class="text-[10px] text-gray-500 leading-tight">Productos para proteger y fortalecer tus cultivos.</p>
-            </div>
-          </div>
-
-          <div class="mb-6 flex justify-center">
-            <div class="w-[270px] h-[270px] rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 shadow-sm">
-              <img
-                id="resImg1"
-                src=""
-                class="w-full h-full object-cover object-center"
-                alt="Imagen de categoría"
-                referrerpolicy="no-referrer"
-                onerror="this.onerror=null;this.src='https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen';"
-              >
-            </div>
-          </div>
-
-          <div class="bg-[#22c55e] rounded-3xl p-6 text-white text-center shadow-lg shadow-green-100 mb-4">
-            <p class="text-[10px] font-bold uppercase tracking-widest opacity-90">Precio de Venta Final</p>
-            <div class="flex justify-center items-start gap-1 mt-1">
-              <span id="resFinalPrice" class="text-5xl font-black tracking-tighter">$0.00</span>
-              <span class="text-sm font-bold mt-2">MXN</span>
-            </div>
-            <p id="resIvaNote" class="text-[10px] mt-2 opacity-80 italic">(Sin IVA en costo)</p>
-          </div>
-
-          <div class="bg-blue-50 border border-blue-100 rounded-2xl p-4 mb-6 shadow-sm">
-            <h4 class="text-[10px] font-black text-blue-800 uppercase tracking-widest mb-3 flex items-center gap-1">
-              <i data-lucide="brain" class="w-4 h-4"></i> Precios Sugeridos
-            </h4>
-            <div id="resPsychPrices" class="grid grid-cols-3 gap-2"></div>
-            <p class="text-[9px] text-blue-500 mt-2 text-center italic leading-tight">Usa estas opciones visuales para aumentar conversiones.</p>
-          </div>
-
-          <div class="space-y-3 text-xs font-bold">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-400 font-medium">Subtotal (antes de IVA)</span>
-              <span id="resSubtotal" class="text-gray-800">$0.00</span>
-            </div>
-            
-            <div id="resExtraRow" class="flex justify-between items-center text-blue-500 hidden">
-              <span class="font-medium">Flete / Extra por pieza</span>
-              <span id="resExtraCost">$0.00</span>
-            </div>
-
-            <div class="flex justify-between items-center text-orange-500">
-              <span class="font-medium">Descuento aplicado</span>
-              <span id="resDiscount">-0.00</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <span class="text-gray-400 font-medium">IVA sobre costo base (16%)</span>
-              <span id="resIvaCost">$0.00</span>
-            </div>
-            <hr class="border-gray-50 my-2">
-            <div class="flex justify-between items-center">
-              <span class="text-gray-400 font-medium">Costo de Adquisición Total</span>
-              <span id="resTotalCost" class="text-gray-800">$0.00</span>
-            </div>
-            <div class="flex justify-between items-center">
-              <div class="flex items-center gap-2"><i data-lucide="trending-up" class="w-3 h-3 text-gray-300"></i><span class="text-gray-400 font-medium">Ganancia Pura</span></div>
-              <span id="resProfit" class="text-gray-800">$0.00</span>
-            </div>
-            <div class="flex justify-between items-center pt-1">
-              <div class="flex items-center gap-2"><i data-lucide="gauge" class="w-3 h-3 text-gray-300"></i><span class="text-gray-400 font-medium">Margen bruto</span></div>
-              <span id="resMarginPct" class="text-gray-800 font-black text-lg">0.00%</span>
-            </div>
-          </div>
-        </div>
-      </aside>
-    </main>
-
-    <div id="viewConfig" class="hidden animate-fade-in space-y-10">
-      
-      <div class="bg-white rounded-3xl p-8 border-2 border-green-50 shadow-sm transition-all duration-300">
-        <div class="flex justify-between items-center cursor-pointer" onclick="toggleCategoryManager()">
-          <h2 class="text-xl font-black text-gray-800 uppercase italic flex items-center gap-2">
-             <i data-lucide="folder-edit" class="text-green-600"></i> Gestión de Categorías
-          </h2>
-          <button id="cat-toggle-btn" class="text-gray-400 hover:text-gray-800">
-            <i data-lucide="chevron-down" class="w-5 h-5"></i>
-          </button>
-        </div>
-        <div id="category-manager-content" class="hidden transition-all duration-300 mt-6">
-          <div class="relative mb-5">
-            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
-              <i data-lucide="search" class="w-4 h-4"></i>
-            </span>
-            <input
-              type="text"
-              id="categoryManagerSearch"
-              placeholder="Buscar en categorías configuradas..."
-              oninput="renderCategoryManager()"
-              class="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-2xl text-sm font-semibold text-gray-700 bg-white focus:ring-2 focus:ring-green-100 outline-none"
-            >
-            <button
-              type="button"
-              onclick="clearCategoryManagerSearch()"
-              class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500 transition-colors"
-              title="Limpiar búsqueda"
-            >
-              <i data-lucide="x" class="w-4 h-4"></i>
-            </button>
-          </div>
-          <div id="categoryManager" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6"></div>
-          <div class="flex flex-wrap gap-3">
-            <button onclick="addNewCategory()" class="bg-gray-800 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-black transition shadow-lg">+ Agregar Categoría</button>
-            <button onclick="sortCategoriesAlphabetically()" class="bg-green-50 text-green-700 border border-green-200 px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-green-100 transition shadow-sm">Ordenar A-Z</button>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl p-8 border border-blue-100 shadow-sm transition-all duration-300">
-        <div class="flex justify-between items-center cursor-pointer" onclick="toggleBulkAssistant()">
-          <h2 class="text-xl font-black text-blue-800 uppercase italic flex items-center gap-2">
-             <i data-lucide="flask-conical" class="text-blue-600"></i> Asistente IA para Venta a Granel
-          </h2>
-          <button id="bulk-toggle-btn" class="text-blue-400 hover:text-blue-800">
-            <i data-lucide="chevron-down" class="w-5 h-5"></i>
-          </button>
-        </div>
-        
-        <div id="bulk-assistant-content" class="hidden transition-all duration-300 mt-6 space-y-6">
-          <p class="text-xs text-blue-700 font-medium">El algoritmo analizará tus límites de precios para sugerirte una curva comercial perfecta.</p>
-          
-          <div class="grid md:grid-cols-3 gap-4 bg-white p-5 rounded-xl shadow-sm border border-blue-100 mb-2 relative">
-            <div>
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Tamaño Envase Completo</label>
-              <div class="relative mt-2">
-                <input type="number" id="asstFullQty" value="1000" placeholder="Ej: 1000" class="w-full pl-3 pr-10 p-3 border border-blue-200 rounded-xl font-bold text-lg text-blue-700 focus:ring-2 focus:ring-blue-300 outline-none">
-                <span class="absolute right-3 top-3 text-gray-400 text-sm font-bold">ml/g</span>
-              </div>
-            </div>
-            <div>
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Precio Envase Completo</label>
-              <div class="relative mt-2">
-                <span class="absolute left-3 top-3 text-blue-400 font-bold">$</span>
-                <input type="number" id="asstFullPrice" value="500" placeholder="Ej: 500" class="w-full pl-8 p-3 border border-blue-200 rounded-xl font-bold text-lg text-blue-700 focus:ring-2 focus:ring-blue-300 outline-none">
-              </div>
-            </div>
-            <div>
-              <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest flex justify-between items-center">
-                Precio 1 Unidad (Auto)
-                <i data-lucide="lock" class="w-3 h-3 text-gray-400"></i>
-              </label>
-              <div class="relative mt-2">
-                <span class="absolute left-3 top-3 text-gray-500 font-bold">$</span>
-                <input type="number" id="asstBasePrice" readonly class="w-full pl-8 p-3 border border-gray-200 rounded-xl font-bold text-lg text-gray-600 bg-gray-100 outline-none cursor-not-allowed">
-              </div>
-            </div>
-          </div>
-
-          <div class="flex justify-end">
-             <button onclick="suggestBulkPrices()" class="bg-indigo-100 text-indigo-700 font-black uppercase text-[10px] px-6 py-3 rounded-xl shadow-sm hover:bg-indigo-200 transition border border-indigo-200 flex items-center gap-2">
-              <i data-lucide="sparkles" class="w-4 h-4"></i> Calcular Sugerencias Inteligentes
-            </button>
-          </div>
-
-          <div class="grid md:grid-cols-3 gap-4 mt-2">
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-blue-100">
-              <h4 class="font-black text-blue-800 text-sm mb-4 border-b border-blue-50 pb-2">PRECIO 2</h4>
-              <div class="space-y-4">
-                <div>
-                  <label class="text-[10px] text-gray-400 uppercase font-black">Cantidad Mínima a Vender</label>
-                  <input type="number" id="asstQty2" value="600" class="w-full p-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-blue-300">
-                </div>
-                <div>
-                  <label class="text-[10px] text-gray-400 uppercase font-black">Cobrar en Total ($)</label>
-                  <div class="relative">
-                    <span class="absolute left-2 top-2 text-green-500 font-bold">$</span>
-                    <input type="number" id="asstTotal2" value="0" class="w-full pl-6 p-2 border border-gray-200 rounded-lg text-sm font-bold text-green-600 outline-none focus:border-green-300 bg-green-50">
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-blue-100">
-              <h4 class="font-black text-blue-800 text-sm mb-4 border-b border-blue-50 pb-2">PRECIO 3</h4>
-              <div class="space-y-4">
-                <div>
-                  <label class="text-[10px] text-gray-400 uppercase font-black">Cantidad Mínima a Vender</label>
-                  <input type="number" id="asstQty3" value="700" class="w-full p-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-blue-300">
-                </div>
-                <div>
-                  <label class="text-[10px] text-gray-400 uppercase font-black">Cobrar en Total ($)</label>
-                  <div class="relative">
-                    <span class="absolute left-2 top-2 text-green-500 font-bold">$</span>
-                    <input type="number" id="asstTotal3" value="0" class="w-full pl-6 p-2 border border-gray-200 rounded-lg text-sm font-bold text-green-600 outline-none focus:border-green-300 bg-green-50">
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-blue-100">
-              <h4 class="font-black text-blue-800 text-sm mb-4 border-b border-blue-50 pb-2">PRECIO 4</h4>
-              <div class="space-y-4">
-                <div>
-                  <label class="text-[10px] text-gray-400 uppercase font-black">Cantidad Mínima a Vender</label>
-                  <input type="number" id="asstQty4" value="800" class="w-full p-2 border border-gray-200 rounded-lg text-sm font-bold outline-none focus:border-blue-300">
-                </div>
-                <div>
-                  <label class="text-[10px] text-gray-400 uppercase font-black">Cobrar en Total ($)</label>
-                  <div class="relative">
-                    <span class="absolute left-2 top-2 text-green-500 font-bold">$</span>
-                    <input type="number" id="asstTotal4" value="0" class="w-full pl-6 p-2 border border-gray-200 rounded-lg text-sm font-bold text-green-600 outline-none focus:border-green-300 bg-green-50">
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <button onclick="applyBulkStrategy()" class="w-full bg-blue-600 text-white font-black uppercase text-xs px-6 py-4 rounded-xl shadow-lg hover:bg-blue-700 transition flex justify-center items-center gap-2 mt-4">
-            <i data-lucide="check-circle" class="w-4 h-4"></i> Aplicar Curva de Descuentos
-          </button>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-3xl p-8 border shadow-sm border-2 border-orange-50 mb-6 transition-all duration-300">
-        <div class="flex justify-between items-center cursor-pointer" onclick="toggleVolumeManager()">
-          <h2 class="text-xl font-black text-gray-800 uppercase italic flex items-center gap-2">
-             <i data-lucide="layers" class="text-orange-500"></i> Escalas de Precio (PRECIO 1 - 4)
-          </h2>
-          <button id="vol-toggle-btn" class="text-gray-400 hover:text-gray-800">
-            <i data-lucide="chevron-down" class="w-5 h-5"></i>
-          </button>
-        </div>
-        <div id="volume-manager-content" class="hidden transition-all duration-300 mt-6">
-          <div id="volumeConfigContainer" class="grid grid-cols-1 md:grid-cols-4 gap-4"></div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-3xl p-8 border shadow-sm transition-all duration-300">
-        <div class="flex justify-between items-center cursor-pointer" onclick="toggleMarginManager()">
-          <h2 class="text-xl font-black text-gray-800 uppercase italic">Editor de Márgenes</h2>
-          <button id="margin-toggle-btn" class="text-gray-400 hover:text-gray-800">
-            <i data-lucide="chevron-down" class="w-5 h-5"></i>
-          </button>
-        </div>
-        <div id="margin-manager-content" class="hidden transition-all duration-300 mt-8">
-          <div class="flex gap-3 mb-6">
-            <button onclick="saveAllConfig()" class="bg-green-600 text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:bg-green-700 transition"><i data-lucide="save" class="w-4 h-4"></i> Guardar Todo</button>
-            <button onclick="resetToDefaults()" class="bg-red-50 text-red-600 px-4 py-2 rounded-xl font-bold border border-red-100 text-xs hover:bg-red-100 transition">Restablecer</button>
-          </div>
-          <div id="configContainer" class="grid md:grid-cols-2 gap-8"></div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-3xl p-8 border-2 border-red-50 shadow-sm transition-all duration-300">
-        <div class="flex justify-between items-center cursor-pointer" onclick="toggleVideoManager()">
-          <h2 class="text-xl font-black text-gray-800 uppercase italic flex items-center gap-2">
-            <i data-lucide="youtube" class="text-red-500"></i> Instrucciones en Video
-          </h2>
-          <button id="video-toggle-btn" class="text-gray-400 hover:text-gray-800">
-            <i data-lucide="chevron-down" class="w-5 h-5"></i>
-          </button>
-        </div>
-
-        <div id="video-manager-content" class="hidden transition-all duration-300 mt-6">
-          <p class="text-xs text-gray-500 font-medium mb-5 leading-relaxed">
-            Agrega URLs de YouTube para mostrar la miniatura del video y abrirlo en YouTube sin errores del reproductor embebido.<br>
-            Soporta links normales <span class="font-black text-gray-600">youtube.com/watch?v=...</span>, cortos <span class="font-black text-gray-600">youtu.be/...</span> y Shorts.
-          </p>
-
-          <div class="bg-gray-50 rounded-2xl p-4 border border-gray-100 mb-6">
-            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Agregar nuevo video</p>
-            <div class="flex flex-col md:flex-row gap-3">
-              <div class="flex-1 relative">
-                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-red-400 pointer-events-none">
-                  <i data-lucide="link" class="w-4 h-4"></i>
-                </span>
-                <input
-                  type="text"
-                  id="videoUrlInput"
-                  placeholder="https://www.youtube.com/watch?v=..."
-                  class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-200 outline-none bg-white"
-                >
-              </div>
-              <div class="md:w-56">
-                <input
-                  type="text"
-                  id="videoTitleInput"
-                  placeholder="Título (opcional)"
-                  class="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-medium focus:ring-2 focus:ring-red-200 outline-none bg-white"
-                >
-              </div>
-              <button
-                onclick="addVideo()"
-                class="bg-red-500 text-white px-5 py-2.5 rounded-xl font-black text-xs uppercase hover:bg-red-600 active:scale-95 transition shadow-lg shadow-red-100 flex items-center justify-center gap-2 whitespace-nowrap"
-              >
-                <i data-lucide="plus" class="w-4 h-4"></i> Agregar
-              </button>
-            </div>
-          </div>
-
-          <div id="videoGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
-
-          <div id="videosEmpty" class="text-center text-gray-300 font-black text-xs uppercase py-10 tracking-widest flex-col items-center" style="display:flex;">
-            <i data-lucide="video-off" class="w-10 h-10 mb-3"></i>
-            Aún no hay videos. Agrega uno arriba.
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-
-  <div id="freightModal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-[100] px-4">
-    <div class="bg-white rounded-3xl p-6 w-full max-w-sm shadow-2xl transform transition-all">
-      <h3 class="font-black text-gray-800 uppercase italic mb-4 flex items-center gap-2">
-        <i data-lucide="truck" class="text-blue-500"></i> Prorrateo de Flete
-      </h3>
-      <div class="space-y-4">
-        <div>
-          <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Costo Total del Envío ($)</label>
-          <input type="number" id="modalFreightTotal" placeholder="Ej: 500" class="w-full p-3 border rounded-xl font-bold text-sm bg-gray-50 focus:ring-2 focus:ring-blue-200 outline-none">
-        </div>
-        <div>
-          <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total de Piezas en la caja</label>
-          <input type="number" id="modalFreightPieces" placeholder="Ej: 20" class="w-full p-3 border rounded-xl font-bold text-sm bg-gray-50 focus:ring-2 focus:ring-blue-200 outline-none">
-        </div>
-        <div class="pt-4 flex gap-3">
-          <button onclick="closeFreightModal()" class="w-full py-3 rounded-xl font-bold text-gray-500 bg-gray-100 hover:bg-gray-200 text-xs uppercase transition">Cancelar</button>
-          <button onclick="applyFreight()" class="w-full py-3 rounded-xl font-black text-white bg-blue-600 hover:bg-blue-700 text-xs uppercase shadow-lg shadow-blue-200 transition">Aplicar a Pieza</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <div id="cloud-panel" class="p-4 transition-all duration-300">
-    <div class="flex items-center justify-between cursor-pointer" onclick="toggleCloudPanel()" id="cloud-header">
-      <div class="flex items-center gap-2">
-        <div class="w-2.5 h-2.5 rounded-full bg-gray-300" id="auth-status-dot"></div>
-        <span class="text-[10px] font-black text-gray-400 uppercase tracking-widest" id="auth-status-text">Offline</span>
-      </div>
-      <button id="cloud-toggle-btn" class="text-gray-400 hover:text-gray-800">
-        <i data-lucide="chevron-up" class="w-4 h-4"></i>
-      </button>
-    </div>
-    
-    <div id="cloud-panel-content" class="mt-4 hidden transition-all duration-300">
-      <div id="auth-form" class="space-y-3">
-        <input type="email" id="fb-email" placeholder="Email" class="text-xs border w-full p-2.5 rounded-lg">
-        <input type="password" id="fb-pass" placeholder="Password" class="text-xs border w-full p-2.5 rounded-lg">
-        <button onclick="handleLogin()" class="w-full bg-blue-600 text-white text-xs py-2.5 rounded-lg font-black uppercase shadow-lg shadow-blue-50">Entrar</button>
-      </div>
-      <div id="cloud-actions" class="hidden space-y-3">
-        <button onclick="syncToCloud()" class="w-full bg-green-600 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Guardar en Nube</button>
-        <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-3 rounded-lg font-black uppercase flex justify-center gap-2"><i data-lucide="download-cloud" class="w-4 h-4"></i> Bajar de Nube</button>
-        <button onclick="auth.signOut()" class="w-full text-red-500 text-[10px] font-black mt-4 uppercase">Salir</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    const CONFIG = {
+﻿const CONFIG = {
       IVA_RATE: 0.16,
       LS_KEY: 'esquina_agricola_v9_single_image',
       IEPS: { none: 0, azul: 0.06, amarilla: 0.07, roja: 0.09 },
@@ -550,12 +6,12 @@
     };
 
     const CATEGORY_INFO = {
-      "Agroquimicos": { icon: "🌿", desc: "Productos para proteger y fortalecer tus cultivos.", imgs: ["https://elciudadanovoces.com/wp-content/uploads/2024/06/6-720x406.jpg"] },
-      "Granel": { icon: "🧪", desc: "Insumos vendidos por Mililitro o Gramo.", imgs: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW2oljMgSWqHmnrNObMtJb6sh8nWUovf_Zg&s"] },
+      "Agroquimicos": { icon: " ", desc: "Productos para proteger y fortalecer tus cultivos.", imgs: ["https://elciudadanovoces.com/wp-content/uploads/2024/06/6-720x406.jpg"] },
+      "Granel": { icon: " ", desc: "Insumos vendidos por Mililitro o Gramo.", imgs: ["https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTHW2oljMgSWqHmnrNObMtJb6sh8nWUovf_Zg&s"] },
       "KG-LT": { icon: "⚖️", desc: "Presentaciones de venta minorista.", imgs: ["https://media.istockphoto.com/id/1283025593/es/foto/se-est%C3%A1-pesando-az%C3%BAcar-de-la-elaboraci%C3%B3n.jpg?s=170667a&w=0&k=20&c=bJiO4FyI8I-fF3dX7aoJEZaInIjNRThws_6ikzPQSuM="] },
-      "FERTILIZANTES": { icon: "🌱", desc: "Nutrición para suelo y planta.", imgs: ["https://eos.com/wp-content/uploads/2023/11/components-of-different-types-of-fertilizers.jpg.webp"] },
-      "INOCUIDAD": { icon: "🧴", desc: "Seguridad alimentaria.", imgs: ["https://www.senasa.gob.pe/senasacontigo/wp-content/uploads/2019/11/inocuidad2.jpg"] },
-      "MAQUINARIA": { icon: "🚜", desc: "Equipos y herramientas.", imgs: ["https://www.defrentealcampo.com.ar/wp-content/uploads/2018/09/drone-pulverizador.jpg"] }
+      "FERTILIZANTES": { icon: " ", desc: "Nutrición para suelo y planta.", imgs: ["https://eos.com/wp-content/uploads/2023/11/components-of-different-types-of-fertilizers.jpg.webp"] },
+      "INOCUIDAD": { icon: " ", desc: "Seguridad alimentaria.", imgs: ["https://www.senasa.gob.pe/senasacontigo/wp-content/uploads/2019/11/inocuidad2.jpg"] },
+      "MAQUINARIA": { icon: " ", desc: "Equipos y herramientas.", imgs: ["https://www.defrentealcampo.com.ar/wp-content/uploads/2018/09/drone-pulverizador.jpg"] }
     };
 
     let appState = {
@@ -575,10 +31,161 @@
         { label: "PRECIO 4", qty: 800, discount: 12 }
       ],
       categoryMetadata: {},
-      currentPVP: 0
+      currentPVP: 0,
+      currentTotalCost: 0
     };
 
     let videoList = [];
+
+    const DEFAULT_VOLUME_CONFIG = [
+      { label: "PRECIO 1", qty: 1, discount: 0 },
+      { label: "PRECIO 2", qty: 600, discount: 5 },
+      { label: "PRECIO 3", qty: 700, discount: 8 },
+      { label: "PRECIO 4", qty: 800, discount: 12 }
+    ];
+
+    function encodeStateForStorage(state) {
+      return JSON.stringify(state, (_key, value) => value === Infinity ? '__INFINITY__' : value);
+    }
+
+    function decodeStateFromStorage(raw) {
+      return JSON.parse(raw, (_key, value) => value === '__INFINITY__' ? Infinity : value);
+    }
+
+    function normalizeAppState(state = {}) {
+      const normalized = {
+        ...state,
+        categories: Array.isArray(state.categories) && state.categories.length > 0 ? state.categories : [...CONFIG.DEFAULT_CATS],
+        margins: state.margins && typeof state.margins === 'object' ? state.margins : {},
+        volumeConfig: Array.isArray(state.volumeConfig) && state.volumeConfig.length > 0 ? state.volumeConfig : DEFAULT_VOLUME_CONFIG.map(tier => ({ ...tier })),
+        categoryMetadata: state.categoryMetadata && typeof state.categoryMetadata === 'object' ? state.categoryMetadata : {},
+        currentPVP: Number(state.currentPVP) || 0,
+        currentTotalCost: Number(state.currentTotalCost) || 0
+      };
+
+      normalized.categories.forEach(cat => {
+        if (!Array.isArray(normalized.margins[cat]) || normalized.margins[cat].length === 0) {
+          normalized.margins[cat] = [{ max: Infinity, m: 20 }];
+        }
+      });
+
+      Object.keys(normalized.margins).forEach(cat => {
+        normalized.margins[cat] = normalized.margins[cat].map(rule => ({
+          max: rule.max === null || rule.max === undefined || rule.max === '' ? Infinity : Number(rule.max),
+          m: Number(rule.m) || 0
+        }));
+      });
+
+      Object.keys(normalized.categoryMetadata).forEach(cat => {
+        if (!Array.isArray(normalized.categoryMetadata[cat].imgs)) {
+          normalized.categoryMetadata[cat].imgs = [''];
+        } else {
+          normalized.categoryMetadata[cat].imgs = [normalized.categoryMetadata[cat].imgs[0] || ''];
+        }
+        const pos = normalized.categoryMetadata[cat].imgPosition || {};
+        normalized.categoryMetadata[cat].imgPosition = {
+          x: Number.isFinite(Number(pos.x)) ? Number(pos.x) : 50,
+          y: Number.isFinite(Number(pos.y)) ? Number(pos.y) : 50
+        };
+      });
+
+      normalized.volumeConfig = normalized.volumeConfig.map((tier, index) => ({
+        label: String(tier.label || DEFAULT_VOLUME_CONFIG[index]?.label || `PRECIO ${index + 1}`),
+        qty: Number(tier.qty) || 0,
+        discount: Number(tier.discount) || 0
+      }));
+
+      return normalized;
+    }
+
+    function getUserConfigDoc() {
+      const user = auth.currentUser;
+      if (!user) {
+        alert('Inicia sesión antes de usar la nube.');
+        return null;
+      }
+      return db.collection('configs').doc(user.uid);
+    }
+
+    function applyVisualTheme(theme) {
+      const isXp = theme === 'xp';
+      const isBrand = theme === 'brand';
+      const isHarvest = theme === 'harvest';
+      document.body.classList.toggle('theme-xp', isXp);
+      document.body.classList.toggle('theme-brand', isBrand);
+      document.body.classList.toggle('theme-harvest', isHarvest);
+
+      const btn = document.getElementById('themeToggleBtn');
+      if (btn) {
+        btn.innerHTML = isXp
+          ? '<i data-lucide="sparkles" class="w-4 h-4"></i>'
+          : '<i data-lucide="monitor" class="w-4 h-4"></i>';
+        btn.title = isXp ? 'Volver al modo actual' : 'Cambiar a modo XP';
+      }
+
+      const brandBtn = document.getElementById('brandThemeBtn');
+      if (brandBtn) {
+        brandBtn.className = isBrand
+          ? 'bg-[#F4A261] text-white border border-[#F4A261] w-9 h-9 rounded-full text-[10px] font-black uppercase hover:bg-[#F4A261] transition inline-flex items-center justify-center shadow-sm'
+          : 'bg-orange-50 text-orange-700 border border-orange-100 w-9 h-9 rounded-full text-[10px] font-black uppercase hover:bg-orange-100 transition inline-flex items-center justify-center shadow-sm';
+        brandBtn.title = isBrand ? 'Volver al estilo anterior' : 'Activar identidad de color';
+      }
+
+      const harvestBtn = document.getElementById('harvestThemeBtn');
+      if (harvestBtn) {
+        harvestBtn.className = isHarvest
+          ? 'bg-[#1A3B2A] text-white border border-[#1A3B2A] w-9 h-9 rounded-full text-[10px] font-black uppercase hover:bg-[#3F6B54] transition inline-flex items-center justify-center shadow-sm'
+          : 'bg-[#F8FAF8] text-[#1A3B2A] border border-[#E5E7EB] w-9 h-9 rounded-full text-[10px] font-black uppercase hover:bg-[#84A98C]/20 transition inline-flex items-center justify-center shadow-sm';
+        harvestBtn.title = isHarvest ? 'Volver al estilo anterior' : 'Activar paleta agro premium';
+      }
+
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function toggleVisualTheme() {
+      const nextTheme = document.body.classList.contains('theme-xp') ? 'modern' : 'xp';
+      localStorage.setItem('esquina_visual_theme', nextTheme);
+      applyVisualTheme(nextTheme);
+      showToast(nextTheme === 'xp' ? 'Tema Windows XP activo' : 'Tema actual activo');
+    }
+
+    function toggleBrandTheme() {
+      const nextTheme = document.body.classList.contains('theme-brand') ? 'modern' : 'brand';
+      localStorage.setItem('esquina_visual_theme', nextTheme);
+      applyVisualTheme(nextTheme);
+      showToast(nextTheme === 'brand' ? 'Identidad de color activa' : 'Tema actual activo');
+    }
+
+    function toggleHarvestTheme() {
+      const nextTheme = document.body.classList.contains('theme-harvest') ? 'modern' : 'harvest';
+      localStorage.setItem('esquina_visual_theme', nextTheme);
+      applyVisualTheme(nextTheme);
+      showToast(nextTheme === 'harvest' ? 'Paleta agro premium activa' : 'Tema actual activo');
+    }
+
+    function showWelcomeQuote() {
+      const overlay = document.getElementById('welcomeOverlay');
+      const quoteEl = document.getElementById('welcomeQuote');
+      if (!overlay || !quoteEl) return;
+
+      const quotes = [
+        'La utilidad no se improvisa, se calcula.',
+        'Precio claro, margen sano, negocio fuerte.',
+        'Cada peso bien calculado protege tu crecimiento.',
+        'Vender bien empieza por conocer tus números.',
+        'El margen es la salud silenciosa de tu negocio.',
+        'No vendas barato: vende inteligente.',
+        'Un buen precio cuida al cliente y también al negocio.',
+        'La rentabilidad se construye decisión por decisión.'
+      ];
+
+      quoteEl.textContent = quotes[Math.floor(Math.random() * quotes.length)];
+
+      setTimeout(() => {
+        overlay.classList.add('welcome-hidden');
+        setTimeout(() => overlay.remove(), 650);
+      }, 2200);
+    }
 
     function extractYouTubeId(url) {
       if (!url) return null;
@@ -753,16 +360,115 @@
       }
     }
 
-    function toggleBulkAssistant() {
+    function setBulkAssistantStatus(message, type = 'success') {
+      const el = document.getElementById('bulkAssistantStatus');
+      if (!el) return;
+
+      const styles = {
+        success: 'bg-gray-100 text-gray-700 border border-gray-200',
+        error: 'bg-red-50 text-red-600 border border-red-100',
+        info: 'bg-orange-50 text-orange-700 border border-orange-100'
+      };
+
+      el.className = `rounded-2xl px-4 py-3 text-xs font-black uppercase tracking-widest ${styles[type] || styles.info}`;
+      el.textContent = message;
+      el.classList.remove('hidden');
+    }
+
+    function showToast(message, type = 'success') {
+      const existing = document.getElementById('appToast');
+      if (existing) existing.remove();
+
+      const toast = document.createElement('div');
+      toast.id = 'appToast';
+      toast.className = `fixed left-1/2 top-5 z-[200] -translate-x-1/2 rounded-2xl px-5 py-3 text-xs font-black uppercase tracking-widest shadow-xl border ${type === 'error' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-gray-100 text-gray-700 border-gray-200'}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2200);
+    }
+
+    async function copyTextToClipboard(text, successMessage) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(successMessage);
+      } catch (e) {
+        const temp = document.createElement('textarea');
+        temp.value = text;
+        document.body.appendChild(temp);
+        temp.select();
+        document.execCommand('copy');
+        temp.remove();
+        showToast(successMessage);
+      }
+    }
+
+    function copyFinalPrice() {
+      const price = document.getElementById('resFinalPrice')?.textContent?.trim() || '0.00';
+      copyTextToClipboard(`$${price} MXN`, 'Precio copiado');
+    }
+
+    function copyScales() {
+      const lines = appState.volumeConfig.map(tier => {
+        const unit = appState.currentPVP * (1 - tier.discount / 100);
+        const total = unit * tier.qty;
+        return `${tier.label}: desde ${tier.qty} pz | unitario ${fmt$(unit)} | total ${fmt$(total)}`;
+      });
+
+      copyTextToClipboard(lines.join('\n'), 'Escalas copiadas');
+    }
+
+    function resetCurrentCalculation() {
+      const baseCost = document.getElementById('calcBaseCost');
+      if (baseCost) {
+        baseCost.value = '0.00';
+        baseCost.dataset.lastValue = '0.00';
+      }
+
+      resetBaseCostAddons();
+      runCalculations();
+      showToast('Cálculo reiniciado');
+    }
+
+    function setCollapsible(contentId, buttonId, isOpen) {
+      const content = document.getElementById(contentId);
+      const btn = document.getElementById(buttonId);
+      if (!content || !btn) return;
+
+      content.classList.toggle('hidden', !isOpen);
+      btn.innerHTML = `<i data-lucide="chevron-${isOpen ? 'up' : 'down'}" class="w-5 h-5"></i>`;
+    }
+
+    let modulesOpen = false;
+
+    function toggleAllModules() {
+      modulesOpen = !modulesOpen;
+      setCollapsible('scale-section-content', 'scale-toggle-btn', modulesOpen);
+      setCollapsible('bulk-assistant-content', 'bulk-toggle-btn', modulesOpen);
+      setCollapsible('volume-manager-content', 'vol-toggle-btn', modulesOpen);
+
+      if (modulesOpen) {
+        const basePriceInput = document.getElementById('asstBasePrice');
+        if (basePriceInput && appState.currentPVP > 0) basePriceInput.value = appState.currentPVP.toFixed(2);
+      }
+
+      lucide.createIcons();
+    }
+
+    function toggleBulkAssistant(event) {
+      if (event) event.stopPropagation();
+
       const content = document.getElementById('bulk-assistant-content');
       const btn = document.getElementById('bulk-toggle-btn');
+      if (!content || !btn) return;
+
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden');
         btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
-        const priceText = document.getElementById('resFinalPrice').textContent;
+        const priceText = document.getElementById('resFinalPrice')?.textContent || '';
         if(priceText && priceText !== "0.00") {
           const cleanPrice = parseFloat(priceText.replace(/,/g, ''));
-          document.getElementById('asstBasePrice').value = cleanPrice.toFixed(2);
+          const basePriceInput = document.getElementById('asstBasePrice');
+          if (basePriceInput && Number.isFinite(cleanPrice)) basePriceInput.value = cleanPrice.toFixed(2);
         }
       } else {
         content.classList.add('hidden');
@@ -775,7 +481,10 @@
       const pUnit = parseFloat(document.getElementById('asstBasePrice').value) || 0;
       const pFull = parseFloat(document.getElementById('asstFullPrice').value) || 0;
       const qFull = parseFloat(document.getElementById('asstFullQty').value) || 0;
-      if(pUnit <= 0 || pFull <= 0 || qFull <= 0) { alert("Por favor llena los datos base."); return; }
+      if(pUnit <= 0 || pFull <= 0 || qFull <= 0) {
+        setBulkAssistantStatus('Completa precio unitario, envase completo y precio completo.', 'error');
+        return;
+      }
       const unitFull = pFull / qFull;
       [2, 3, 4].forEach(i => {
         const q = parseFloat(document.getElementById(`asstQty${i}`).value) || 0;
@@ -790,7 +499,7 @@
           document.getElementById(`asstTotal${i}`).value = Math.round(totalQ);
         }
       });
-      alert("¡Sugerencias calculadas! Revisa los montos en verde.");
+      setBulkAssistantStatus('Sugerencias calculadas. Revisa los montos en verde.', 'success');
     }
 
     function applyBulkStrategy() {
@@ -810,16 +519,38 @@
       let d4 = 0;
       if(basePrice * q4 > 0 && t4 > 0) d4 = (1 - (t4 / (basePrice * q4))) * 100;
 
-      if(t2 === 0 || t3 === 0 || t4 === 0) { alert("Primero da clic en 'Calcular Sugerencias Inteligentes'."); return; }
+      if(t2 === 0 || t3 === 0 || t4 === 0) {
+        setBulkAssistantStatus('Primero calcula sugerencias o llena los tres montos.', 'error');
+        return;
+      }
 
       if(appState.volumeConfig[1]) { appState.volumeConfig[1].qty = q2; appState.volumeConfig[1].discount = Math.max(0, parseFloat(d2.toFixed(2))); }
       if(appState.volumeConfig[2]) { appState.volumeConfig[2].qty = q3; appState.volumeConfig[2].discount = Math.max(0, parseFloat(d3.toFixed(2))); }
       if(appState.volumeConfig[3]) { appState.volumeConfig[3].qty = q4; appState.volumeConfig[3].discount = Math.max(0, parseFloat(d4.toFixed(2))); }
 
       saveLocal();
-      renderVolumeConfig();
       runCalculations();
-      alert("¡Listo! Tu estrategia de descuentos ha sido aplicada.");
+      closeBulkAssistant();
+      showToast('Curva aplicada a escalas');
+    }
+
+    function unlockCalculatorControls() {
+      ['calcIeps', 'calcBaseCost', 'calcCategorySearch', 'calcManualToggle', 'calcExtraToggle', 'calcIvaToggle'].forEach(id => {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.disabled = false;
+        el.style.pointerEvents = '';
+      });
+    }
+
+    function closeBulkAssistant() {
+      const content = document.getElementById('bulk-assistant-content');
+      const btn = document.getElementById('bulk-toggle-btn');
+
+      if (content) content.classList.add('hidden');
+      if (btn) btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+      unlockCalculatorControls();
+      if (window.lucide) lucide.createIcons();
     }
 
     function openFreightModal() { document.getElementById('freightModal').classList.remove('hidden'); document.getElementById('modalFreightTotal').focus(); }
@@ -839,22 +570,107 @@
     function toggleManualMargin() { document.getElementById('manualMarginWrap').classList.toggle('hidden'); runCalculations(); }
     function toggleExtraCost() { document.getElementById('extraCostWrap').classList.toggle('hidden'); runCalculations(); }
 
+    function getIepsOptions() {
+      return [
+        { value: 'none', label: 'Sin IEPS (0%)', dot: 'bg-gray-300', text: 'text-gray-700', bg: '#ffffff', border: '#d1d5db', color: '#374151', shadow: 'none' },
+        { value: 'azul', label: 'Etiqueta Azul (6%)', dot: 'bg-blue-500', text: 'text-blue-700', bg: '#eff6ff', border: '#93c5fd', color: '#1d4ed8', shadow: '0 0 0 3px rgba(59, 130, 246, 0.10)' },
+        { value: 'amarilla', label: 'Etiqueta Amarilla (7%)', dot: 'bg-amber-400', text: 'text-amber-700', bg: '#fffbeb', border: '#fcd34d', color: '#b45309', shadow: '0 0 0 3px rgba(245, 158, 11, 0.10)' },
+        { value: 'roja', label: 'Etiqueta Roja (9%)', dot: 'bg-red-500', text: 'text-red-700', bg: '#fef2f2', border: '#fca5a5', color: '#b91c1c', shadow: '0 0 0 3px rgba(239, 68, 68, 0.10)' }
+      ];
+    }
+
+    function ensureIepsSuggestionsPortal() {
+      const suggestions = document.getElementById('calcIepsSuggestions');
+      if (!suggestions || suggestions.parentElement === document.body) return suggestions;
+      document.body.appendChild(suggestions);
+      return suggestions;
+    }
+
+    function positionIepsSuggestions() {
+      const display = document.getElementById('calcIepsDisplay');
+      const suggestions = ensureIepsSuggestionsPortal();
+      if (!display || !suggestions) return;
+
+      const rect = display.getBoundingClientRect();
+      suggestions.style.left = `${rect.left}px`;
+      suggestions.style.top = `${rect.bottom + 8}px`;
+      suggestions.style.width = `${rect.width}px`;
+      suggestions.style.right = 'auto';
+      suggestions.style.marginTop = '0';
+    }
+
+    function hideIepsDropdown() {
+      const suggestions = document.getElementById('calcIepsSuggestions');
+      if (!suggestions) return;
+      suggestions.classList.add('hidden');
+      suggestions.innerHTML = '';
+    }
+
+    function renderIepsSuggestions() {
+      const suggestions = ensureIepsSuggestionsPortal();
+      const currentValue = document.getElementById('calcIeps')?.value || 'none';
+      if (!suggestions) return;
+
+      suggestions.innerHTML = getIepsOptions().map(option => {
+        const activeClass = option.value === currentValue ? 'shadow-sm' : 'hover:bg-gray-50';
+        return `
+          <button
+            type="button"
+            onmousedown="selectIepsOption('${option.value}')"
+            class="w-full text-left px-4 py-3 text-sm font-semibold transition-colors border-b border-gray-50 last:border-b-0 flex items-center justify-between gap-3 ${activeClass}"
+            style="background-color: ${option.bg}; border-left: 4px solid ${option.border};"
+          >
+            <span class="flex items-center gap-2 min-w-0">
+              <span class="w-2.5 h-2.5 rounded-full ${option.dot} shrink-0"></span>
+              <span class="truncate ${option.text}">${option.label}</span>
+            </span>
+            ${option.value === currentValue ? '<i data-lucide="check" class="w-4 h-4 text-orange-500"></i>' : ''}
+          </button>
+        `;
+      }).join('');
+
+      positionIepsSuggestions();
+      suggestions.classList.remove('hidden');
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function toggleIepsDropdown(event) {
+      if (event) event.stopPropagation();
+      const suggestions = ensureIepsSuggestionsPortal();
+      if (!suggestions) return;
+
+      if (suggestions.classList.contains('hidden')) {
+        renderIepsSuggestions();
+      } else {
+        hideIepsDropdown();
+      }
+    }
+
+    function selectIepsOption(value) {
+      const ieps = document.getElementById('calcIeps');
+      if (!ieps) return;
+      ieps.value = value;
+      hideIepsDropdown();
+      handleIepsChange();
+    }
+
     function updateIepsSelectTheme() {
       const ieps = document.getElementById('calcIeps');
       if (!ieps) return;
 
-      const styles = {
-        none: { background: '#ffffff', border: '#d1d5db', color: '#374151', boxShadow: 'none' },
-        azul: { background: '#eff6ff', border: '#93c5fd', color: '#1d4ed8', boxShadow: '0 0 0 3px rgba(59, 130, 246, 0.10)' },
-        amarilla: { background: '#fffbeb', border: '#fcd34d', color: '#b45309', boxShadow: '0 0 0 3px rgba(245, 158, 11, 0.10)' },
-        roja: { background: '#fef2f2', border: '#fca5a5', color: '#b91c1c', boxShadow: '0 0 0 3px rgba(239, 68, 68, 0.10)' }
-      };
+      const current = getIepsOptions().find(option => option.value === ieps.value) || getIepsOptions()[0];
+      const display = document.getElementById('calcIepsDisplay');
+      const label = document.getElementById('calcIepsLabel');
+      const dot = document.getElementById('calcIepsDot');
 
-      const current = styles[ieps.value] || styles.none;
-      ieps.style.backgroundColor = current.background;
-      ieps.style.borderColor = current.border;
-      ieps.style.color = current.color;
-      ieps.style.boxShadow = current.boxShadow;
+      if (label) label.textContent = current.label;
+      if (dot) dot.className = `w-2.5 h-2.5 rounded-full ${current.dot} shrink-0`;
+      if (display) {
+        display.style.setProperty('background-color', current.bg, 'important');
+        display.style.setProperty('border-color', current.border, 'important');
+        display.style.setProperty('color', current.color, 'important');
+        display.style.setProperty('box-shadow', current.shadow, 'important');
+      }
     }
 
     function handleIepsChange() {
@@ -922,7 +738,7 @@
       const includeIva = document.getElementById('calcIvaToggle').checked;
 
       const iepsAmt = baseCost * (CONFIG.IEPS[iepsKey] || 0);
-      const ivaAmt = includeIva ? (baseCost + extraCost) * CONFIG.IVA_RATE : 0;
+      const ivaAmt = includeIva ? (baseCost + extraCost + iepsAmt) * CONFIG.IVA_RATE : 0;
       const totalCost = baseCost + extraCost + iepsAmt + ivaAmt;
 
       let m = 0;
@@ -937,14 +753,16 @@
       const finalPrice = totalCost / (1 - ratio);
 
       appState.currentPVP = finalPrice;
+      appState.currentTotalCost = totalCost;
 
       updateMainUI({ finalPrice, profit: finalPrice - totalCost, marginPct: m, totalCost, baseCost, extraCost, iepsAmt, ivaAmt, includeIva });
       updateScales(totalCost, finalPrice);
+      renderVolumeConfig(totalCost, finalPrice);
 
       const asstBasePriceInput = document.getElementById('asstBasePrice');
       if(asstBasePriceInput && finalPrice > 0) asstBasePriceInput.value = finalPrice.toFixed(2);
 
-      saveLocal();
+      unlockCalculatorControls();
     }
 
     function updateMainUI(d) {
@@ -952,14 +770,21 @@
       let customMeta = null;
       if (appState.categoryMetadata && appState.categoryMetadata[cat]) customMeta = appState.categoryMetadata[cat];
 
-      const info = customMeta || CATEGORY_INFO[cat] || { icon: "📦", desc: "Categoría general", imgs: [""] };
+      const info = customMeta || CATEGORY_INFO[cat] || { icon: " ", desc: "Categoría general", imgs: [""] };
+      const imgPosition = info.imgPosition || { x: 50, y: 50 };
       const fallbackImg = "https://via.placeholder.com/270x270/f9fafb/9ca3af?text=Sin+Imagen";
       const img1 = (info.imgs && info.imgs[0] && info.imgs[0].trim() !== "") ? info.imgs[0] : fallbackImg;
 
       document.getElementById('resCatTitle').textContent = cat;
-      document.getElementById('resCatIcon').textContent = info.icon || "📦";
+      document.getElementById('resCatIcon').textContent = info.icon || " ";
       document.getElementById('resCatDesc').textContent = info.desc || "Categoría general";
       document.getElementById('resImg1').src = img1;
+      document.getElementById('resImg1').style.objectPosition = `${Number(imgPosition.x) || 50}% ${Number(imgPosition.y) || 50}%`;
+
+      const posX = document.getElementById('imagePositionX');
+      const posY = document.getElementById('imagePositionY');
+      if (posX) posX.value = Number(imgPosition.x) || 50;
+      if (posY) posY.value = Number(imgPosition.y) || 50;
 
       document.getElementById('resFinalPrice').textContent = fmt$(d.finalPrice).replace('$', '');
       document.getElementById('resIvaNote').textContent = d.includeIva ? "(IVA incluido en costo)" : "(Sin IVA en costo)";
@@ -970,30 +795,18 @@
       let charm3 = (Math.ceil(p / 10) * 10) - 1; if(charm3 === charm1) charm3 += 10;
 
       document.getElementById('resPsychPrices').innerHTML = `
-        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
+        <div class="bg-white rounded-lg p-2 text-center border border-orange-100 shadow-sm">
           <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Agresivo</span>
-          <span class="font-black text-blue-700 text-sm">${fmt$(charm1).replace('$','')}</span>
+          <span class="font-black text-orange-700 text-sm">${fmt$(charm1).replace('$','')}</span>
         </div>
-        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
+        <div class="bg-white rounded-lg p-2 text-center border border-orange-100 shadow-sm">
           <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Comercial</span>
-          <span class="font-black text-blue-700 text-sm">${fmt$(charm2).replace('$','')}</span>
+          <span class="font-black text-orange-700 text-sm">${fmt$(charm2).replace('$','')}</span>
         </div>
-        <div class="bg-white rounded-lg p-2 text-center border border-blue-100 shadow-sm">
+        <div class="bg-white rounded-lg p-2 text-center border border-orange-100 shadow-sm">
           <span class="block text-[8px] text-gray-400 font-black uppercase mb-1">Margen +</span>
-          <span class="font-black text-blue-700 text-sm">${fmt$(charm3).replace('$','')}</span>
+          <span class="font-black text-orange-700 text-sm">${fmt$(charm3).replace('$','')}</span>
         </div>`;
-
-      const badge = document.getElementById('resBadge');
-      if (d.marginPct >= 25) {
-        badge.className = "bg-green-100 text-green-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider";
-        badge.textContent = "Margen saludable";
-      } else if (d.marginPct >= 15) {
-        badge.className = "bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider";
-        badge.textContent = "Margen moderado";
-      } else {
-        badge.className = "bg-red-100 text-red-700 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider";
-        badge.textContent = "Margen bajo";
-      }
 
       document.getElementById('resSubtotal').textContent = fmt$(d.baseCost);
 
@@ -1006,11 +819,26 @@
       }
 
       document.getElementById('resIvaCost').textContent = fmt$(d.ivaAmt);
+      document.getElementById('resDiscount').textContent = '-' + fmt$(0).replace('$', '');
       document.getElementById('resTotalCost').textContent = fmt$(d.totalCost);
       document.getElementById('resProfit').textContent = fmt$(d.profit);
       document.getElementById('resMarginPct').textContent = d.marginPct.toFixed(2) + '%';
 
       lucide.createIcons();
+    }
+
+    function getDiscountRows(cost = appState.currentTotalCost, basePVP = appState.currentPVP) {
+      const currentMargin = basePVP > 0 ? ((basePVP - cost) / basePVP) * 100 : 0;
+
+      return [5, 4, 3, 2, 1].map(discount => {
+        const targetMargin = Math.max(currentMargin - discount, 0);
+        const discountedPrice = targetMargin >= 99 ? basePVP : cost / (1 - (targetMargin / 100));
+        const discountAmount = Math.max(basePVP - discountedPrice, 0);
+        const profit = discountedPrice - cost;
+        const margin = discountedPrice > 0 ? ((profit / discountedPrice) * 100) : 0;
+
+        return { discount, targetMargin, discountAmount, discountedPrice, profit, margin };
+      });
     }
 
     function updateScales(cost, basePVP) {
@@ -1021,15 +849,16 @@
         let margin = p > 0 ? (((p - cost) / p) * 100).toFixed(1) : 0;
         let totalPrice = p * tier.qty;
         let totalProfit = (p - cost) * tier.qty;
+        const safeLabel = escapeHtml(tier.label);
 
         container.innerHTML += `
-          <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors">
-            <td class="py-3 text-xs text-green-700 font-black uppercase tracking-wider">${tier.label}</td>
-            <td class="py-3 text-gray-500 font-bold">≥ ${tier.qty} pz</td>
-            <td class="py-3 font-black text-gray-800 text-base">${fmt$(p)}</td>
-            <td class="py-3 font-black text-blue-600">${fmt$(totalPrice)}</td>
-            <td class="py-3 font-black text-green-600">${fmt$(totalProfit)}</td>
-            <td class="py-3 text-right text-gray-400 font-bold">${margin}%</td>
+          <tr class="border-b border-gray-50 last:border-0 hover:bg-gray-50 transition-colors text-center align-middle">
+            <td class="py-4 px-2 text-xs text-gray-700 font-black uppercase tracking-wider">${safeLabel}</td>
+            <td class="py-4 px-2 text-gray-500 font-bold">≥ ${tier.qty} pz</td>
+            <td class="py-4 px-2 font-black text-gray-800 text-base">${fmt$(p)}</td>
+            <td class="py-4 px-2 font-black text-orange-600">${fmt$(totalPrice)}</td>
+            <td class="py-4 px-2 font-black text-gray-700">${fmt$(totalProfit)}</td>
+            <td class="py-4 px-2 text-gray-400 font-bold">${margin}%</td>
           </tr>`;
       });
     }
@@ -1061,6 +890,8 @@
     let categoryImageDrafts = {};
     let categoryImageValidationTimers = {};
     let categoryImageAutosaveTimers = {};
+    let expandedCategoryCard = null;
+    let expandedMarginCard = null;
 
     function slugifyDomId(value) {
       return String(value || 'cat')
@@ -1106,11 +937,11 @@
 
     function getCategoryImageStatusClasses(type) {
       const map = {
-        success: 'bg-green-50 text-green-700 border border-green-200',
+        success: 'bg-gray-100 text-gray-700 border border-gray-200',
         error: 'bg-red-50 text-red-700 border border-red-200',
         warning: 'bg-amber-50 text-amber-700 border border-amber-200',
         neutral: 'bg-gray-50 text-gray-600 border border-gray-200',
-        loading: 'bg-blue-50 text-blue-700 border border-blue-200'
+        loading: 'bg-orange-50 text-orange-700 border border-orange-200'
       };
       return map[type] || map.neutral;
     }
@@ -1139,7 +970,7 @@
 
       btn.disabled = !enabled;
       btn.className = enabled
-        ? 'px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-green-600 text-white hover:bg-green-700 transition shadow-sm'
+        ? 'px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-gray-800 text-white hover:bg-gray-900 transition shadow-sm'
         : 'px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-gray-100 text-gray-400 cursor-not-allowed transition';
     }
 
@@ -1333,7 +1164,7 @@
       }
 
       filteredCategories.forEach(({ cat, index }) => {
-        let meta = { icon: "📦", desc: "", imgs: [""] };
+        let meta = { icon: " ", desc: "", imgs: [""] };
 
         if (appState.categoryMetadata && appState.categoryMetadata[cat]) {
           meta = appState.categoryMetadata[cat];
@@ -1350,17 +1181,31 @@
         const safeIcon = escapeHtmlAttr(meta.icon || '');
         const safeDesc = escapeHtmlAttr(meta.desc || '');
         const safeImg1 = escapeHtmlAttr(currentImgValue);
+        const isExpanded = expandedCategoryCard === cat;
 
         container.innerHTML += `
-          <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-1 h-full bg-green-400"></div>
+          <div class="bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-sm space-y-4 relative overflow-hidden ${isExpanded ? 'ring-2 ring-gray-200' : ''}">
+            <div class="absolute top-0 left-0 w-1 h-full bg-gray-400"></div>
 
+            <button
+              type="button"
+              onclick="toggleCategoryCard(${safeCatAction})"
+              class="w-full flex items-center justify-between gap-3 pl-2 text-left group"
+            >
+              <span class="font-black text-sm text-gray-700 group-hover:text-gray-900 uppercase tracking-wide truncate">${escapeHtml(cat)}</span>
+              <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-700 shrink-0">
+                ${isExpanded ? 'Ocultar' : 'Editar'}
+                <i data-lucide="chevron-${isExpanded ? 'up' : 'down'}" class="w-4 h-4"></i>
+              </span>
+            </button>
+
+            <div class="${isExpanded ? 'block' : 'hidden'} space-y-4 animate-fade-in">
             <div class="flex items-center gap-2 pl-2">
               <input
                 type="text"
                 value="${safeCatValue}"
                 onchange="renameCategory(${index}, this.value)"
-                class="bg-transparent font-black text-sm w-full outline-none text-gray-700 focus:text-green-600"
+                class="bg-transparent font-black text-sm w-full outline-none text-gray-700 focus:text-gray-900"
               >
               <button onclick="removeCategory(${index})" class="text-red-300 hover:text-red-500">
                 <i data-lucide="trash-2" class="w-4 h-4"></i>
@@ -1370,17 +1215,17 @@
             <div class="grid grid-cols-2 gap-2 pl-2">
               <input
                 type="text"
-                placeholder="Icono (ej: 🍎)"
+                placeholder="Icono (ej:  )"
                 value="${safeIcon}"
                 onchange="updateMeta(${safeCatAction}, 'icon', this.value)"
-                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
+                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-gray-300"
               >
               <input
                 type="text"
                 placeholder="Descripción corta"
                 value="${safeDesc}"
                 onchange="updateMeta(${safeCatAction}, 'desc', this.value)"
-                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
+                class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-gray-300"
               >
             </div>
 
@@ -1394,13 +1239,13 @@
                   value="${safeImg1}"
                   oninput="handleCategoryImageDraftInput(${safeCatAction}, this.value)"
                   onblur="saveCategoryImage(${safeCatAction}, true)"
-                  class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-green-400"
+                  class="text-[10px] p-2 border border-gray-200 rounded-lg w-full bg-white outline-none focus:ring-1 focus:ring-gray-300"
                 >
               </div>
 
               <div class="flex flex-col lg:flex-row gap-4 items-start">
                 <div class="w-full max-w-[160px]">
-                  <div class="aspect-square rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm">
+                  <div class="aspect-square rounded-full overflow-hidden border border-gray-200 bg-white shadow-sm">
                     <img
                       id="${ids.preview}"
                       src="${escapeHtmlAttr(currentImgValue || CATEGORY_IMAGE_PLACEHOLDER)}"
@@ -1425,13 +1270,14 @@
                       type="button"
                       id="${ids.save}"
                       onclick="saveCategoryImage(${safeCatAction})"
-                      class="px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-green-600 text-white hover:bg-green-700 transition shadow-sm"
+                      class="px-4 py-2 rounded-xl text-[10px] font-black uppercase bg-gray-800 text-white hover:bg-gray-900 transition shadow-sm"
                     >
                       Guardar imagen
                     </button>
                   </div>
                 </div>
               </div>
+            </div>
             </div>
           </div>
         `;
@@ -1449,16 +1295,78 @@
       renderCategoryManager();
     }
 
+    function toggleCategoryCard(cat) {
+      expandedCategoryCard = expandedCategoryCard === cat ? null : cat;
+      renderCategoryManager();
+    }
+
     function updateMeta(cat, field, val) {
       if(!appState.categoryMetadata) appState.categoryMetadata = {};
       if(!appState.categoryMetadata[cat]) {
         appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
           ? { ...CATEGORY_INFO[cat] }
-          : { icon: "📦", desc: "", imgs: [""] };
+          : { icon: " ", desc: "", imgs: [""] };
       }
       appState.categoryMetadata[cat][field] = val;
       saveLocal();
       runCalculations();
+    }
+
+    function ensureCategoryMeta(cat) {
+      if (!appState.categoryMetadata) appState.categoryMetadata = {};
+      if (!appState.categoryMetadata[cat]) {
+        appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
+          ? {
+              icon: CATEGORY_INFO[cat].icon || " ",
+              desc: CATEGORY_INFO[cat].desc || "",
+              imgs: [CATEGORY_INFO[cat].imgs?.[0] || ""]
+            }
+          : { icon: " ", desc: "", imgs: [""] };
+      }
+      if (!appState.categoryMetadata[cat].imgPosition) {
+        appState.categoryMetadata[cat].imgPosition = { x: 50, y: 50 };
+      }
+      return appState.categoryMetadata[cat];
+    }
+
+    function toggleImagePositionEditor() {
+      const panel = document.getElementById('imagePositionEditor');
+      if (!panel) return;
+      panel.classList.toggle('hidden');
+    }
+
+    function updateImagePosition(axis, value) {
+      const select = document.getElementById('calcCategory');
+      if (!select || !select.value) return;
+
+      const meta = ensureCategoryMeta(select.value);
+      const numericValue = Math.max(0, Math.min(100, Number(value) || 50));
+      meta.imgPosition[axis === 'y' ? 'y' : 'x'] = numericValue;
+
+      const img = document.getElementById('resImg1');
+      if (img) {
+        img.style.objectPosition = `${meta.imgPosition.x}% ${meta.imgPosition.y}%`;
+      }
+
+      saveLocal();
+    }
+
+    function resetImagePosition() {
+      const select = document.getElementById('calcCategory');
+      if (!select || !select.value) return;
+
+      const meta = ensureCategoryMeta(select.value);
+      meta.imgPosition = { x: 50, y: 50 };
+
+      const posX = document.getElementById('imagePositionX');
+      const posY = document.getElementById('imagePositionY');
+      if (posX) posX.value = 50;
+      if (posY) posY.value = 50;
+
+      const img = document.getElementById('resImg1');
+      if (img) img.style.objectPosition = '50% 50%';
+
+      saveLocal();
     }
 
     function updateMetaImg(cat, idx, val) {
@@ -1467,11 +1375,11 @@
       if (!appState.categoryMetadata[cat]) {
         appState.categoryMetadata[cat] = CATEGORY_INFO[cat]
           ? {
-              icon: CATEGORY_INFO[cat].icon || "📦",
+              icon: CATEGORY_INFO[cat].icon || " ",
               desc: CATEGORY_INFO[cat].desc || "",
               imgs: [CATEGORY_INFO[cat].imgs?.[0] || ""]
             }
-          : { icon: "📦", desc: "", imgs: [""] };
+          : { icon: " ", desc: "", imgs: [""] };
       }
 
       if (!Array.isArray(appState.categoryMetadata[cat].imgs)) {
@@ -1545,25 +1453,57 @@
 
     function renderConfigTables() {
       const container = document.getElementById('configContainer');
+      const searchInput = document.getElementById('marginManagerSearch');
+      const searchTerm = searchInput ? searchInput.value : '';
       container.innerHTML = '';
 
-      appState.categories.forEach(cat => {
-        let html = `<div class="border rounded-2xl p-6 bg-white shadow-sm border-gray-50">
-          <h3 class="font-black text-green-700 mb-4 uppercase text-[10px] tracking-widest flex items-center gap-2 italic">
-            <i data-lucide="tag" class="w-4 h-4"></i> ${cat}
-          </h3>
+      const filteredCategories = appState.categories.filter(cat =>
+        normalizeText(cat).includes(normalizeText(searchTerm))
+      );
+
+      if (filteredCategories.length === 0) {
+        container.innerHTML = `
+          <div class="md:col-span-2 bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-6 text-center">
+            <p class="text-xs font-black uppercase tracking-widest text-gray-400">Sin coincidencias</p>
+            <p class="text-xs text-gray-500 mt-2">Prueba con otra categoría o limpia la búsqueda.</p>
+          </div>
+        `;
+        if (window.lucide) lucide.createIcons();
+        return;
+      }
+
+      filteredCategories.forEach(cat => {
+        const safeCat = escapeHtml(cat);
+        const safeCatAction = `decodeURIComponent('${encodeURIComponent(cat)}')`;
+        const isExpanded = expandedMarginCard === cat;
+        let html = `<div class="border rounded-2xl p-4 bg-white shadow-sm border-gray-50 ${isExpanded ? 'ring-2 ring-gray-200' : ''}">
+          <button
+            type="button"
+            onclick="toggleMarginCard(${safeCatAction})"
+            class="w-full flex items-center justify-between gap-3 text-left group"
+          >
+            <span class="font-black text-gray-700 uppercase text-[10px] tracking-widest flex items-center gap-2 italic truncate">
+              <i data-lucide="tag" class="w-4 h-4"></i> ${safeCat}
+            </span>
+            <span class="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-gray-700 shrink-0">
+              ${isExpanded ? 'Ocultar' : 'Editar'}
+              <i data-lucide="chevron-${isExpanded ? 'up' : 'down'}" class="w-4 h-4"></i>
+            </span>
+          </button>
+          <div class="${isExpanded ? 'block' : 'hidden'} mt-5 animate-fade-in">
           <div class="space-y-3 mb-4">`;
 
         (appState.margins[cat] || []).forEach((rule, idx) => {
           html += `<div class="flex items-center gap-2">
-            <input type="number" value="${rule.max === Infinity ? '' : rule.max}" placeholder="Infinito" oninput="updateMarginRule('${cat}', ${idx}, 'max', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner">
-            <input type="number" value="${rule.m}" oninput="updateMarginRule('${cat}', ${idx}, 'm', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs text-green-600 bg-gray-50 shadow-inner">
-            <button onclick="removeMarginRow('${cat}', ${idx})" class="text-red-200 hover:text-red-500"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
+            <input type="number" value="${rule.max === Infinity ? '' : Number(rule.max) || 0}" placeholder="Infinito" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'max', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner">
+            <input type="number" value="${Number(rule.m) || 0}" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'm', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs text-gray-700 bg-gray-50 shadow-inner">
+            <button onclick="removeMarginRow(${safeCatAction}, ${idx})" class="text-red-200 hover:text-red-500"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
           </div>`;
         });
 
         html += `</div>
-          <button onclick="addMarginRow('${cat}')" class="w-full border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-green-500">+ Añadir Rango</button>
+          <button onclick="addMarginRow(${safeCatAction})" class="w-full border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-gray-700">+ Añadir Rango</button>
+          </div>
         </div>`;
 
         container.innerHTML += html;
@@ -1572,26 +1512,67 @@
       lucide.createIcons();
     }
 
-    function addMarginRow(cat) { appState.margins[cat].push({max: 2000, m: 15}); renderConfigTables(); }
-    function removeMarginRow(cat, idx) { appState.margins[cat].splice(idx, 1); renderConfigTables(); }
-    function updateMarginRule(cat, idx, field, val) { appState.margins[cat][idx][field] = val === '' ? Infinity : parseFloat(val); }
+    function clearMarginManagerSearch() {
+      const input = document.getElementById('marginManagerSearch');
+      if (!input) return;
+      input.value = '';
+      renderConfigTables();
+    }
 
-    function renderVolumeConfig() {
+    function toggleMarginCard(cat) {
+      expandedMarginCard = expandedMarginCard === cat ? null : cat;
+      renderConfigTables();
+    }
+
+    function addMarginRow(cat) { appState.margins[cat].push({max: 2000, m: 15}); saveLocal(); renderConfigTables(); }
+    function removeMarginRow(cat, idx) { appState.margins[cat].splice(idx, 1); saveLocal(); renderConfigTables(); }
+    function updateMarginRule(cat, idx, field, val) { appState.margins[cat][idx][field] = val === '' ? Infinity : parseFloat(val); saveLocal(); runCalculations(); }
+
+    function renderVolumeConfig(cost = appState.currentTotalCost, basePVP = appState.currentPVP) {
       const container = document.getElementById('volumeConfigContainer');
+      if (!container) return;
+
       container.innerHTML = '';
-      appState.volumeConfig.forEach((tier, idx) => {
+
+      if (!basePVP || basePVP <= 0) {
+        container.innerHTML = `
+          <div class="md:col-span-5 bg-gray-50 border border-dashed border-gray-200 rounded-2xl p-6 text-center">
+            <p class="text-xs font-black uppercase tracking-widest text-gray-400">Sin precio final</p>
+            <p class="text-xs text-gray-500 mt-2">Ingresa un costo base para calcular descuentos.</p>
+          </div>
+        `;
+        return;
+      }
+
+      getDiscountRows(cost, basePVP).forEach(row => {
+        const profitClass = row.profit >= 0 ? 'text-gray-700' : 'text-red-500';
+        const badgeClass = row.profit >= 0 ? 'bg-gray-100 text-gray-700 border-gray-200' : 'bg-red-50 text-red-600 border-red-100';
+
         container.innerHTML += `
-          <div class="bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
+          <div class="min-w-[210px] flex-1 bg-gray-50 p-4 rounded-xl border border-gray-100 shadow-sm relative overflow-hidden">
             <div class="absolute top-0 left-0 w-1 h-full bg-orange-400"></div>
-            <h4 class="font-black text-gray-800 text-sm mb-3 ml-2">${tier.label}</h4>
-            <div class="space-y-3 ml-2">
-              <div>
-                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">A partir de (Piezas)</label>
-                <input type="number" value="${tier.qty}" onchange="updateVolumeTier(${idx}, 'qty', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs bg-white focus:ring-2 focus:ring-orange-200 outline-none">
+            <div class="ml-2">
+              <div class="flex items-center justify-between gap-2 mb-4">
+                <h4 class="font-black text-gray-800 text-sm">-${row.discount} pts margen</h4>
+                <span class="text-[9px] font-black uppercase px-2 py-1 rounded-full border ${badgeClass}">${row.profit >= 0 ? 'Ganancia' : 'Pérdida'}</span>
               </div>
-              <div>
-                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">% Descuento</label>
-                <input type="number" value="${tier.discount}" onchange="updateVolumeTier(${idx}, 'discount', this.value)" class="w-full p-2 border border-gray-200 rounded-lg font-bold text-xs text-orange-600 bg-white focus:ring-2 focus:ring-orange-200 outline-none">
+              <div class="space-y-3 text-xs font-bold">
+                <div>
+                  <span class="block text-[9px] font-black uppercase tracking-widest text-gray-400">Precio con descuento</span>
+                  <span class="block text-lg font-black text-gray-800">${fmt$(row.discountedPrice)}</span>
+                </div>
+                <div class="flex justify-between gap-3">
+                  <span class="text-gray-400">Margen final</span>
+                  <span class="text-gray-700">${row.margin.toFixed(1)}%</span>
+                </div>
+                <div class="flex justify-between gap-3">
+                  <span class="text-gray-400">Descuentas</span>
+                  <span class="text-orange-500">-${fmt$(row.discountAmount)}</span>
+                </div>
+                <div class="flex justify-between gap-3">
+                  <span class="text-gray-400">Ganas</span>
+                  <span class="${profitClass}">${fmt$(row.profit)}</span>
+                </div>
               </div>
             </div>
           </div>`;
@@ -1612,7 +1593,6 @@
       if(view === 'config') {
         renderCategoryManager();
         renderConfigTables();
-        renderVolumeConfig();
       }
     }
 
@@ -1642,6 +1622,22 @@
       lucide.createIcons();
     }
 
+    function toggleScaleSection() {
+      const content = document.getElementById('scale-section-content');
+      const btn = document.getElementById('scale-toggle-btn');
+      if (!content || !btn) return;
+
+      if (content.classList.contains('hidden')) {
+        content.classList.remove('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+      } else {
+        content.classList.add('hidden');
+        btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
+      }
+
+      lucide.createIcons();
+    }
+
     function toggleMarginManager() {
       const content = document.getElementById('margin-manager-content');
       const btn = document.getElementById('margin-toggle-btn');
@@ -1662,19 +1658,34 @@
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden');
         header.classList.add('border-b', 'pb-2');
-        btn.innerHTML = '<i data-lucide="chevron-down" class="w-4 h-4"></i>';
+        btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
       } else {
         content.classList.add('hidden');
         header.classList.remove('border-b', 'pb-2');
-        btn.innerHTML = '<i data-lucide="chevron-up" class="w-4 h-4"></i>';
+        btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
       }
+      lucide.createIcons();
+    }
+
+    function openCloudConfig() {
+      switchTab('config');
+
+      const content = document.getElementById('cloud-panel-content');
+      const header = document.getElementById('cloud-header');
+      const btn = document.getElementById('cloud-toggle-btn');
+      const panel = document.getElementById('cloud-panel');
+
+      if (content) content.classList.remove('hidden');
+      if (header) header.classList.add('border-b', 'pb-2');
+      if (btn) btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+      if (panel) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
       lucide.createIcons();
     }
 
     const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 
     function saveLocal() {
-      localStorage.setItem(CONFIG.LS_KEY, JSON.stringify(appState));
+      localStorage.setItem(CONFIG.LS_KEY, encodeStateForStorage(appState));
     }
 
     function saveAllConfig() {
@@ -1710,8 +1721,29 @@
       categorySuggestionIndex = -1;
     }
 
-    function renderCategorySuggestions(categories = [], highlightedIndex = -1) {
+    function ensureCategorySuggestionsPortal() {
       const suggestions = document.getElementById('calcCategorySuggestions');
+      if (!suggestions || suggestions.parentElement === document.body) return suggestions;
+
+      document.body.appendChild(suggestions);
+      return suggestions;
+    }
+
+    function positionCategorySuggestions() {
+      const input = document.getElementById('calcCategorySearch');
+      const suggestions = ensureCategorySuggestionsPortal();
+      if (!input || !suggestions) return;
+
+      const rect = input.getBoundingClientRect();
+      suggestions.style.left = `${rect.left}px`;
+      suggestions.style.top = `${rect.bottom + 8}px`;
+      suggestions.style.width = `${rect.width}px`;
+      suggestions.style.right = 'auto';
+      suggestions.style.marginTop = '0';
+    }
+
+    function renderCategorySuggestions(categories = [], highlightedIndex = -1) {
+      const suggestions = ensureCategorySuggestionsPortal();
       if (!suggestions) return;
 
       const limitedCategories = categories.slice(0, 30);
@@ -1722,6 +1754,7 @@
             Sin coincidencias
           </div>
         `;
+        positionCategorySuggestions();
         suggestions.classList.remove('hidden');
         categorySuggestionIndex = -1;
         return;
@@ -1729,19 +1762,20 @@
 
       suggestions.innerHTML = limitedCategories.map((cat, index) => {
         const isActive = index === highlightedIndex;
-        const safeLabel = escapeHtml(cat);
+        const safeLabel = escapeHtml(String(cat || '').toUpperCase());
         const safeValue = encodeURIComponent(cat);
         return `
           <button
             type="button"
             onmousedown="selectCategorySuggestion(decodeURIComponent('${safeValue}'))"
-            class="w-full text-left px-4 py-3 text-sm font-semibold transition-colors border-b border-gray-50 last:border-b-0 ${isActive ? 'bg-green-50 text-green-700' : 'text-gray-700 hover:bg-gray-50'}"
+            class="w-full text-left px-4 py-3 text-sm font-semibold transition-colors border-b border-gray-50 last:border-b-0 ${isActive ? 'bg-gray-100 text-gray-800' : 'text-gray-700 hover:bg-gray-50'}"
           >
             ${safeLabel}
           </button>
         `;
       }).join('');
 
+      positionCategorySuggestions();
       suggestions.classList.remove('hidden');
       categorySuggestionIndex = highlightedIndex;
     }
@@ -1753,7 +1787,7 @@
       if (!select || !input || !category) return;
 
       select.value = category;
-      input.value = category;
+      input.value = String(category || '').toUpperCase();
       input.dataset.previousValue = category;
       hideCategorySuggestions();
 
@@ -1769,12 +1803,7 @@
       if (!input) return;
 
       input.dataset.previousValue = input.value || '';
-
-      if ((input.value || '').trim() !== '') {
-        input.value = '';
-      }
-
-      renderCategorySuggestions(getFilteredCategories(''));
+      hideCategorySuggestions();
     }
 
     function handleCategoryInputBlur() {
@@ -1788,7 +1817,7 @@
 
         if ((input.value || '').trim() === '') {
           const fallbackValue = input.dataset.previousValue || (select ? select.value : '') || appState.categories[0] || '';
-          input.value = fallbackValue;
+          input.value = String(fallbackValue || '').toUpperCase();
           input.dataset.previousValue = fallbackValue;
         }
       }, 150);
@@ -1807,13 +1836,13 @@
       select.innerHTML = '';
 
       appState.categories.forEach(cat => {
-        select.innerHTML += `<option value="${cat}">${cat}</option>`;
+        select.innerHTML += `<option value="${escapeHtmlAttr(cat)}">${escapeHtml(cat)}</option>`;
       });
 
       if (currentSelection) {
         select.value = currentSelection;
         if (!input.value || !appState.categories.includes(input.value)) {
-          input.value = currentSelection;
+          input.value = String(currentSelection || '').toUpperCase();
         }
         input.dataset.previousValue = currentSelection;
       } else {
@@ -1834,6 +1863,11 @@
       const exactMatch = appState.categories.find(cat =>
         normalizeText(cat) === normalizeText(term)
       );
+
+      if (normalizeText(term) === '') {
+        hideCategorySuggestions();
+        return;
+      }
 
       if (exactMatch) {
         select.value = exactMatch;
@@ -1931,7 +1965,7 @@
       if (!select || !select.value) return;
 
       if (input) {
-        input.value = select.value;
+        input.value = String(select.value || '').toUpperCase();
         input.dataset.previousValue = select.value;
       }
 
@@ -1943,17 +1977,26 @@
       const actions = document.getElementById('cloud-actions');
       const form = document.getElementById('auth-form');
       const dot = document.getElementById('auth-status-dot');
+      const quickBtn = document.getElementById('cloudQuickBtn');
 
       if (user) {
         dot.className = "w-2.5 h-2.5 rounded-full bg-green-500 shadow-md";
         document.getElementById('auth-status-text').textContent = user.email;
         form.classList.add('hidden');
         actions.classList.remove('hidden');
+        if (quickBtn) {
+          quickBtn.className = "bg-green-600 text-white border border-green-600 w-9 h-9 rounded-full text-[10px] font-black uppercase hover:bg-green-700 transition inline-flex items-center justify-center shadow-sm";
+          quickBtn.title = `Conectado: ${user.email}`;
+        }
       } else {
         dot.className = "w-2.5 h-2.5 rounded-full bg-gray-300";
         document.getElementById('auth-status-text').textContent = "Offline";
         form.classList.remove('hidden');
         actions.classList.add('hidden');
+        if (quickBtn) {
+          quickBtn.className = "bg-gray-100 text-gray-500 border border-gray-200 w-9 h-9 rounded-full text-[10px] font-black uppercase hover:bg-gray-200 transition inline-flex items-center justify-center shadow-sm";
+          quickBtn.title = "Sin sesión en nube";
+        }
       }
     });
 
@@ -1970,8 +2013,11 @@
 
     async function syncToCloud() {
       try {
-        await db.collection('configs').doc('global').set({
-          data: JSON.stringify(appState),
+        const docRef = getUserConfigDoc();
+        if (!docRef) return;
+
+        await docRef.set({
+          data: encodeStateForStorage(appState),
           updatedAt: new Date()
         });
         alert("Nube OK");
@@ -1982,19 +2028,12 @@
 
     async function pullFromCloud() {
       try {
-        const doc = await db.collection('configs').doc('global').get();
-        if(doc.exists) {
-          appState = JSON.parse(doc.data().data);
+        const docRef = getUserConfigDoc();
+        if (!docRef) return;
 
-          if (appState.categoryMetadata) {
-            Object.keys(appState.categoryMetadata).forEach(cat => {
-              if (!Array.isArray(appState.categoryMetadata[cat].imgs)) {
-                appState.categoryMetadata[cat].imgs = [''];
-              } else {
-                appState.categoryMetadata[cat].imgs = [appState.categoryMetadata[cat].imgs[0] || ''];
-              }
-            });
-          }
+        const doc = await docRef.get();
+        if(doc.exists) {
+          appState = normalizeAppState(decodeStateFromStorage(doc.data().data));
 
           saveLocal();
           renderCategoryManager();
@@ -2007,33 +2046,15 @@
     }
 
     window.onload = () => {
+      localStorage.setItem('esquina_visual_theme', 'harvest');
+      applyVisualTheme('harvest');
+      showWelcomeQuote();
+
       const local = localStorage.getItem(CONFIG.LS_KEY);
 
       if (local) {
         try {
-          const p = JSON.parse(local);
-
-          if (!p.categories) p.categories = [...CONFIG.DEFAULT_CATS];
-          if (!p.margins) p.margins = {};
-          if (!p.volumeConfig) {
-            p.volumeConfig = [
-              { label: "PRECIO 1", qty: 1, discount: 0 },
-              { label: "PRECIO 2", qty: 600, discount: 5 },
-              { label: "PRECIO 3", qty: 700, discount: 8 },
-              { label: "PRECIO 4", qty: 800, discount: 12 }
-            ];
-          }
-          if (!p.categoryMetadata) p.categoryMetadata = {};
-
-          Object.keys(p.categoryMetadata).forEach(cat => {
-            if (!Array.isArray(p.categoryMetadata[cat].imgs)) {
-              p.categoryMetadata[cat].imgs = [''];
-            } else {
-              p.categoryMetadata[cat].imgs = [p.categoryMetadata[cat].imgs[0] || ''];
-            }
-          });
-
-          appState = p;
+          appState = normalizeAppState(decodeStateFromStorage(local));
         } catch (e) {
           console.error(e);
         }
@@ -2044,18 +2065,22 @@
       const baseCostInput = document.getElementById('calcBaseCost');
       if (baseCostInput) baseCostInput.dataset.lastValue = baseCostInput.value || '';
 
-      document.getElementById('calcIeps').innerHTML = `
-        <option value="none">Sin IEPS (0%)</option>
-        <option value="azul" style="color:#2563eb">Etiqueta Azul (6%)</option>
-        <option value="amarilla" style="color:#d97706">Etiqueta Amarilla (7%)</option>
-        <option value="roja" style="color:#dc2626">Etiqueta Roja (9%)</option>
-      `;
+      document.getElementById('calcIeps').innerHTML = getIepsOptions()
+        .map(option => `<option value="${option.value}">${option.label}</option>`)
+        .join('');
 
       updateIepsSelectTheme();
       updateCategoryDropdowns();
+      renderVolumeConfig();
       handleCategoryChange();
+      window.addEventListener('resize', positionCategorySuggestions);
+      window.addEventListener('scroll', positionCategorySuggestions, true);
+      window.addEventListener('resize', positionIepsSuggestions);
+      window.addEventListener('scroll', positionIepsSuggestions, true);
+      document.addEventListener('click', event => {
+        if (!event.target.closest('#calcIepsDisplay') && !event.target.closest('#calcIepsSuggestions')) {
+          hideIepsDropdown();
+        }
+      });
       lucide.createIcons();
     };
-  </script>
-</body>
-</html>
