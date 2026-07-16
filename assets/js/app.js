@@ -1803,7 +1803,14 @@
       if (!input) return;
 
       input.dataset.previousValue = input.value || '';
+      selectCategorySearchText();
       hideCategorySuggestions();
+    }
+
+    function selectCategorySearchText() {
+      const input = document.getElementById('calcCategorySearch');
+      if (!input) return;
+      setTimeout(() => input.select(), 0);
     }
 
     function handleCategoryInputBlur() {
