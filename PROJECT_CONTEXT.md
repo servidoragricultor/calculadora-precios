@@ -17,6 +17,21 @@
   - `assets/js/app.js` -> `docs/assets/js/app.js`
   - `assets/js/firebase.js` -> `docs/assets/js/firebase.js`
 
+## Firebase
+
+- Proyecto Firebase: `calculadora-esquina`.
+- La aplicacion usa Firebase Authentication con Email/Password.
+- La configuracion de despliegue esta en `firebase.json`.
+- Firestore guarda la configuracion del usuario en `configs/{uid}`.
+- Las reglas de Firestore solo permiten acceso al usuario autenticado cuyo UID coincide con el documento.
+- Para publicar cambios en las reglas:
+
+```bash
+npx firebase-tools deploy --only firestore:rules --project calculadora-esquina
+```
+
+- Si aparece `Missing or insufficient permissions`, comprobar que el usuario haya iniciado sesion y que las reglas esten publicadas en el proyecto correcto.
+
 ## Herramientas
 
 - Git esta instalado en: `C:\Program Files\Git\cmd\git.exe`
