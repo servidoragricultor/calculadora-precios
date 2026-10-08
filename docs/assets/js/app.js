@@ -746,7 +746,7 @@
         m = parseFloat(document.getElementById('calcManualMargin').value) || 0;
       } else {
         const rules = appState.margins[cat] || [{max: Infinity, m: 20}];
-        m = (rules.find(r => totalCost < r.max) || rules[rules.length-1]).m;
+        m = (rules.find(r => totalCost <= r.max) || rules[rules.length-1]).m;
       }
 
       const ratio = Math.min(m/100, 0.99);
