@@ -2,7 +2,7 @@
 
 ## Ubicacion
 
-- Proyecto local: `C:\Users\Admin\Progamacion\Calculadora de Precios`
+- Proyecto local: `C:\OpenCode\calculadora-precios`
 - Repositorio GitHub: `https://github.com/servidoragricultor/calculadora-precios`
 - URL publica GitHub Pages: `https://servidoragricultor.github.io/calculadora-precios/`
 - Branch principal: `main`
@@ -60,6 +60,12 @@ npx firebase-tools deploy --only firestore:rules --project calculadora-esquina
 - `Descuentos sobre margen` usa borde gris como las demas secciones.
 - En `Gestion de Categorias`, los botones `+ Agregar Categoria` y `Ordenar A-Z` estan debajo del buscador.
 - En `Editor de Margenes`, se elimino el boton `Restablecer`.
+- En `Editor de Margenes`, las columnas indican `Rango de precio` y `Porcentaje de margen`.
+- La palomita de cada categoria confirma, ordena y guarda sus rangos de menor a mayor.
+- Presionar `Enter` en cualquier campo del editor ejecuta la misma confirmacion.
+- El editor permite pegar tablas desde Excel o Google Sheets para reemplazar todos los rangos de la categoria.
+- El pegado acepta dos columnas separadas por espacios o tabulaciones y limpia formatos como `$2,500` y `14%`.
+- Si una fila pegada es invalida, se conservan los rangos anteriores.
 
 ## Commits Recientes Relevantes
 
@@ -79,25 +85,33 @@ npx firebase-tools deploy --only firestore:rules --project calculadora-esquina
 3. Validar JavaScript:
 
 ```powershell
-node --check "C:\Users\Admin\Progamacion\Calculadora de Precios\assets\js\app.js"
+node --check "C:\OpenCode\calculadora-precios\assets\js\app.js"
 ```
+
+Para probar la aplicacion localmente:
+
+```powershell
+python -m http.server 8000
+```
+
+Abrir `http://localhost:8000/` y usar `Ctrl + F5` despues de cambios publicados.
 
 4. Revisar estado:
 
 ```powershell
-& "C:\Program Files\Git\cmd\git.exe" -C "C:\Users\Admin\Progamacion\Calculadora de Precios" status --short
+& "C:\Program Files\Git\cmd\git.exe" -C "C:\OpenCode\calculadora-precios" status --short
 ```
 
 5. Crear commit con usuario temporal:
 
 ```powershell
-& "C:\Program Files\Git\cmd\git.exe" -C "C:\Users\Admin\Progamacion\Calculadora de Precios" -c user.name="servidoragricultor" -c user.email="servidoragricultor@users.noreply.github.com" commit -m "Mensaje del commit"
+& "C:\Program Files\Git\cmd\git.exe" -C "C:\OpenCode\calculadora-precios" -c user.name="servidoragricultor" -c user.email="servidoragricultor@users.noreply.github.com" commit -m "Mensaje del commit"
 ```
 
 6. Subir a GitHub:
 
 ```powershell
-& "C:\Program Files\Git\cmd\git.exe" -C "C:\Users\Admin\Progamacion\Calculadora de Precios" push origin main
+& "C:\Program Files\Git\cmd\git.exe" -C "C:\OpenCode\calculadora-precios" push origin main
 ```
 
 ## Notas

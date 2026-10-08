@@ -1491,18 +1491,36 @@
             </span>
           </button>
           <div class="${isExpanded ? 'block' : 'hidden'} mt-5 animate-fade-in">
+          <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_1.25rem] gap-2 mb-2 px-1 text-[9px] font-black uppercase tracking-widest text-gray-400">
+            <span>Rango de precio</span>
+            <span>Porcentaje de margen</span>
+            <span></span>
+          </div>
+          <div class="mb-4 rounded-xl border border-dashed border-gray-200 bg-gray-50 p-3">
+            <label for="margin-paste-${slugifyDomId(cat)}" class="block text-[9px] font-black uppercase tracking-widest text-gray-400 mb-2">Pegar tabla desde Excel o Google Sheets</label>
+            <textarea id="margin-paste-${slugifyDomId(cat)}" rows="3" placeholder="50&#9;50&#10;100&#9;45&#10;150&#9;41" class="w-full resize-y rounded-lg border border-gray-200 bg-white p-2 text-xs font-bold text-gray-700 outline-none focus:ring-2 focus:ring-gray-200"></textarea>
+            <div class="mt-2 flex items-center justify-between gap-3">
+              <span class="text-[9px] font-medium text-gray-400">Dos columnas: rango y porcentaje.</span>
+              <button type="button" onclick="replaceMarginTable(${safeCatAction})" class="shrink-0 rounded-lg bg-gray-800 px-3 py-2 text-[9px] font-black uppercase text-white hover:bg-gray-900 transition">Reemplazar rangos</button>
+            </div>
+          </div>
           <div class="space-y-3 mb-4">`;
 
         (appState.margins[cat] || []).forEach((rule, idx) => {
-          html += `<div class="flex items-center gap-2">
-            <input type="number" value="${rule.max === Infinity ? '' : Number(rule.max) || 0}" placeholder="Infinito" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'max', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner">
-            <input type="number" value="${Number(rule.m) || 0}" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'm', this.value)" class="w-full p-2 border rounded-lg font-bold text-xs text-gray-700 bg-gray-50 shadow-inner">
+          html += `<div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_1.25rem] items-center gap-2">
+            <input type="number" value="${rule.max === Infinity ? '' : Number(rule.max) || 0}" placeholder="Infinito" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'max', this.value)" onkeydown="handleMarginRuleKeydown(event, ${safeCatAction})" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner">
+            <input type="number" value="${Number(rule.m) || 0}" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'm', this.value)" onkeydown="handleMarginRuleKeydown(event, ${safeCatAction})" class="w-full p-2 border rounded-lg font-bold text-xs text-gray-700 bg-gray-50 shadow-inner">
             <button onclick="removeMarginRow(${safeCatAction}, ${idx})" class="text-red-200 hover:text-red-500"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
           </div>`;
         });
 
         html += `</div>
-          <button onclick="addMarginRow(${safeCatAction})" class="w-full border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-gray-700">+ Añadir Rango</button>
+          <div class="flex gap-2">
+            <button onclick="addMarginRow(${safeCatAction})" class="flex-1 border-2 border-dashed border-gray-100 py-2 rounded-xl text-[9px] font-black text-gray-400 uppercase hover:text-gray-700">+ Añadir Rango</button>
+            <button type="button" onclick="confirmMarginRules(${safeCatAction})" class="w-11 border border-emerald-200 bg-emerald-50 text-emerald-600 rounded-xl inline-flex items-center justify-center hover:bg-emerald-100 transition" title="Confirmar y ordenar rangos" aria-label="Confirmar y ordenar rangos">
+              <i data-lucide="check" class="w-4 h-4"></i>
+            </button>
+          </div>
           </div>
         </div>`;
 
@@ -1522,6 +1540,72 @@
     function toggleMarginCard(cat) {
       expandedMarginCard = expandedMarginCard === cat ? null : cat;
       renderConfigTables();
+    }
+
+    function sortMarginRules(cat) {
+      const rules = appState.margins[cat] || [];
+      rules.sort((a, b) => {
+        const maxA = Number.isFinite(a.max) ? a.max : Infinity;
+        const maxB = Number.isFinite(b.max) ? b.max : Infinity;
+        return maxA - maxB;
+      });
+    }
+
+    function confirmMarginRules(cat) {
+      sortMarginRules(cat);
+      saveLocal();
+      runCalculations();
+      renderConfigTables();
+      showToast('Rangos confirmados y ordenados');
+    }
+
+    function handleMarginRuleKeydown(event, cat) {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      confirmMarginRules(cat);
+    }
+
+    function parseMarginTable(raw) {
+      const lines = String(raw || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
+      const rules = [];
+
+      for (let index = 0; index < lines.length; index += 1) {
+        const columns = lines[index].split(/\s+/).map(value => value.trim()).filter(Boolean);
+        if (columns.length !== 2) {
+          return { error: `La fila ${index + 1} debe tener rango y porcentaje.` };
+        }
+
+        const maxText = columns[0].toLowerCase();
+        const max = ['infinito', 'infinity', '∞'].includes(maxText)
+          ? Infinity
+          : Number(columns[0].replace(/[$,]/g, ''));
+        const margin = Number(columns[1].replace('%', ''));
+
+        if ((!Number.isFinite(max) && max !== Infinity) || max < 0 || !Number.isFinite(margin) || margin < 0 || margin > 100) {
+          return { error: `La fila ${index + 1} contiene valores inválidos.` };
+        }
+
+        rules.push({ max, m: margin });
+      }
+
+      if (rules.length === 0) return { error: 'Pega al menos una fila de rangos.' };
+      return { rules };
+    }
+
+    function replaceMarginTable(cat) {
+      const textarea = document.getElementById(`margin-paste-${slugifyDomId(cat)}`);
+      const result = parseMarginTable(textarea?.value);
+      if (result.error) {
+        showToast(result.error, 'error');
+        return;
+      }
+
+      appState.margins[cat] = result.rules;
+      sortMarginRules(cat);
+      saveLocal();
+      runCalculations();
+      renderConfigTables();
+      showToast('Rangos reemplazados y ordenados');
     }
 
     function addMarginRow(cat) { appState.margins[cat].push({max: 2000, m: 15}); saveLocal(); renderConfigTables(); }
@@ -1689,7 +1773,7 @@
     }
 
     function saveAllConfig() {
-      for(let cat in appState.margins) appState.margins[cat].sort((a,b) => a.max - b.max);
+      for(let cat in appState.margins) sortMarginRules(cat);
       saveLocal();
       runCalculations();
       alert("Guardado.");
