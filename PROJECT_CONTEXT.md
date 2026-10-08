@@ -67,8 +67,20 @@ npx firebase-tools deploy --only firestore:rules --project calculadora-esquina
 - El pegado acepta dos columnas separadas por espacios o tabulaciones y limpia formatos como `$2,500` y `14%`.
 - Si una fila pegada es invalida, se conservan los rangos anteriores.
 
+Formato de pegado recomendado:
+
+```text
+$2,500 14%
+$2,800 13.5%
+$3,000 13%
+$3,500 12%
+```
+
+El boton `Reemplazar rangos` sustituye toda la tabla de la categoria; no agrega filas a la configuracion anterior.
+
 ## Commits Recientes Relevantes
 
+- `6907542 Add bulk margin range import`
 - `6efc9bd Remove reset margins button`
 - `875fe35 Move category actions below search`
 - `2942750 Remove quick action buttons`
