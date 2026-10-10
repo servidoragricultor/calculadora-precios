@@ -1827,11 +1827,22 @@
       if (!input || !suggestions) return;
 
       const rect = input.getBoundingClientRect();
+      const gap = 8;
+      const spaceBelow = window.innerHeight - rect.bottom - gap;
+      const spaceAbove = rect.top - gap;
+      const opensUpward = spaceBelow < 240 && spaceAbove > spaceBelow;
       suggestions.style.left = `${rect.left}px`;
-      suggestions.style.top = `${rect.bottom + 8}px`;
       suggestions.style.width = `${rect.width}px`;
       suggestions.style.right = 'auto';
       suggestions.style.marginTop = '0';
+      suggestions.style.maxHeight = `${Math.max(180, Math.min(window.innerHeight * 0.6, opensUpward ? spaceAbove : spaceBelow))}px`;
+      if (opensUpward) {
+        suggestions.style.top = 'auto';
+        suggestions.style.bottom = `${window.innerHeight - rect.top + gap}px`;
+      } else {
+        suggestions.style.bottom = 'auto';
+        suggestions.style.top = `${rect.bottom + gap}px`;
+      }
     }
 
     function renderCategorySuggestions(categories = [], highlightedIndex = -1) {
