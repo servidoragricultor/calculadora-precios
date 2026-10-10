@@ -874,7 +874,15 @@
     function getFilteredCategories(searchTerm = '') {
       const normalizedTerm = normalizeText(searchTerm);
       if (!normalizedTerm) return [...appState.categories];
-      return appState.categories.filter(cat => normalizeText(cat).includes(normalizedTerm));
+      return appState.categories
+        .filter(cat => normalizeText(cat).includes(normalizedTerm))
+        .sort((a, b) => {
+          const aText = normalizeText(a);
+          const bText = normalizeText(b);
+          const aStarts = aText.startsWith(normalizedTerm) ? 0 : 1;
+          const bStarts = bText.startsWith(normalizedTerm) ? 0 : 1;
+          return aStarts - bStarts || aText.localeCompare(bText, 'es', { sensitivity: 'base', numeric: true });
+        });
     }
 
     function escapeHtmlAttr(value) {
@@ -1830,12 +1838,18 @@
       const suggestions = ensureCategorySuggestionsPortal();
       if (!suggestions) return;
 
-      const limitedCategories = categories.slice(0, 30);
+      const limitedCategories = categories.slice(0, 50);
+      const selectedCategory = document.getElementById('calcCategory')?.value || '';
+      const searchTerm = normalizeText(document.getElementById('calcCategorySearch')?.value || '');
+      const resultLabel = categories.length > limitedCategories.length
+        ? `Mostrando ${limitedCategories.length} de ${categories.length}`
+        : `${categories.length} ${categories.length === 1 ? 'resultado' : 'resultados'}`;
 
       if (limitedCategories.length === 0) {
         suggestions.innerHTML = `
-          <div class="px-4 py-3 text-xs font-bold uppercase tracking-widest text-gray-400">
-            Sin coincidencias
+          <div class="category-suggestions-header">
+            <span>Sin coincidencias</span>
+            <span class="category-suggestions-count">Prueba otra palabra</span>
           </div>
         `;
         positionCategorySuggestions();
@@ -1844,20 +1858,29 @@
         return;
       }
 
-      suggestions.innerHTML = limitedCategories.map((cat, index) => {
+      suggestions.innerHTML = `
+        <div class="category-suggestions-header">
+          <span>${searchTerm ? 'Selecciona una categoría' : 'Categorías disponibles'}</span>
+          <span class="category-suggestions-count">${resultLabel}</span>
+        </div>
+        ${limitedCategories.map((cat, index) => {
         const isActive = index === highlightedIndex;
+        const isSelected = normalizeText(cat) === normalizeText(selectedCategory);
         const safeLabel = escapeHtml(String(cat || '').toUpperCase());
         const safeValue = encodeURIComponent(cat);
         return `
           <button
             type="button"
-            onmousedown="selectCategorySuggestion(decodeURIComponent('${safeValue}'))"
-            class="w-full text-left px-4 py-3 text-sm font-semibold transition-colors border-b border-gray-50 last:border-b-0 ${isActive ? 'bg-gray-100 text-gray-800' : 'text-gray-700 hover:bg-gray-50'}"
+            onmousedown="event.preventDefault(); selectCategorySuggestion(decodeURIComponent('${safeValue}'))"
+            aria-selected="${isSelected}"
+            class="category-suggestion-option ${isActive ? 'is-highlighted' : ''} ${isSelected ? 'is-selected' : ''}"
           >
-            ${safeLabel}
+            <span class="category-suggestion-label">${safeLabel}</span>
+            ${isSelected ? '<span class="category-suggestion-check" aria-label="Seleccionada">&#10003;</span>' : ''}
           </button>
         `;
-      }).join('');
+      }).join('')}
+      `;
 
       positionCategorySuggestions();
       suggestions.classList.remove('hidden');
@@ -1888,7 +1911,7 @@
 
       input.dataset.previousValue = input.value || '';
       selectCategorySearchText();
-      hideCategorySuggestions();
+      renderCategorySuggestions(getFilteredCategories(''), -1);
     }
 
     function selectCategorySearchText() {

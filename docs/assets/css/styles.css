@@ -21,10 +21,20 @@
     #calcCategorySuggestions {
       position: fixed !important;
       z-index: 300 !important;
-      max-height: 18rem;
+      max-height: min(60vh, 30rem);
       background: #f3f4f6 !important;
       border-color: #d1d5db !important;
+      overflow-y: auto;
     }
+
+    .category-suggestions-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: .65rem .85rem; position: sticky; top: 0; z-index: 1; background: inherit; border-bottom: 1px solid #e5e7eb; color: #374151; font-size: .68rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    .category-suggestions-count { color: #9ca3af; font-size: .62rem; font-weight: 700; letter-spacing: 0; text-transform: none; white-space: nowrap; }
+    .category-suggestion-option { display: flex; align-items: center; justify-content: space-between; gap: .75rem; min-height: 2.8rem; width: 100%; padding: .7rem .85rem; border-bottom: 1px solid #e5e7eb; color: #374151; cursor: pointer; text-align: left; transition: background-color .15s ease, color .15s ease; }
+    .category-suggestion-option:last-child { border-bottom: 0; }
+    .category-suggestion-option:hover, .category-suggestion-option.is-highlighted { background: #e5e7eb; color: #111827; }
+    .category-suggestion-option.is-selected { color: #285943; }
+    .category-suggestion-label { font-size: .78rem; font-weight: 700; line-height: 1.25; }
+    .category-suggestion-check { flex: 0 0 auto; font-size: 1rem; font-weight: 900; }
 
     #calcIepsSuggestions {
       position: fixed !important;
