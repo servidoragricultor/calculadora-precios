@@ -28,7 +28,7 @@
         { label: "PRECIO 1", qty: 1, discount: 0 },
         { label: "PRECIO 2", qty: 500, discount: 5 },
         { label: "PRECIO 3", qty: 700, discount: 8 },
-        { label: "PRECIO 4", qty: 1000, discount: 12 }
+        { label: "PRECIO 4", qty: 1010, discount: 12 }
       ],
       categoryMetadata: {},
       currentPVP: 0,
@@ -41,7 +41,7 @@
       { label: "PRECIO 1", qty: 1, discount: 0 },
       { label: "PRECIO 2", qty: 500, discount: 5 },
       { label: "PRECIO 3", qty: 700, discount: 8 },
-      { label: "PRECIO 4", qty: 1000, discount: 12 }
+      { label: "PRECIO 4", qty: 1010, discount: 12 }
     ];
 
     function encodeStateForStorage(state) {
@@ -484,7 +484,9 @@
       if (fullQty <= 0) return;
       [2, 3, 4].forEach((tier, index) => {
         const input = document.getElementById(`asstQty${tier}`);
-        if (input) input.value = Math.round(fullQty * [0.5, 0.7, 1][index]);
+        if (!input) return;
+        const quantity = index === 2 ? fullQty + 10 : fullQty * [0.5, 0.7][index];
+        input.value = Math.round(quantity);
       });
     }
 
@@ -501,7 +503,7 @@
         const q = parseFloat(document.getElementById(`asstQty${i}`).value) || 0;
         if(q > 0) {
           let totalQ = 0;
-          if (q >= qFull) { totalQ = pFull; } 
+          if (q >= qFull) { totalQ = pFull + (q - qFull) * unitFull; }
           else {
             let unitQ = pUnit - (pUnit - unitFull) * (q / qFull);
             totalQ = q * unitQ;
