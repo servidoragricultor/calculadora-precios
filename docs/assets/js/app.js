@@ -26,9 +26,9 @@
       },
       volumeConfig: [
         { label: "PRECIO 1", qty: 1, discount: 0 },
-        { label: "PRECIO 2", qty: 600, discount: 5 },
+        { label: "PRECIO 2", qty: 500, discount: 5 },
         { label: "PRECIO 3", qty: 700, discount: 8 },
-        { label: "PRECIO 4", qty: 800, discount: 12 }
+        { label: "PRECIO 4", qty: 1000, discount: 12 }
       ],
       categoryMetadata: {},
       currentPVP: 0,
@@ -39,9 +39,9 @@
 
     const DEFAULT_VOLUME_CONFIG = [
       { label: "PRECIO 1", qty: 1, discount: 0 },
-      { label: "PRECIO 2", qty: 600, discount: 5 },
+      { label: "PRECIO 2", qty: 500, discount: 5 },
       { label: "PRECIO 3", qty: 700, discount: 8 },
-      { label: "PRECIO 4", qty: 800, discount: 12 }
+      { label: "PRECIO 4", qty: 1000, discount: 12 }
     ];
 
     function encodeStateForStorage(state) {
@@ -515,7 +515,7 @@
 
     function applyBulkStrategy() {
       const basePrice = parseFloat(document.getElementById('asstBasePrice').value) || 1;
-      const q2 = parseFloat(document.getElementById('asstQty2').value) || 600;
+      const q2 = parseFloat(document.getElementById('asstQty2').value) || 500;
       const t2 = parseFloat(document.getElementById('asstTotal2').value) || 0;
       let d2 = 0;
       if(basePrice * q2 > 0 && t2 > 0) d2 = (1 - (t2 / (basePrice * q2))) * 100;
@@ -525,7 +525,7 @@
       let d3 = 0;
       if(basePrice * q3 > 0 && t3 > 0) d3 = (1 - (t3 / (basePrice * q3))) * 100;
 
-      const q4 = parseFloat(document.getElementById('asstQty4').value) || 800;
+      const q4 = parseFloat(document.getElementById('asstQty4').value) || 1000;
       const t4 = parseFloat(document.getElementById('asstTotal4').value) || 0;
       let d4 = 0;
       if(basePrice * q4 > 0 && t4 > 0) d4 = (1 - (t4 / (basePrice * q4))) * 100;
