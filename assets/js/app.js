@@ -449,6 +449,7 @@
       if (modulesOpen) {
         const basePriceInput = document.getElementById('asstBasePrice');
         if (basePriceInput && appState.currentPVP > 0) basePriceInput.value = appState.currentPVP.toFixed(2);
+        syncBulkQuantities();
       }
 
       lucide.createIcons();
@@ -464,6 +465,7 @@
       if (content.classList.contains('hidden')) {
         content.classList.remove('hidden');
         btn.innerHTML = '<i data-lucide="chevron-up" class="w-5 h-5"></i>';
+        syncBulkQuantities();
         const priceText = document.getElementById('resFinalPrice')?.textContent || '';
         if(priceText && priceText !== "0.00") {
           const cleanPrice = parseFloat(priceText.replace(/,/g, ''));
@@ -475,6 +477,15 @@
         btn.innerHTML = '<i data-lucide="chevron-down" class="w-5 h-5"></i>';
       }
       lucide.createIcons();
+    }
+
+    function syncBulkQuantities() {
+      const fullQty = parseFloat(document.getElementById('asstFullQty')?.value) || 0;
+      if (fullQty <= 0) return;
+      [2, 3, 4].forEach((tier, index) => {
+        const input = document.getElementById(`asstQty${tier}`);
+        if (input) input.value = Math.round(fullQty * [0.5, 0.7, 1][index]);
+      });
     }
 
     function suggestBulkPrices() {

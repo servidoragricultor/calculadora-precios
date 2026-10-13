@@ -214,7 +214,7 @@
                   <div class="text-center">
                     <label class="block text-[10px] font-black text-gray-400 uppercase tracking-widest">Tamaño Envase Completo</label>
                     <div class="relative mt-1">
-                      <input type="number" id="asstFullQty" value="1000" placeholder="Ej: 1000" class="input-field pr-12 text-lg font-bold text-gray-800">
+                      <input type="number" id="asstFullQty" value="1000" placeholder="Ej: 1000" oninput="syncBulkQuantities()" class="input-field pr-12 text-lg font-bold text-gray-800">
                       <span class="absolute right-3 top-2 text-gray-400 text-sm font-bold">ml/g</span>
                     </div>
                   </div>
@@ -252,12 +252,12 @@
                   <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
                     <h4 class="font-black text-gray-800 text-sm mb-5 flex items-center justify-between uppercase tracking-wide">
                       PRECIO 2
-                      <span class="text-[9px] text-gray-400 uppercase tracking-widest">Volumen bajo</span>
+                      <span class="text-[9px] text-gray-400 uppercase tracking-widest">Volumen bajo · 50%</span>
                     </h4>
                     <div class="space-y-5">
                       <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cantidad Mínima a Vender</label>
-                        <input type="number" id="asstQty2" value="600" class="input-field mt-1 text-sm font-bold text-gray-700">
+                         <input type="number" id="asstQty2" value="500" class="input-field mt-1 text-sm font-bold text-gray-700">
                       </div>
                       <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cobrar en Total ($)</label>
@@ -271,12 +271,12 @@
                   <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
                     <h4 class="font-black text-gray-800 text-sm mb-5 flex items-center justify-between uppercase tracking-wide">
                       PRECIO 3
-                      <span class="text-[9px] text-gray-400 uppercase tracking-widest">Volumen medio</span>
+                      <span class="text-[9px] text-gray-400 uppercase tracking-widest">Volumen medio · 70%</span>
                     </h4>
                     <div class="space-y-5">
                       <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cantidad Mínima a Vender</label>
-                        <input type="number" id="asstQty3" value="700" class="input-field mt-1 text-sm font-bold text-gray-700">
+                         <input type="number" id="asstQty3" value="700" class="input-field mt-1 text-sm font-bold text-gray-700">
                       </div>
                       <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cobrar en Total ($)</label>
@@ -290,12 +290,12 @@
                   <div class="bg-white p-6 rounded-3xl shadow-sm border border-gray-100 relative overflow-hidden">
                     <h4 class="font-black text-gray-800 text-sm mb-5 flex items-center justify-between uppercase tracking-wide">
                       PRECIO 4
-                      <span class="text-[9px] text-gray-500 uppercase tracking-widest">Volumen alto</span>
+                      <span class="text-[9px] text-gray-500 uppercase tracking-widest">Volumen alto · 100%</span>
                     </h4>
                     <div class="space-y-5">
                       <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cantidad Mínima a Vender</label>
-                        <input type="number" id="asstQty4" value="800" class="input-field mt-1 text-sm font-bold text-gray-700">
+                         <input type="number" id="asstQty4" value="1000" class="input-field mt-1 text-sm font-bold text-gray-700">
                       </div>
                       <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cobrar en Total ($)</label>
