@@ -503,7 +503,8 @@
         const q = parseFloat(document.getElementById(`asstQty${i}`).value) || 0;
         if(q > 0) {
           let totalQ = 0;
-          if (q >= qFull) { totalQ = pFull + (q - qFull) * unitFull; }
+          if (i === 4) { totalQ = pFull - 10; }
+          else if (q >= qFull) { totalQ = pFull + (q - qFull) * unitFull; }
           else {
             let unitQ = pUnit - (pUnit - unitFull) * (q / qFull);
             totalQ = q * unitQ;
