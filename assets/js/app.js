@@ -28,7 +28,7 @@
         { label: "PRECIO 1", qty: 1, discount: 0 },
         { label: "PRECIO 2", qty: 500, discount: 5 },
         { label: "PRECIO 3", qty: 700, discount: 8 },
-        { label: "PRECIO 4", qty: 1020, discount: 12 }
+        { label: "PRECIO 4", qty: 1000, discount: 12 }
       ],
       categoryMetadata: {},
       currentPVP: 0,
@@ -41,7 +41,7 @@
       { label: "PRECIO 1", qty: 1, discount: 0 },
       { label: "PRECIO 2", qty: 500, discount: 5 },
       { label: "PRECIO 3", qty: 700, discount: 8 },
-      { label: "PRECIO 4", qty: 1020, discount: 12 }
+      { label: "PRECIO 4", qty: 1000, discount: 12 }
     ];
 
     function encodeStateForStorage(state) {
@@ -91,7 +91,7 @@
 
       normalized.volumeConfig = normalized.volumeConfig.map((tier, index) => ({
         label: String(tier.label || DEFAULT_VOLUME_CONFIG[index]?.label || `PRECIO ${index + 1}`),
-        qty: index === 3 && Number(tier.qty) === 1010 ? 1020 : Number(tier.qty) || 0,
+        qty: index === 3 && [1010, 1020].includes(Number(tier.qty)) ? 1000 : Number(tier.qty) || 0,
         discount: Number(tier.discount) || 0
       }));
 
@@ -485,7 +485,7 @@
       [2, 3, 4].forEach((tier, index) => {
         const input = document.getElementById(`asstQty${tier}`);
         if (!input) return;
-        const quantity = index === 2 ? fullQty + 20 : fullQty * [0.5, 0.7][index];
+        const quantity = index === 2 ? fullQty : fullQty * [0.5, 0.7][index];
         input.value = Math.round(quantity);
       });
     }
@@ -528,7 +528,7 @@
       let d3 = 0;
       if(basePrice * q3 > 0 && t3 > 0) d3 = (1 - (t3 / (basePrice * q3))) * 100;
 
-      const q4 = parseFloat(document.getElementById('asstQty4').value) || 1020;
+      const q4 = parseFloat(document.getElementById('asstQty4').value) || 1000;
       const t4 = parseFloat(document.getElementById('asstTotal4').value) || 0;
       let d4 = 0;
       if(basePrice * q4 > 0 && t4 > 0) d4 = (1 - (t4 / (basePrice * q4))) * 100;
