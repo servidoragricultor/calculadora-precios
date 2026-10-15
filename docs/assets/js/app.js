@@ -485,7 +485,7 @@
       [2, 3, 4].forEach((tier, index) => {
         const input = document.getElementById(`asstQty${tier}`);
         if (!input) return;
-        const quantity = index === 2 ? fullQty + 10 : fullQty * [0.5, 0.7][index];
+        const quantity = index === 2 ? fullQty + 20 : fullQty * [0.5, 0.7][index];
         input.value = Math.round(quantity);
       });
     }
