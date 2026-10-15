@@ -91,7 +91,7 @@
 
       normalized.volumeConfig = normalized.volumeConfig.map((tier, index) => ({
         label: String(tier.label || DEFAULT_VOLUME_CONFIG[index]?.label || `PRECIO ${index + 1}`),
-        qty: Number(tier.qty) || 0,
+        qty: index === 3 && Number(tier.qty) === 1010 ? 1020 : Number(tier.qty) || 0,
         discount: Number(tier.discount) || 0
       }));
 
@@ -527,7 +527,7 @@
       let d3 = 0;
       if(basePrice * q3 > 0 && t3 > 0) d3 = (1 - (t3 / (basePrice * q3))) * 100;
 
-      const q4 = parseFloat(document.getElementById('asstQty4').value) || 1000;
+      const q4 = parseFloat(document.getElementById('asstQty4').value) || 1020;
       const t4 = parseFloat(document.getElementById('asstTotal4').value) || 0;
       let d4 = 0;
       if(basePrice * q4 > 0 && t4 > 0) d4 = (1 - (t4 / (basePrice * q4))) * 100;
