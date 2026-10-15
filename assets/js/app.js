@@ -28,7 +28,7 @@
         { label: "PRECIO 1", qty: 1, discount: 0 },
         { label: "PRECIO 2", qty: 500, discount: 5 },
         { label: "PRECIO 3", qty: 700, discount: 8 },
-        { label: "PRECIO 4", qty: 1010, discount: 12 }
+        { label: "PRECIO 4", qty: 1020, discount: 12 }
       ],
       categoryMetadata: {},
       currentPVP: 0,
@@ -41,7 +41,7 @@
       { label: "PRECIO 1", qty: 1, discount: 0 },
       { label: "PRECIO 2", qty: 500, discount: 5 },
       { label: "PRECIO 3", qty: 700, discount: 8 },
-      { label: "PRECIO 4", qty: 1010, discount: 12 }
+      { label: "PRECIO 4", qty: 1020, discount: 12 }
     ];
 
     function encodeStateForStorage(state) {
