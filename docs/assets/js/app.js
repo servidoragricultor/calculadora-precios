@@ -1790,8 +1790,21 @@
 
     const fmt$ = n => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(n);
 
+    let cloudUnsubscribe = null;
+    let cloudReady = false;
+    let cloudDirty = false;
+    let cloudWriteTimer = null;
+    let cloudRevision = null;
+    let applyingCloudState = false;
+    let cloudConflict = false;
+
     function saveLocal() {
       localStorage.setItem(CONFIG.LS_KEY, encodeStateForStorage(appState));
+      if (!applyingCloudState && auth.currentUser && cloudReady) {
+        cloudDirty = true;
+        clearTimeout(cloudWriteTimer);
+        cloudWriteTimer = setTimeout(() => syncToCloud(true), 1500);
+      }
     }
 
     function saveAllConfig() {
@@ -2127,7 +2140,13 @@
           quickBtn.className = "bg-green-600 text-white border border-green-600 w-9 h-9 rounded-full text-[10px] font-black uppercase hover:bg-green-700 transition inline-flex items-center justify-center shadow-sm";
           quickBtn.title = `Conectado: ${user.email}`;
         }
+        startCloudSync();
       } else {
+        if (cloudUnsubscribe) cloudUnsubscribe();
+        cloudUnsubscribe = null;
+        cloudReady = false;
+        cloudDirty = false;
+        cloudConflict = false;
         dot.className = "w-2.5 h-2.5 rounded-full bg-gray-300";
         document.getElementById('auth-status-text').textContent = "Offline";
         form.classList.remove('hidden');
@@ -2150,18 +2169,113 @@
       }
     }
 
-    async function syncToCloud() {
+    function renderCloudState(message, error = false) {
+      const status = document.getElementById('auth-status-text');
+      if (status) status.textContent = message;
+      const dot = document.getElementById('auth-status-dot');
+      if (dot) dot.className = `w-2.5 h-2.5 rounded-full ${error ? 'bg-amber-500' : 'bg-green-500'} shadow-md`;
+    }
+
+    function applyCloudData(data) {
+      applyingCloudState = true;
       try {
+        appState = normalizeAppState(decodeStateFromStorage(data));
+        saveLocal();
+      } finally {
+        applyingCloudState = false;
+      }
+      cloudDirty = false;
+      renderCategoryManager();
+      renderConfigTables();
+      handleCategoryChange();
+    }
+
+    function startCloudSync() {
+      if (cloudUnsubscribe) cloudUnsubscribe();
+      cloudReady = false;
+      cloudConflict = false;
+      const docRef = getUserConfigDoc();
+      if (!docRef) return;
+
+      let firstSnapshot = true;
+      cloudUnsubscribe = docRef.onSnapshot(snapshot => {
+        const remoteData = snapshot.exists ? snapshot.data() : null;
+        const remoteRevision = remoteData?.updatedAt?.toMillis?.() ?? null;
+
+        if (firstSnapshot) {
+          firstSnapshot = false;
+          cloudRevision = remoteRevision;
+          cloudReady = true;
+          if (remoteData?.data) {
+            const localRaw = localStorage.getItem(CONFIG.LS_KEY);
+            const localState = localRaw ? encodeStateForStorage(normalizeAppState(decodeStateFromStorage(localRaw))) : '';
+            const cloudState = encodeStateForStorage(normalizeAppState(decodeStateFromStorage(remoteData.data)));
+            if (localState && localState !== cloudState && confirm('La configuración de este equipo difiere de la nube. Aceptar = cargar nube; Cancelar = conservar este equipo y subirlo (se guardará respaldo local).')) {
+              localStorage.setItem(`${CONFIG.LS_KEY}_backup_${Date.now()}`, localRaw);
+              applyCloudData(remoteData.data);
+            } else if (localState && localState !== cloudState) {
+              localStorage.setItem(`${CONFIG.LS_KEY}_backup_${Date.now()}`, remoteData.data);
+              cloudDirty = true;
+              syncToCloud(true);
+            } else {
+              applyCloudData(remoteData.data);
+            }
+          } else {
+            cloudDirty = true;
+            syncToCloud(true);
+          }
+          renderCloudState('Sincronizado');
+          return;
+        }
+
+        if (remoteRevision === cloudRevision) return;
+        cloudRevision = remoteRevision;
+        if (cloudDirty) {
+          cloudConflict = true;
+          renderCloudState('Conflicto: cambios locales pendientes', true);
+          alert('La nube cambió desde otro equipo. Tus cambios locales se conservaron y no se subirán automáticamente. Usa “Bajar de Nube” después de respaldar o resolver los cambios.');
+          return;
+        }
+        if (remoteData?.data) applyCloudData(remoteData.data);
+        renderCloudState('Sincronizado');
+      }, error => {
+        cloudReady = false;
+        renderCloudState('Error de sincronización', true);
+        console.error('Error escuchando configuración de nube:', error);
+      });
+    }
+
+    async function syncToCloud(silent = false) {
+      try {
+        if (!cloudReady) {
+          if (!silent) alert('La sincronización con la nube todavía está iniciando. Intenta de nuevo en unos segundos.');
+          return;
+        }
+        if (cloudConflict) {
+          if (!silent) alert('Hay un conflicto pendiente. Baja la nube o recarga después de respaldar los cambios locales.');
+          return;
+        }
         const docRef = getUserConfigDoc();
         if (!docRef) return;
-
-        await docRef.set({
-          data: encodeStateForStorage(appState),
-          updatedAt: new Date()
+        const payload = encodeStateForStorage(appState);
+        await db.runTransaction(async transaction => {
+          const current = await transaction.get(docRef);
+          const revision = current.exists ? (current.data().updatedAt?.toMillis?.() ?? null) : null;
+          if (revision !== cloudRevision) throw new Error('La nube cambió desde la última sincronización. Se conservaron tus cambios locales; baja la nube antes de continuar.');
+          transaction.set(docRef, {
+            data: payload,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+          });
         });
-        alert("Nube OK");
+        cloudDirty = false;
+        cloudRevision = Date.now();
+        renderCloudState('Sincronizado');
+        if (!silent) alert('Nube OK');
       } catch (e) {
-        alert(e.message);
+        cloudConflict = true;
+        renderCloudState('Conflicto: cambios locales conservados', true);
+        if (!silent) alert(e.message);
+        else console.error(e.message);
       }
     }
 
@@ -2172,11 +2286,10 @@
 
         const doc = await docRef.get();
         if(doc.exists) {
-          appState = normalizeAppState(decodeStateFromStorage(doc.data().data));
-
-          saveLocal();
-          renderCategoryManager();
-          handleCategoryChange();
+          clearTimeout(cloudWriteTimer);
+          cloudRevision = doc.data().updatedAt?.toMillis?.() ?? null;
+          cloudConflict = false;
+          applyCloudData(doc.data().data);
           alert("Bajado.");
         }
       } catch (e) {
