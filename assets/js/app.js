@@ -1878,12 +1878,19 @@
       if (!file) return;
       try {
         const imported = JSON.parse(await file.text());
-        if (imported.format !== 'calculator-margin-config/v1' || !imported.margins || typeof imported.margins !== 'object' || Array.isArray(imported.margins)) {
-          throw new Error('El archivo no tiene el formato calculator-margin-config/v1.');
+        const isMarginExport = imported.format === 'calculator-margin-config/v1';
+        const isAppState = Array.isArray(imported.categories);
+        if ((!isMarginExport && !isAppState) || !imported.margins || typeof imported.margins !== 'object' || Array.isArray(imported.margins)) {
+          throw new Error('El archivo debe ser calculator-margin-config/v1 o un estado exportado de la calculadora.');
         }
-        const categories = Object.keys(imported.margins);
-        if (!categories.length || categories.length !== Number(imported.categoryCount)) {
-          throw new Error('El número de categorías no coincide con el contenido del archivo.');
+        if (imported.categoryMetadata && (typeof imported.categoryMetadata !== 'object' || Array.isArray(imported.categoryMetadata))) {
+          throw new Error('Los metadatos de categorías del archivo no son válidos.');
+        }
+        const categories = isAppState ? imported.categories : Object.keys(imported.margins);
+        if (!categories.length || new Set(categories).size !== categories.length ||
+          (isMarginExport && categories.length !== Number(imported.categoryCount)) ||
+          categories.some(category => typeof category !== 'string' || !category.trim() || !Object.hasOwn(imported.margins, category))) {
+          throw new Error('Las categorías del archivo están vacías, duplicadas o no coinciden con sus márgenes.');
         }
         for (const category of categories) {
           const rules = imported.margins[category];
@@ -1899,7 +1906,13 @@
         const categoryMetadata = Object.fromEntries(categories
           .filter(category => appState.categoryMetadata?.[category])
           .map(category => [category, appState.categoryMetadata[category]]));
-        appState = normalizeAppState({ ...appState, categories, margins: imported.margins, categoryMetadata });
+        appState = normalizeAppState({
+          ...appState,
+          categories,
+          margins: imported.margins,
+          volumeConfig: Array.isArray(imported.volumeConfig) ? imported.volumeConfig : appState.volumeConfig,
+          categoryMetadata: { ...categoryMetadata, ...(imported.categoryMetadata || {}) }
+        });
         applyingCloudState = true;
         try { localStorage.setItem(CONFIG.LS_KEY, encodeStateForStorage(appState)); }
         finally { applyingCloudState = false; }

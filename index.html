@@ -501,7 +501,7 @@
 
       <div class="bg-white rounded-3xl p-8 border-2 border-gray-100 shadow-sm">
         <h2 class="text-xl font-black text-gray-800 uppercase italic mb-2">Respaldar e importar base de márgenes</h2>
-        <p class="text-xs text-gray-500 mb-5">Importa o exporta archivos JSON <span class="font-bold">calculator-margin-config/v1</span>. La importación reemplaza categorías y márgenes en este navegador, pero no modifica Firebase automáticamente.</p>
+        <p class="text-xs text-gray-500 mb-5">Importa o exporta JSON de márgenes <span class="font-bold">calculator-margin-config/v1</span> o un estado exportado de la calculadora. La importación reemplaza categorías y márgenes en este navegador, pero no modifica Firebase automáticamente.</p>
         <div class="flex flex-wrap gap-3 mb-6">
           <button onclick="document.getElementById('marginConfigFile').click()" class="bg-orange-600 text-white px-5 py-3 rounded-xl text-xs font-black uppercase hover:bg-orange-700">Importar archivo JSON</button>
           <input id="marginConfigFile" type="file" accept=".json,application/json" class="hidden" onchange="importMarginConfigFile(this)">
@@ -629,6 +629,6 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=8"></script>
+  <script src="assets/js/app.js?v=9"></script>
 </body>
 </html>
