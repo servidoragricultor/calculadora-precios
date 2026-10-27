@@ -1,6 +1,7 @@
 ﻿const CONFIG = {
       IVA_RATE: 0.16,
       LS_KEY: 'esquina_agricola_v9_single_image',
+      BACKUPS_KEY: 'esquina_agricola_local_backups_v1',
       IEPS: { none: 0, azul: 0.06, amarilla: 0.07, roja: 0.09 },
       DEFAULT_CATS: ["Agroquimicos", "Granel", "KG-LT", "FERTILIZANTES", "INOCUIDAD", "MAQUINARIA"]
     };
@@ -1798,8 +1799,130 @@
     let applyingCloudState = false;
     let cloudConflict = false;
 
+    function saveLocalBackup(raw, reason = 'Respaldo automático') {
+      if (!raw) return;
+      try {
+        const backups = JSON.parse(localStorage.getItem(CONFIG.BACKUPS_KEY) || '[]');
+        if (backups[0]?.data === raw) return;
+        backups.unshift({ createdAt: new Date().toISOString(), reason, categories: normalizeAppState(decodeStateFromStorage(raw)).categories.length, data: raw });
+        backups.splice(12);
+        localStorage.setItem(CONFIG.BACKUPS_KEY, JSON.stringify(backups));
+        renderLocalBackups();
+      } catch (error) {
+        console.warn('No se pudo guardar el respaldo local:', error);
+      }
+    }
+
+    function renderLocalBackups() {
+      const select = document.getElementById('localBackupSelect');
+      if (!select) return;
+      let backups = [];
+      try { backups = JSON.parse(localStorage.getItem(CONFIG.BACKUPS_KEY) || '[]'); } catch (_) {}
+      select.innerHTML = '<option value="">Selecciona un respaldo guardado en este navegador...</option>' + backups.map((backup, index) => {
+        const date = new Date(backup.createdAt).toLocaleString('es-MX');
+        return `<option value="${index}">${escapeHtml(date)} · ${backup.categories} categorías · ${escapeHtml(backup.reason)}</option>`;
+      }).join('');
+    }
+
+    function restoreLocalBackup() {
+      const select = document.getElementById('localBackupSelect');
+      const index = Number(select?.value);
+      let backups = [];
+      try { backups = JSON.parse(localStorage.getItem(CONFIG.BACKUPS_KEY) || '[]'); } catch (_) {}
+      const backup = backups[index];
+      if (!backup || !confirm(`¿Restaurar el respaldo con ${backup.categories} categorías? Se guardará la configuración actual antes de reemplazarla. No se subirá a la nube automáticamente.`)) return;
+      saveLocalBackup(localStorage.getItem(CONFIG.LS_KEY), 'Antes de restaurar');
+      applyingCloudState = true;
+      try {
+        appState = normalizeAppState(decodeStateFromStorage(backup.data));
+        localStorage.setItem(CONFIG.LS_KEY, encodeStateForStorage(appState));
+      } finally { applyingCloudState = false; }
+      cloudDirty = true;
+      cloudConflict = false;
+      renderCategoryManager();
+      renderConfigTables();
+      updateCategoryDropdowns();
+      handleCategoryChange();
+      alert('Respaldo restaurado en este navegador. Revisa las categorías antes de elegir “Guardar en Nube”.');
+    }
+
+    function createLocalBackup() {
+      saveLocalBackup(localStorage.getItem(CONFIG.LS_KEY) || encodeStateForStorage(appState), 'Respaldo manual');
+      renderLocalBackups();
+      alert('Respaldo guardado en este navegador.');
+    }
+
+    function exportMarginConfig() {
+      const margins = Object.fromEntries(appState.categories.map(category => [
+        category,
+        (appState.margins[category] || []).map(rule => ({ max: rule.max === Infinity ? null : Number(rule.max), m: Number(rule.m) }))
+      ]));
+      const exportData = {
+        format: 'calculator-margin-config/v1',
+        source: 'La Esquina del Agricultor',
+        exportedAt: new Date().toISOString(),
+        categoryCount: appState.categories.length,
+        margins
+      };
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `calculator-margins-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function importMarginConfigFile(input) {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        const imported = JSON.parse(await file.text());
+        if (imported.format !== 'calculator-margin-config/v1' || !imported.margins || typeof imported.margins !== 'object' || Array.isArray(imported.margins)) {
+          throw new Error('El archivo no tiene el formato calculator-margin-config/v1.');
+        }
+        const categories = Object.keys(imported.margins);
+        if (!categories.length || categories.length !== Number(imported.categoryCount)) {
+          throw new Error('El número de categorías no coincide con el contenido del archivo.');
+        }
+        for (const category of categories) {
+          const rules = imported.margins[category];
+          if (!category.trim() || !Array.isArray(rules) || !rules.length || rules.some(rule => {
+            const max = rule.max === null || rule.max === '' ? Infinity : Number(rule.max);
+            const margin = Number(rule.m);
+            return (max !== Infinity && (!Number.isFinite(max) || max < 0)) || !Number.isFinite(margin) || margin < 0 || margin > 100;
+          })) throw new Error(`Hay reglas inválidas en la categoría “${category}”.`);
+        }
+        if (!confirm(`El archivo contiene ${categories.length} categorías. Se reemplazarán las categorías y márgenes actuales; las imágenes y los ajustes de volumen se conservarán cuando sea posible. Se guardará un respaldo local antes de importar. ¿Continuar?`)) return;
+
+        saveLocalBackup(localStorage.getItem(CONFIG.LS_KEY), 'Antes de importar archivo');
+        const categoryMetadata = Object.fromEntries(categories
+          .filter(category => appState.categoryMetadata?.[category])
+          .map(category => [category, appState.categoryMetadata[category]]));
+        appState = normalizeAppState({ ...appState, categories, margins: imported.margins, categoryMetadata });
+        applyingCloudState = true;
+        try { localStorage.setItem(CONFIG.LS_KEY, encodeStateForStorage(appState)); }
+        finally { applyingCloudState = false; }
+        cloudDirty = true;
+        cloudConflict = false;
+        renderCategoryManager();
+        renderConfigTables();
+        updateCategoryDropdowns();
+        handleCategoryChange();
+        renderLocalBackups();
+        alert(`Importación lista: ${categories.length} categorías. Se guardó solo en este navegador; usa “Guardar en Nube” si quieres subirla a Firebase.`);
+      } catch (error) {
+        alert(`No se pudo importar el archivo: ${error.message}`);
+      } finally {
+        input.value = '';
+      }
+    }
+
     function saveLocal() {
-      localStorage.setItem(CONFIG.LS_KEY, encodeStateForStorage(appState));
+      const previous = localStorage.getItem(CONFIG.LS_KEY);
+      const next = encodeStateForStorage(appState);
+      if (previous && previous !== next) saveLocalBackup(previous);
+      localStorage.setItem(CONFIG.LS_KEY, next);
       if (!applyingCloudState && auth.currentUser && cloudReady) {
         cloudDirty = true;
         clearTimeout(cloudWriteTimer);
@@ -2214,9 +2337,11 @@
               localStorage.setItem(`${CONFIG.LS_KEY}_backup_${Date.now()}`, localRaw);
               applyCloudData(remoteData.data);
             } else if (localState && localState !== cloudState) {
-              localStorage.setItem(`${CONFIG.LS_KEY}_backup_${Date.now()}`, remoteData.data);
+              saveLocalBackup(remoteData.data, 'Copia recibida de la nube');
               cloudDirty = true;
-              syncToCloud(true);
+              cloudConflict = true;
+              renderCloudState('Diferencia detectada: nube protegida', true);
+              alert('Se conservaron ambas configuraciones. La nube no se sobrescribió. Usa “Bajar de Nube” para cargar la nube o restaura un respaldo local.');
             } else {
               applyCloudData(remoteData.data);
             }
@@ -2313,6 +2438,7 @@
       }
 
       loadVideosLocal();
+      renderLocalBackups();
 
       const baseCostInput = document.getElementById('calcBaseCost');
       if (baseCostInput) baseCostInput.dataset.lastValue = baseCostInput.value || '';
