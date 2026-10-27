@@ -619,10 +619,11 @@
             <button onclick="handleLogin()" class="w-full bg-orange-600 text-white text-xs py-3 rounded-xl font-black uppercase shadow-lg shadow-orange-50">Entrar</button>
           </div>
           <div id="cloud-actions" class="hidden grid md:grid-cols-3 gap-3">
-            <button onclick="syncToCloud()" class="w-full bg-gray-800 text-white text-xs py-3 rounded-xl font-black uppercase flex justify-center gap-2"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Guardar en Nube</button>
-            <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-3 rounded-xl font-black uppercase flex justify-center gap-2"><i data-lucide="download-cloud" class="w-4 h-4"></i> Bajar de Nube</button>
+            <button onclick="syncToCloud()" class="w-full bg-gray-800 text-white text-xs py-3 rounded-xl font-black uppercase flex justify-center gap-2"><i data-lucide="upload-cloud" class="w-4 h-4"></i> Subir cambios</button>
+            <button onclick="pullFromCloud()" class="w-full bg-amber-500 text-white text-xs py-3 rounded-xl font-black uppercase flex justify-center gap-2"><i data-lucide="refresh-cw" class="w-4 h-4"></i> Combinar con Nube</button>
             <button onclick="auth.signOut()" class="w-full text-red-500 border border-red-100 bg-red-50 text-[10px] font-black uppercase rounded-xl">Salir</button>
           </div>
+          <p class="mt-3 text-xs text-gray-500">La sincronización envía solo las categorías que cambiaron y combina las demás. Si dos equipos cambian la misma categoría, prevalece la edición más reciente.</p>
         </div>
       </div>
 
@@ -651,6 +652,6 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=13"></script>
+  <script src="assets/js/app.js?v=14"></script>
 </body>
 </html>

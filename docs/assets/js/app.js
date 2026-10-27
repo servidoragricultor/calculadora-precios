@@ -2,6 +2,8 @@
       IVA_RATE: 0.16,
       LS_KEY: 'esquina_agricola_v9_single_image',
       BACKUPS_KEY: 'esquina_agricola_local_backups_v1',
+      CLOUD_BASE_KEY: 'esquina_cloud_sync_base_v2',
+      CLOUD_PENDING_KEY: 'esquina_cloud_sync_pending_v2',
       IEPS: { none: 0, azul: 0.06, amarilla: 0.07, roja: 0.09 },
       DEFAULT_CATS: ["Agroquimicos", "Granel", "KG-LT", "FERTILIZANTES", "INOCUIDAD", "MAQUINARIA"]
     };
@@ -1916,6 +1918,172 @@
     let cloudRevision = null;
     let applyingCloudState = false;
     let cloudConflict = false;
+    let cloudMergeInProgress = false;
+    let cloudSnapshotQueued = false;
+
+    function cloudStorageKey(key) {
+      const uid = auth.currentUser?.uid || 'anonymous';
+      return `${key}_${uid}`;
+    }
+
+    function categoryCloudId(category) {
+      const encoded = Array.from(String(category)).map(char => char.codePointAt(0).toString(16)).join('-');
+      return `cat_${encoded || 'empty'}`;
+    }
+
+    function cloudCategoryRecord(state, category, modifiedAt = Date.now()) {
+      const order = state.categories.indexOf(category);
+      return {
+        name: category,
+        order: order < 0 ? state.categories.length : order,
+        margins: (state.margins[category] || [{ max: null, m: 20 }]).map(rule => ({
+          max: rule.max === Infinity ? null : Number(rule.max),
+          m: Number(rule.m) || 0
+        })),
+        metadata: state.categoryMetadata?.[category] || null,
+        deleted: false,
+        modifiedAt
+      };
+    }
+
+    function cloudCategoryRecordsFromState(state, modifiedAt = Date.now()) {
+      return Object.fromEntries([...new Set(state.categories)].map(category => [
+        categoryCloudId(category), cloudCategoryRecord(state, category, modifiedAt)
+      ]));
+    }
+
+    function categoryRecordSignature(record) {
+      if (!record) return '';
+      return encodeStateForStorage({
+        name: record.name,
+        order: Number(record.order) || 0,
+        margins: record.margins || [],
+        metadata: record.metadata || null,
+        deleted: Boolean(record.deleted)
+      });
+    }
+
+    function volumeConfigSignature(volumeConfig) {
+      return encodeStateForStorage(Array.isArray(volumeConfig) ? volumeConfig : []);
+    }
+
+    function localCloudStateSignature(state) {
+      return encodeStateForStorage({
+        categoryRecords: cloudCategoryRecordsFromState(state, 0),
+        volumeConfig: state.volumeConfig || []
+      });
+    }
+
+    function readCloudPending() {
+      const key = cloudStorageKey(CONFIG.CLOUD_PENDING_KEY);
+      try {
+        const pending = JSON.parse(localStorage.getItem(key) || '{}');
+        if (auth.currentUser) {
+          const anonymousKey = `${CONFIG.CLOUD_PENDING_KEY}_anonymous`;
+          const anonymousPending = JSON.parse(localStorage.getItem(anonymousKey) || '{}');
+          Object.entries(anonymousPending).forEach(([id, change]) => {
+            if (!pending[id] || Number(change?.modifiedAt) > Number(pending[id]?.modifiedAt)) pending[id] = change;
+          });
+          if (Object.keys(anonymousPending).length) {
+            localStorage.setItem(key, JSON.stringify(pending));
+            localStorage.removeItem(anonymousKey);
+          }
+        }
+        return pending;
+      }
+      catch (_) { return {}; }
+    }
+
+    function writeCloudPending(pending) {
+      localStorage.setItem(cloudStorageKey(CONFIG.CLOUD_PENDING_KEY), JSON.stringify(pending));
+    }
+
+    function readCloudSyncBase() {
+      try { return JSON.parse(localStorage.getItem(cloudStorageKey(CONFIG.CLOUD_BASE_KEY)) || 'null'); }
+      catch (_) { return null; }
+    }
+
+    function markLocalCloudChanges(previousState, nextState) {
+      if (applyingCloudState) return;
+      const pending = readCloudPending();
+      const base = readCloudSyncBase();
+      const previousRecords = previousState ? cloudCategoryRecordsFromState(previousState, 0) : {};
+      const nextRecords = cloudCategoryRecordsFromState(nextState, 0);
+      const baselineRecords = base?.categoryRecords || {};
+      const allIds = new Set([...Object.keys(previousRecords), ...Object.keys(nextRecords), ...Object.keys(baselineRecords)]);
+
+      for (const id of allIds) {
+        const before = previousRecords[id];
+        const after = nextRecords[id];
+        const baseline = baselineRecords[id];
+        const changedInThisSave = categoryRecordSignature(before) !== categoryRecordSignature(after);
+        const afterForComparison = after || (baseline?.deleted ? baseline : null);
+        const differsFromCloudBase = base
+          ? categoryRecordSignature(afterForComparison) !== categoryRecordSignature(baseline)
+          : changedInThisSave || Boolean(pending[id]);
+        if (!differsFromCloudBase) {
+          delete pending[id];
+          continue;
+        }
+        if (changedInThisSave || !pending[id]) {
+          const priorModifiedAt = Number(pending[id]?.modifiedAt) || 0;
+          const modifiedAt = Math.max(Date.now(), priorModifiedAt + 1);
+          const record = after || { ...(before || baseline), deleted: true };
+          pending[id] = { modifiedAt, record: { ...record, modifiedAt } };
+        }
+      }
+
+      const previousVolume = previousState?.volumeConfig || [];
+      const nextVolume = nextState.volumeConfig || [];
+      const baseVolume = base?.settings?.volumeConfig || [];
+      const changedVolumeThisSave = volumeConfigSignature(previousVolume) !== volumeConfigSignature(nextVolume);
+      const differsFromVolumeBase = base
+        ? volumeConfigSignature(nextVolume) !== volumeConfigSignature(baseVolume)
+        : changedVolumeThisSave || Boolean(pending.__settings);
+      if (!differsFromVolumeBase) {
+        delete pending.__settings;
+      } else if (changedVolumeThisSave || !pending.__settings) {
+        const priorModifiedAt = Number(pending.__settings?.modifiedAt) || 0;
+        pending.__settings = {
+          modifiedAt: Math.max(Date.now(), priorModifiedAt + 1),
+          volumeConfig: nextVolume
+        };
+      }
+
+      writeCloudPending(pending);
+    }
+
+    function cloudV2ToAppState(remote, fallbackState = appState) {
+      const records = remote?.categoryRecords || {};
+      const activeRecords = Object.values(records)
+        .filter(record => record && !record.deleted && typeof record.name === 'string')
+        .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0) || a.name.localeCompare(b.name, 'es'));
+      const categories = activeRecords.map(record => record.name);
+      const margins = {};
+      const categoryMetadata = {};
+      activeRecords.forEach(record => {
+        margins[record.name] = Array.isArray(record.margins) ? record.margins : [{ max: null, m: 20 }];
+        if (record.metadata && typeof record.metadata === 'object') categoryMetadata[record.name] = record.metadata;
+      });
+      return normalizeAppState({
+        ...fallbackState,
+        categories,
+        margins,
+        categoryMetadata,
+        volumeConfig: remote?.settings?.volumeConfig || fallbackState.volumeConfig
+      });
+    }
+
+    function storeCloudSyncBase(remote) {
+      localStorage.setItem(cloudStorageKey(CONFIG.CLOUD_BASE_KEY), JSON.stringify({
+        categoryRecords: remote?.categoryRecords || {},
+        settings: { volumeConfig: remote?.settings?.volumeConfig || [] }
+      }));
+    }
+
+    function hasPendingCloudChanges() {
+      return Object.keys(readCloudPending()).length > 0;
+    }
 
     function saveLocalBackup(raw, reason = 'Respaldo automático') {
       if (!raw) return;
@@ -1956,10 +2124,14 @@
       try { backups = JSON.parse(localStorage.getItem(CONFIG.BACKUPS_KEY) || '[]'); } catch (_) {}
       const backup = backups[index];
       if (!backup || !confirm(`¿Restaurar el respaldo con ${backup.categories} categorías? Se guardará la configuración actual antes de reemplazarla. No se subirá a la nube automáticamente.`)) return;
-      saveLocalBackup(localStorage.getItem(CONFIG.LS_KEY), 'Antes de restaurar');
+      const previousRaw = localStorage.getItem(CONFIG.LS_KEY);
+      saveLocalBackup(previousRaw, 'Antes de restaurar');
+      const previousState = previousRaw ? normalizeAppState(decodeStateFromStorage(previousRaw)) : null;
+      const restoredState = normalizeAppState(decodeStateFromStorage(backup.data));
+      markLocalCloudChanges(previousState, restoredState);
       applyingCloudState = true;
       try {
-        appState = normalizeAppState(decodeStateFromStorage(backup.data));
+        appState = restoredState;
         localStorage.setItem(CONFIG.LS_KEY, encodeStateForStorage(appState));
       } finally { applyingCloudState = false; }
       cloudDirty = true;
@@ -2032,17 +2204,21 @@
         }
         if (!confirm(`El archivo contiene ${categories.length} categorías. Se reemplazarán las categorías y márgenes actuales; las imágenes y los ajustes de volumen se conservarán cuando sea posible. Se guardará un respaldo local antes de importar. ¿Continuar?`)) return;
 
-        saveLocalBackup(localStorage.getItem(CONFIG.LS_KEY), 'Antes de importar archivo');
+        const previousRaw = localStorage.getItem(CONFIG.LS_KEY);
+        saveLocalBackup(previousRaw, 'Antes de importar archivo');
+        const previousState = previousRaw ? normalizeAppState(decodeStateFromStorage(previousRaw)) : null;
         const categoryMetadata = Object.fromEntries(categories
           .filter(category => appState.categoryMetadata?.[category])
           .map(category => [category, appState.categoryMetadata[category]]));
-        appState = normalizeAppState({
+        const importedState = normalizeAppState({
           ...appState,
           categories,
           margins: imported.margins,
           volumeConfig: Array.isArray(imported.volumeConfig) ? imported.volumeConfig : appState.volumeConfig,
           categoryMetadata: { ...categoryMetadata, ...(imported.categoryMetadata || {}) }
         });
+        markLocalCloudChanges(previousState, importedState);
+        appState = importedState;
         applyingCloudState = true;
         try { localStorage.setItem(CONFIG.LS_KEY, encodeStateForStorage(appState)); }
         finally { applyingCloudState = false; }
@@ -2065,6 +2241,10 @@
       const previous = localStorage.getItem(CONFIG.LS_KEY);
       const next = encodeStateForStorage(appState);
       if (previous && previous !== next) saveLocalBackup(previous);
+      if (!applyingCloudState && previous !== next) {
+        const previousState = previous ? normalizeAppState(decodeStateFromStorage(previous)) : null;
+        markLocalCloudChanges(previousState, appState);
+      }
       localStorage.setItem(CONFIG.LS_KEY, next);
       if (!applyingCloudState && auth.currentUser && cloudReady) {
         cloudDirty = true;
@@ -2442,18 +2622,68 @@
       if (dot) dot.className = `w-2.5 h-2.5 rounded-full ${error ? 'bg-amber-500' : 'bg-green-500'} shadow-md`;
     }
 
-    function applyCloudData(data) {
+    function applyCloudData(remote) {
+      const incomingState = cloudV2ToAppState(remote, appState);
+      const currentRaw = localStorage.getItem(CONFIG.LS_KEY);
+      if (currentRaw) saveLocalBackup(currentRaw, 'Antes de combinar cambios de nube');
       applyingCloudState = true;
       try {
-        appState = normalizeAppState(decodeStateFromStorage(data));
+        appState = incomingState;
         saveLocal();
+        storeCloudSyncBase(remote);
+        writeCloudPending({});
       } finally {
         applyingCloudState = false;
       }
       cloudDirty = false;
+      cloudConflict = false;
       renderCategoryManager();
       renderConfigTables();
+      updateCategoryDropdowns();
       handleCategoryChange();
+    }
+
+    async function migrateLegacyCloudDocument(docRef) {
+      return db.runTransaction(async transaction => {
+        const snapshot = await transaction.get(docRef);
+        if (!snapshot.exists) return null;
+        const remote = snapshot.data();
+        if (Number(remote.syncVersion) === 2) return remote;
+
+        const oldState = remote.data
+          ? normalizeAppState(decodeStateFromStorage(remote.data))
+          : normalizeAppState({});
+        const revision = remote.updatedAt?.toMillis?.() || Date.now();
+        const categoryRecords = cloudCategoryRecordsFromState(oldState, revision);
+        const localRaw = localStorage.getItem(CONFIG.LS_KEY);
+        if (localRaw) {
+          saveLocalBackup(localRaw, 'Antes de migrar la nube a sincronización por cambios');
+          const localState = normalizeAppState(decodeStateFromStorage(localRaw));
+          const cloudNames = new Set(oldState.categories);
+          localState.categories.forEach((category, index) => {
+            if (!cloudNames.has(category)) {
+              categoryRecords[categoryCloudId(category)] = {
+                ...cloudCategoryRecord(localState, category, Date.now()),
+                order: oldState.categories.length + index
+              };
+            }
+          });
+        }
+
+        const settings = {
+          volumeConfig: oldState.volumeConfig,
+          modifiedAt: revision
+        };
+        transaction.set(docRef, {
+          syncVersion: 2,
+          categoryRecords,
+          settings,
+          legacyData: typeof remote.data === 'string' ? remote.data : null,
+          data: firebase.firestore.FieldValue.delete(),
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        return { syncVersion: 2, categoryRecords, settings };
+      });
     }
 
     function startCloudSync() {
@@ -2463,49 +2693,83 @@
       const docRef = getUserConfigDoc();
       if (!docRef) return;
 
-      let firstSnapshot = true;
-      cloudUnsubscribe = docRef.onSnapshot(snapshot => {
-        const remoteData = snapshot.exists ? snapshot.data() : null;
-        const remoteRevision = remoteData?.updatedAt?.toMillis?.() ?? null;
-
-        if (firstSnapshot) {
-          firstSnapshot = false;
-          cloudRevision = remoteRevision;
+      const processSnapshot = async snapshot => {
+        if (cloudMergeInProgress) return;
+        if (!snapshot.exists) {
           cloudReady = true;
-          if (remoteData?.data) {
-            const localRaw = localStorage.getItem(CONFIG.LS_KEY);
-            const localState = localRaw ? encodeStateForStorage(normalizeAppState(decodeStateFromStorage(localRaw))) : '';
-            const cloudState = encodeStateForStorage(normalizeAppState(decodeStateFromStorage(remoteData.data)));
-            if (localState && localState !== cloudState && confirm('La configuración de este equipo difiere de la nube. Aceptar = cargar nube; Cancelar = conservar este equipo y subirlo (se guardará respaldo local).')) {
-              localStorage.setItem(`${CONFIG.LS_KEY}_backup_${Date.now()}`, localRaw);
-              applyCloudData(remoteData.data);
-            } else if (localState && localState !== cloudState) {
-              saveLocalBackup(remoteData.data, 'Copia recibida de la nube');
-              cloudDirty = true;
-              cloudConflict = true;
-              renderCloudState('Diferencia detectada: nube protegida', true);
-              alert('Se conservaron ambas configuraciones. La nube no se sobrescribió. Usa “Bajar de Nube” para cargar la nube o restaura un respaldo local.');
-            } else {
-              applyCloudData(remoteData.data);
-            }
-          } else {
-            cloudDirty = true;
-            syncToCloud(true);
-          }
-          renderCloudState('Sincronizado');
+          cloudRevision = null;
+          await syncToCloud(true);
           return;
         }
 
-        if (remoteRevision === cloudRevision) return;
-        cloudRevision = remoteRevision;
-        if (cloudDirty) {
-          cloudConflict = true;
-          renderCloudState('Conflicto: cambios locales pendientes', true);
-          alert('La nube cambió desde otro equipo. Tus cambios locales se conservaron y no se subirán automáticamente. Usa “Bajar de Nube” después de respaldar o resolver los cambios.');
+        const remote = snapshot.data();
+        if (Number(remote.syncVersion) !== 2) {
+          cloudReady = false;
+          cloudMergeInProgress = true;
+          try {
+            await migrateLegacyCloudDocument(docRef);
+          } finally {
+            cloudMergeInProgress = false;
+            cloudSnapshotQueued = false;
+          }
+          const migrated = await docRef.get({ source: 'server' });
+          if (migrated.exists) await processSnapshot(migrated);
           return;
         }
-        if (remoteData?.data) applyCloudData(remoteData.data);
-        renderCloudState('Sincronizado');
+
+        cloudReady = true;
+        cloudRevision = remote.updatedAt?.toMillis?.() ?? Date.now();
+        if (!readCloudSyncBase() && !hasPendingCloudChanges()) {
+          const localRaw = localStorage.getItem(CONFIG.LS_KEY);
+          if (localRaw) {
+            const localState = normalizeAppState(decodeStateFromStorage(localRaw));
+            const cloudNames = new Set(Object.values(remote.categoryRecords || {})
+              .filter(record => record && !record.deleted)
+              .map(record => record.name));
+            const localOnlyCategories = localState.categories.filter(category => !cloudNames.has(category));
+            if (localOnlyCategories.length) {
+              saveLocalBackup(localRaw, 'Antes de combinar categorías locales nuevas');
+              const pending = readCloudPending();
+              localOnlyCategories.forEach(category => {
+                const modifiedAt = Date.now();
+                const record = cloudCategoryRecord(localState, category, modifiedAt);
+                pending[categoryCloudId(category)] = { modifiedAt, record };
+              });
+              writeCloudPending(pending);
+              await syncToCloud(true);
+              return;
+            }
+          }
+        }
+        if (hasPendingCloudChanges()) {
+          await syncToCloud(true);
+        } else {
+          const localRaw = localStorage.getItem(CONFIG.LS_KEY);
+          const localState = localRaw ? normalizeAppState(decodeStateFromStorage(localRaw)) : null;
+          const incomingState = cloudV2ToAppState(remote, appState);
+          const localSig = localState ? localCloudStateSignature(localState) : '';
+          const incomingSig = localCloudStateSignature(incomingState);
+          const hasBase = Boolean(readCloudSyncBase());
+          if (!hasBase && localState && localSig !== incomingSig) {
+            saveLocalBackup(localRaw, 'Copia local previa a la sincronización por cambios');
+          }
+          if (localSig !== incomingSig || !hasBase) applyCloudData(remote);
+          else storeCloudSyncBase(remote);
+          cloudDirty = false;
+          renderCloudState('Sincronizado');
+        }
+      };
+
+      cloudUnsubscribe = docRef.onSnapshot(snapshot => {
+        if (cloudMergeInProgress) {
+          cloudSnapshotQueued = true;
+          return;
+        }
+        processSnapshot(snapshot).catch(error => {
+          cloudReady = false;
+          renderCloudState('Error de sincronización', true);
+          console.error('Error procesando configuración de nube:', error);
+        });
       }, error => {
         cloudReady = false;
         renderCloudState('Error de sincronización', true);
@@ -2514,55 +2778,126 @@
     }
 
     async function syncToCloud(silent = false) {
+      if (cloudMergeInProgress) return;
       try {
         if (!cloudReady) {
           if (!silent) alert('La sincronización con la nube todavía está iniciando. Intenta de nuevo en unos segundos.');
           return;
         }
-        if (cloudConflict) {
-          if (!silent) alert('Hay un conflicto pendiente. Baja la nube o recarga después de respaldar los cambios locales.');
-          return;
-        }
         const docRef = getUserConfigDoc();
         if (!docRef) return;
-        const payload = encodeStateForStorage(appState);
-        await db.runTransaction(async transaction => {
-          const current = await transaction.get(docRef);
-          const revision = current.exists ? (current.data().updatedAt?.toMillis?.() ?? null) : null;
-          if (revision !== cloudRevision) throw new Error('La nube cambió desde la última sincronización. Se conservaron tus cambios locales; baja la nube antes de continuar.');
-          transaction.set(docRef, {
-            data: payload,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-          });
+        cloudMergeInProgress = true;
+
+        const pendingAtStart = readCloudPending();
+        const baseAtStart = readCloudSyncBase();
+        const localSignatureAtStart = localCloudStateSignature(appState);
+        const currentLocalRecords = cloudCategoryRecordsFromState(appState);
+        const transactionResult = await db.runTransaction(async transaction => {
+          const snapshot = await transaction.get(docRef);
+          const remote = snapshot.exists ? snapshot.data() : null;
+          if (remote && Number(remote.syncVersion) !== 2) throw new Error('La nube todavía está migrando a sincronización por cambios. Intenta de nuevo en unos segundos.');
+
+          const remoteRecords = { ...(remote?.categoryRecords || {}) };
+          const categoryUpdates = {};
+          const pending = pendingAtStart;
+          const baseRecords = baseAtStart?.categoryRecords || {};
+
+          if (!snapshot.exists) {
+            Object.assign(categoryUpdates, currentLocalRecords);
+          } else {
+            Object.entries(pending).forEach(([id, change]) => {
+              if (id === '__settings' || !change?.record) return;
+              const cloudRecord = remoteRecords[id];
+              const baselineRecord = baseRecords[id];
+              const remoteChanged = categoryRecordSignature(cloudRecord) !== categoryRecordSignature(baselineRecord);
+              const localWins = !cloudRecord || !remoteChanged || Number(change.modifiedAt) >= Number(cloudRecord.modifiedAt || 0);
+              if (localWins) {
+                const record = { ...change.record, modifiedAt: Number(change.modifiedAt) || Date.now() };
+                categoryUpdates[id] = record;
+                remoteRecords[id] = record;
+              }
+            });
+          }
+
+          const cloudSettings = remote?.settings || null;
+          const baseSettings = baseAtStart?.settings || null;
+          const settingChange = pending.__settings;
+          let settingsUpdate = null;
+          if (!snapshot.exists || !cloudSettings) {
+            settingsUpdate = {
+              volumeConfig: appState.volumeConfig,
+              modifiedAt: Date.now()
+            };
+          } else if (settingChange) {
+            const remoteSettingsChanged = volumeConfigSignature(cloudSettings.volumeConfig) !== volumeConfigSignature(baseSettings?.volumeConfig);
+            const localSettingsWin = !remoteSettingsChanged || Number(settingChange.modifiedAt) >= Number(cloudSettings.modifiedAt || 0);
+            if (localSettingsWin) {
+              settingsUpdate = {
+                volumeConfig: settingChange.volumeConfig,
+                modifiedAt: Number(settingChange.modifiedAt) || Date.now()
+              };
+            }
+          }
+
+          const hasWrites = Object.keys(categoryUpdates).length > 0 || Boolean(settingsUpdate) || !snapshot.exists;
+          if (hasWrites) {
+            const patch = {
+              syncVersion: 2,
+              updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            };
+            if (Object.keys(categoryUpdates).length) patch.categoryRecords = categoryUpdates;
+            if (settingsUpdate) patch.settings = settingsUpdate;
+            transaction.set(docRef, patch, { merge: true });
+          }
+          return { wrote: hasWrites };
         });
-        cloudDirty = false;
-        cloudRevision = Date.now();
-        renderCloudState('Sincronizado');
-        if (!silent) alert('Nube OK');
-      } catch (e) {
-        cloudConflict = true;
-        renderCloudState('Conflicto: cambios locales conservados', true);
-        if (!silent) alert(e.message);
-        else console.error(e.message);
+
+        const fresh = await docRef.get({ source: 'server' });
+        if (!fresh.exists || Number(fresh.data().syncVersion) !== 2) throw new Error('No se pudo confirmar la sincronización en la nube.');
+        const remote = fresh.data();
+        cloudRevision = remote.updatedAt?.toMillis?.() ?? Date.now();
+
+        const localChangedDuringSync = localCloudStateSignature(appState) !== localSignatureAtStart;
+        if (localChangedDuringSync) {
+          storeCloudSyncBase(remote);
+          writeCloudPending({});
+          markLocalCloudChanges(cloudV2ToAppState(remote, appState), appState);
+          const currentPending = readCloudPending();
+          cloudDirty = Object.keys(currentPending).length > 0;
+          if (cloudDirty) {
+            clearTimeout(cloudWriteTimer);
+            cloudWriteTimer = setTimeout(() => syncToCloud(true), 500);
+          }
+        } else {
+          applyCloudData(remote);
+          cloudDirty = false;
+        }
+
+        cloudConflict = false;
+        renderCloudState(transactionResult.wrote ? 'Cambios sincronizados' : 'Sincronizado');
+        if (!silent) alert(transactionResult.wrote ? 'Cambios sincronizados; solo se enviaron las categorías o ajustes modificados.' : 'Sin cambios pendientes; se combinaron los datos de la nube.');
+      } catch (error) {
+        cloudDirty = true;
+        renderCloudState('Error al sincronizar cambios', true);
+        if (!silent) alert(error.message);
+        else console.error('Error sincronizando cambios:', error);
+      } finally {
+        cloudMergeInProgress = false;
+        if (cloudSnapshotQueued && cloudReady) {
+          cloudSnapshotQueued = false;
+          clearTimeout(cloudWriteTimer);
+          cloudWriteTimer = setTimeout(() => syncToCloud(true), 0);
+        }
       }
     }
 
     async function pullFromCloud() {
-      try {
-        const docRef = getUserConfigDoc();
-        if (!docRef) return;
-
-        const doc = await docRef.get();
-        if(doc.exists) {
-          clearTimeout(cloudWriteTimer);
-          cloudRevision = doc.data().updatedAt?.toMillis?.() ?? null;
-          cloudConflict = false;
-          applyCloudData(doc.data().data);
-          alert("Bajado.");
-        }
-      } catch (e) {
-        alert(e.message);
+      if (!cloudReady) {
+        alert('La sincronización con la nube todavía está iniciando. Intenta de nuevo en unos segundos.');
+        return;
       }
+      clearTimeout(cloudWriteTimer);
+      await syncToCloud(false);
     }
 
     window.onload = () => {

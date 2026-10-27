@@ -3,7 +3,16 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /configs/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && request.auth.uid == userId;
+      allow create: if request.auth != null
+        && request.auth.uid == userId
+        && request.resource.data.syncVersion == 2;
+      allow update: if request.auth != null
+        && request.auth.uid == userId
+        && (!('syncVersion' in resource.data)
+          || resource.data.syncVersion != 2
+          || request.resource.data.syncVersion == 2);
+      allow delete: if request.auth != null && request.auth.uid == userId;
     }
   }
 }
