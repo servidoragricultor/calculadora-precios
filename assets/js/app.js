@@ -1818,6 +1818,13 @@
       if (!select) return;
       let backups = [];
       try { backups = JSON.parse(localStorage.getItem(CONFIG.BACKUPS_KEY) || '[]'); } catch (_) {}
+      const status = document.getElementById('localBackupStatus');
+      if (status) {
+        const latest = backups[0];
+        status.textContent = latest
+          ? `Último respaldo: ${new Date(latest.createdAt).toLocaleString('es-MX')} · ${latest.categories} categorías · ${latest.reason}`
+          : 'Aún no hay respaldos guardados en este navegador.';
+      }
       select.innerHTML = '<option value="">Selecciona un respaldo guardado en este navegador...</option>' + backups.map((backup, index) => {
         const date = new Date(backup.createdAt).toLocaleString('es-MX');
         return `<option value="${index}">${escapeHtml(date)} · ${backup.categories} categorías · ${escapeHtml(backup.reason)}</option>`;
@@ -1850,6 +1857,11 @@
       saveLocalBackup(localStorage.getItem(CONFIG.LS_KEY) || encodeStateForStorage(appState), 'Respaldo manual');
       renderLocalBackups();
       alert('Respaldo guardado en este navegador.');
+    }
+
+    function createAutomaticLocalBackup() {
+      const current = localStorage.getItem(CONFIG.LS_KEY) || encodeStateForStorage(appState);
+      saveLocalBackup(current, 'Respaldo automático');
     }
 
     function exportMarginConfig() {
@@ -2452,6 +2464,12 @@
 
       loadVideosLocal();
       renderLocalBackups();
+      createAutomaticLocalBackup();
+      window.setInterval(createAutomaticLocalBackup, 5 * 60 * 1000);
+      window.addEventListener('pagehide', createAutomaticLocalBackup);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') createAutomaticLocalBackup();
+      });
 
       const baseCostInput = document.getElementById('calcBaseCost');
       if (baseCostInput) baseCostInput.dataset.lastValue = baseCostInput.value || '';
