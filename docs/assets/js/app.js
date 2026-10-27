@@ -495,11 +495,11 @@
       document.getElementById('asstQty4').value = fullQty;
     }
 
-    function calculateTier2SmallPresentationTotal() {
+    function calculateTier1SmallPresentationTotal() {
       const referencePrice = parseFloat(document.getElementById('asstSmallPresentationPrice')?.value) || 0;
       const smallQty = parseFloat(document.getElementById('asstSmallPresentationQty')?.value) || 0;
-      if (smallQty <= 0 || referencePrice <= 5) return null;
-      return Number((referencePrice - 5).toFixed(2));
+      if (smallQty <= 0 || referencePrice <= 3) return null;
+      return Number((referencePrice - 3).toFixed(2));
     }
 
     let automaticBulkCurveTimer = null;
@@ -623,15 +623,20 @@
         return false;
       }
       if (smallQty > 0 && smallPrice > 0) {
-        const smallPackageTotal = calculateTier2SmallPresentationTotal();
+        const smallPackageTotal = calculateTier1SmallPresentationTotal();
         if (smallPackageTotal === null || smallPackageTotal <= 0) {
-          setBulkAssistantStatus('Completa una cantidad y un precio válidos para la presentación más pequeña; el total debe quedar por encima de $0.', 'error');
+          setBulkAssistantStatus('Completa una cantidad y un precio válidos para la presentación más pequeña; Precio 1 queda $3 por debajo de esa presentación.', 'error');
           return false;
         }
-        document.getElementById('asstQty2').value = smallQty;
-        document.getElementById('asstTotal2').value = smallPackageTotal.toFixed(2);
       }
       const basePrice = parseFloat(document.getElementById('asstBasePrice').value) || 1;
+      if (smallQty > 0 && smallPrice > 0 && appState.volumeConfig[0]) {
+        const smallPackageTotal = calculateTier1SmallPresentationTotal();
+        appState.volumeConfig[0].qty = smallQty;
+        const tier1UnitPrice = smallPackageTotal / smallQty;
+        const tier1Discount = (1 - (tier1UnitPrice / basePrice)) * 100;
+        appState.volumeConfig[0].discount = Number(tier1Discount.toFixed(8));
+      }
       const q2 = parseFloat(document.getElementById('asstQty2').value) || 500;
       const t2 = parseFloat(document.getElementById('asstTotal2').value) || 0;
       let d2 = 0;
