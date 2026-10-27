@@ -489,6 +489,35 @@
         const quantity = index === 2 ? fullQty : fullQty * [0.5, 0.7][index];
         input.value = Math.round(quantity);
       });
+      updateBulkTier2SmallPresentationPrice();
+    }
+
+    function calculateTier2SmallPresentationTotal() {
+      const referenceQty = parseFloat(document.getElementById('asstSmallPresentationQty')?.value) || 0;
+      const referencePrice = parseFloat(document.getElementById('asstSmallPresentationPrice')?.value) || 0;
+      const tier2Qty = parseFloat(document.getElementById('asstQty2')?.value) || 0;
+      if (referenceQty <= 0 || referencePrice <= 0 || tier2Qty <= 0) return null;
+      return Number(((referencePrice / referenceQty) * tier2Qty - 5).toFixed(2));
+    }
+
+    function updateBulkTier2SmallPresentationPrice() {
+      const enabled = document.getElementById('asstSmallPresentationToggle')?.checked;
+      const totalInput = document.getElementById('asstTotal2');
+      if (!enabled || !totalInput) return true;
+      const total = calculateTier2SmallPresentationTotal();
+      if (total === null || total <= 0) return false;
+      totalInput.value = total.toFixed(2);
+      return true;
+    }
+
+    function toggleBulkTier2SmallPresentation() {
+      const enabled = document.getElementById('asstSmallPresentationToggle')?.checked;
+      document.getElementById('asstSmallPresentationFields')?.classList.toggle('hidden', !enabled);
+      if (enabled) updateBulkTier2SmallPresentationPrice();
+    }
+
+    function handleSmallPresentationInput() {
+      updateBulkTier2SmallPresentationPrice();
     }
 
     function suggestBulkPrices() {
@@ -514,10 +543,26 @@
           document.getElementById(`asstTotal${i}`).value = Math.round(totalQ);
         }
       });
+      if (document.getElementById('asstSmallPresentationToggle')?.checked) {
+        const smallPackageTotal = calculateTier2SmallPresentationTotal();
+        if (smallPackageTotal === null || smallPackageTotal <= 0) {
+          setBulkAssistantStatus('Completa una cantidad y un precio válidos para la presentación más pequeña; el total debe quedar por encima de $0.', 'error');
+          return;
+        }
+        document.getElementById('asstTotal2').value = smallPackageTotal.toFixed(2);
+      }
       setBulkAssistantStatus('Sugerencias calculadas. Revisa los montos en verde.', 'success');
     }
 
     function applyBulkStrategy() {
+      if (document.getElementById('asstSmallPresentationToggle')?.checked) {
+        const smallPackageTotal = calculateTier2SmallPresentationTotal();
+        if (smallPackageTotal === null || smallPackageTotal <= 0) {
+          setBulkAssistantStatus('Completa una cantidad y un precio válidos para la presentación más pequeña; el total debe quedar por encima de $0.', 'error');
+          return;
+        }
+        document.getElementById('asstTotal2').value = smallPackageTotal.toFixed(2);
+      }
       const basePrice = parseFloat(document.getElementById('asstBasePrice').value) || 1;
       const q2 = parseFloat(document.getElementById('asstQty2').value) || 500;
       const t2 = parseFloat(document.getElementById('asstTotal2').value) || 0;

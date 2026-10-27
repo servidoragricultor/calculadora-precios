@@ -257,7 +257,22 @@
                     <div class="space-y-5">
                       <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cantidad Mínima a Vender</label>
-                         <input type="number" id="asstQty2" value="500" class="input-field mt-1 text-sm font-bold text-gray-700">
+                         <input type="number" id="asstQty2" value="500" oninput="handleSmallPresentationInput()" class="input-field mt-1 text-sm font-bold text-gray-700">
+                      </div>
+                      <label class="flex items-start gap-2 rounded-xl border border-orange-100 bg-orange-50 p-3 cursor-pointer">
+                        <input type="checkbox" id="asstSmallPresentationToggle" onchange="toggleBulkTier2SmallPresentation()" class="mt-0.5 rounded text-orange-600">
+                        <span class="text-[10px] font-bold text-orange-800">Calcular Precio 2 desde una presentación más pequeña (equivalente menos $5)</span>
+                      </label>
+                      <div id="asstSmallPresentationFields" class="hidden space-y-3 rounded-xl border border-orange-100 p-3">
+                        <p class="text-[10px] text-gray-500">El total de Precio 2 se calcula proporcionalmente a la cantidad elegida, siempre $5 menos que ese equivalente.</p>
+                        <div>
+                          <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cantidad de la presentación pequeña</label>
+                          <input type="number" id="asstSmallPresentationQty" min="0.01" step="any" placeholder="Ej. 250" oninput="handleSmallPresentationInput()" class="input-field mt-1 text-sm font-bold text-gray-700">
+                        </div>
+                        <div>
+                          <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Precio total de esa presentación ($)</label>
+                          <input type="number" id="asstSmallPresentationPrice" min="0.01" step="0.01" placeholder="Ej. 150" oninput="handleSmallPresentationInput()" class="input-field mt-1 text-sm font-bold text-gray-700">
+                        </div>
                       </div>
                       <div>
                         <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest">Cobrar en Total ($)</label>
@@ -630,6 +645,6 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=11"></script>
+  <script src="assets/js/app.js?v=12"></script>
 </body>
 </html>
