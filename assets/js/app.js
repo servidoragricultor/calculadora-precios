@@ -483,41 +483,95 @@
     function syncBulkQuantities() {
       const fullQty = parseFloat(document.getElementById('asstFullQty')?.value) || 0;
       if (fullQty <= 0) return;
-      [2, 3, 4].forEach((tier, index) => {
-        const input = document.getElementById(`asstQty${tier}`);
-        if (!input) return;
-        const quantity = index === 2 ? fullQty : fullQty * [0.5, 0.7][index];
-        input.value = Math.round(quantity);
-      });
-      updateBulkTier2SmallPresentationPrice();
+      const smallQty = parseFloat(document.getElementById('asstSmallPresentationQty')?.value) || 0;
+      const smallPrice = parseFloat(document.getElementById('asstSmallPresentationPrice')?.value) || 0;
+      document.getElementById('asstQty2').value = smallQty > 0 && smallPrice > 0 ? smallQty : Math.round(fullQty * 0.5);
+      const q2 = parseFloat(document.getElementById('asstQty2').value) || 0;
+      document.getElementById('asstQty3').value = smallQty > 0 && smallPrice > 0
+        ? Math.max(Math.round(fullQty * 0.7), Math.round((q2 + fullQty) / 2))
+        : Math.round(fullQty * 0.7);
+      document.getElementById('asstQty4').value = fullQty;
     }
 
     function calculateTier2SmallPresentationTotal() {
-      const referenceQty = parseFloat(document.getElementById('asstSmallPresentationQty')?.value) || 0;
       const referencePrice = parseFloat(document.getElementById('asstSmallPresentationPrice')?.value) || 0;
-      const tier2Qty = parseFloat(document.getElementById('asstQty2')?.value) || 0;
-      if (referenceQty <= 0 || referencePrice <= 0 || tier2Qty <= 0) return null;
-      return Number(((referencePrice / referenceQty) * tier2Qty - 5).toFixed(2));
+      const smallQty = parseFloat(document.getElementById('asstSmallPresentationQty')?.value) || 0;
+      if (smallQty <= 0 || referencePrice <= 5) return null;
+      return Number((referencePrice - 5).toFixed(2));
     }
 
-    function updateBulkTier2SmallPresentationPrice() {
-      const enabled = document.getElementById('asstSmallPresentationToggle')?.checked;
-      const totalInput = document.getElementById('asstTotal2');
-      if (!enabled || !totalInput) return true;
-      const total = calculateTier2SmallPresentationTotal();
-      if (total === null || total <= 0) return false;
-      totalInput.value = total.toFixed(2);
-      return true;
+    let automaticBulkCurveTimer = null;
+    let automaticBulkCurveApplying = false;
+
+    function setPresentationCurveStatus(message, state = 'info') {
+      const status = document.getElementById('presentationCurveStatus');
+      if (!status) return;
+      const colors = {
+        info: 'text-gray-500 bg-gray-50',
+        success: 'text-green-700 bg-green-50',
+        error: 'text-red-700 bg-red-50'
+      };
+      status.className = `mt-3 rounded-xl px-3 py-2 text-xs font-bold ${colors[state] || colors.info}`;
+      status.textContent = message;
     }
 
-    function toggleBulkTier2SmallPresentation() {
-      const enabled = document.getElementById('asstSmallPresentationToggle')?.checked;
-      document.getElementById('asstSmallPresentationFields')?.classList.toggle('hidden', !enabled);
-      if (enabled) updateBulkTier2SmallPresentationPrice();
+    function handlePresentationPricingInput() {
+      syncBulkQuantities();
+      scheduleAutomaticBulkCurve();
     }
 
-    function handleSmallPresentationInput() {
-      updateBulkTier2SmallPresentationPrice();
+    function scheduleAutomaticBulkCurve() {
+      if (automaticBulkCurveApplying) return;
+      clearTimeout(automaticBulkCurveTimer);
+      automaticBulkCurveTimer = setTimeout(applyAutomaticBulkCurve, 500);
+    }
+
+    function applyAutomaticBulkCurve() {
+      const unitPrice = Number(appState.currentPVP) || 0;
+      const fullQty = parseFloat(document.getElementById('asstFullQty')?.value) || 0;
+      const fullPrice = parseFloat(document.getElementById('asstFullPrice')?.value) || 0;
+      const smallQtyInput = document.getElementById('asstSmallPresentationQty')?.value;
+      const smallPriceInput = document.getElementById('asstSmallPresentationPrice')?.value;
+      const hasSmallQty = String(smallQtyInput || '').trim() !== '';
+      const hasSmallPrice = String(smallPriceInput || '').trim() !== '';
+
+      if (unitPrice <= 0) {
+        setPresentationCurveStatus('Ingresa el costo base para obtener el precio unitario y calcular las escalas.');
+        return;
+      }
+      if (fullQty <= 0 || fullPrice <= 0) {
+        setPresentationCurveStatus('Completa la cantidad y el precio de venta del envase completo.');
+        return;
+      }
+      if (hasSmallQty !== hasSmallPrice) {
+        setPresentationCurveStatus('Para usar Precio 2 especial, completa tanto la cantidad como el precio de la presentación pequeña.', 'info');
+        return;
+      }
+
+      const smallQty = hasSmallQty ? Number(smallQtyInput) : 0;
+      const smallPrice = hasSmallPrice ? Number(smallPriceInput) : 0;
+      if (hasSmallQty && (smallQty <= 0 || smallPrice <= 5 || smallQty >= fullQty)) {
+        setPresentationCurveStatus('La presentación pequeña debe tener cantidad menor al envase completo y un precio mayor a $5.', 'error');
+        return;
+      }
+
+      const q2 = smallQty || Math.round(fullQty * 0.5);
+      const q3 = smallQty > 0
+        ? Math.max(Math.round(fullQty * 0.7), Math.round((smallQty + fullQty) / 2))
+        : Math.round(fullQty * 0.7);
+      document.getElementById('asstBasePrice').value = unitPrice.toFixed(2);
+      document.getElementById('asstQty2').value = q2;
+      document.getElementById('asstQty3').value = q3;
+      document.getElementById('asstQty4').value = fullQty;
+
+      if (!suggestBulkPrices()) return;
+      automaticBulkCurveApplying = true;
+      try {
+        if (!applyBulkStrategy(true)) return;
+      } finally {
+        automaticBulkCurveApplying = false;
+      }
+      setPresentationCurveStatus('Curva calculada y aplicada automáticamente a las escalas.', 'success');
     }
 
     function suggestBulkPrices() {
@@ -526,7 +580,7 @@
       const qFull = parseFloat(document.getElementById('asstFullQty').value) || 0;
       if(pUnit <= 0 || pFull <= 0 || qFull <= 0) {
         setBulkAssistantStatus('Completa precio unitario, envase completo y precio completo.', 'error');
-        return;
+        return false;
       }
       const unitFull = pFull / qFull;
       [2, 3, 4].forEach(i => {
@@ -543,24 +597,36 @@
           document.getElementById(`asstTotal${i}`).value = Math.round(totalQ);
         }
       });
-      if (document.getElementById('asstSmallPresentationToggle')?.checked) {
-        const smallPackageTotal = calculateTier2SmallPresentationTotal();
-        if (smallPackageTotal === null || smallPackageTotal <= 0) {
-          setBulkAssistantStatus('Completa una cantidad y un precio válidos para la presentación más pequeña; el total debe quedar por encima de $0.', 'error');
-          return;
+      const smallQty = parseFloat(document.getElementById('asstSmallPresentationQty')?.value) || 0;
+      const smallPrice = parseFloat(document.getElementById('asstSmallPresentationPrice')?.value) || 0;
+      if (smallQty > 0 && smallPrice > 0) {
+        if (smallQty >= qFull || smallPrice <= 5) {
+          setBulkAssistantStatus('La presentación pequeña debe tener cantidad menor al envase completo y precio mayor a $5.', 'error');
+          return false;
         }
-        document.getElementById('asstTotal2').value = smallPackageTotal.toFixed(2);
+        document.getElementById('asstQty2').value = smallQty;
+        document.getElementById('asstTotal2').value = (smallPrice - 5).toFixed(2);
       }
       setBulkAssistantStatus('Sugerencias calculadas. Revisa los montos en verde.', 'success');
+      return true;
     }
 
-    function applyBulkStrategy() {
-      if (document.getElementById('asstSmallPresentationToggle')?.checked) {
+    function applyBulkStrategy(automatic = false) {
+      const smallQty = parseFloat(document.getElementById('asstSmallPresentationQty')?.value) || 0;
+      const smallPrice = parseFloat(document.getElementById('asstSmallPresentationPrice')?.value) || 0;
+      const hasSmallQty = String(document.getElementById('asstSmallPresentationQty')?.value || '').trim() !== '';
+      const hasSmallPrice = String(document.getElementById('asstSmallPresentationPrice')?.value || '').trim() !== '';
+      if (hasSmallQty !== hasSmallPrice) {
+        setBulkAssistantStatus('Completa la cantidad y el precio de la presentación pequeña, o deja ambos campos vacíos.', 'error');
+        return false;
+      }
+      if (smallQty > 0 && smallPrice > 0) {
         const smallPackageTotal = calculateTier2SmallPresentationTotal();
         if (smallPackageTotal === null || smallPackageTotal <= 0) {
           setBulkAssistantStatus('Completa una cantidad y un precio válidos para la presentación más pequeña; el total debe quedar por encima de $0.', 'error');
-          return;
+          return false;
         }
+        document.getElementById('asstQty2').value = smallQty;
         document.getElementById('asstTotal2').value = smallPackageTotal.toFixed(2);
       }
       const basePrice = parseFloat(document.getElementById('asstBasePrice').value) || 1;
@@ -581,17 +647,23 @@
 
       if(t2 === 0 || t3 === 0 || t4 === 0) {
         setBulkAssistantStatus('Primero calcula sugerencias o llena los tres montos.', 'error');
-        return;
+        return false;
       }
 
-      if(appState.volumeConfig[1]) { appState.volumeConfig[1].qty = q2; appState.volumeConfig[1].discount = Math.max(0, parseFloat(d2.toFixed(2))); }
+      if(appState.volumeConfig[1]) { appState.volumeConfig[1].qty = q2; appState.volumeConfig[1].discount = smallQty > 0 && smallPrice > 0 ? parseFloat(d2.toFixed(8)) : Math.max(0, parseFloat(d2.toFixed(2))); }
       if(appState.volumeConfig[2]) { appState.volumeConfig[2].qty = q3; appState.volumeConfig[2].discount = Math.max(0, parseFloat(d3.toFixed(2))); }
       if(appState.volumeConfig[3]) { appState.volumeConfig[3].qty = q4; appState.volumeConfig[3].discount = Math.max(0, parseFloat(d4.toFixed(2))); }
 
       saveLocal();
-      runCalculations();
-      closeBulkAssistant();
-      showToast('Curva aplicada a escalas');
+      const wasApplyingAutomaticCurve = automaticBulkCurveApplying;
+      automaticBulkCurveApplying = true;
+      try { runCalculations(); }
+      finally { automaticBulkCurveApplying = wasApplyingAutomaticCurve; }
+      if (!automatic) {
+        closeBulkAssistant();
+        showToast('Curva aplicada a escalas');
+      }
+      return true;
     }
 
     function unlockCalculatorControls() {
@@ -823,6 +895,7 @@
       if(asstBasePriceInput && finalPrice > 0) asstBasePriceInput.value = finalPrice.toFixed(2);
 
       unlockCalculatorControls();
+      scheduleAutomaticBulkCurve();
     }
 
     function updateMainUI(d) {
