@@ -158,7 +158,7 @@
               </label>
               <div id="manualMarginWrap" class="hidden animate-fade-in pl-7 mt-2">
                 <div class="flex items-center gap-3">
-                  <input type="number" id="calcManualMargin" value="20" class="input-field w-24 font-bold" oninput="runCalculations()">
+                  <input type="number" id="calcManualMargin" value="20" min="0" max="99" step="any" class="input-field w-24 font-bold" oninput="runCalculations()">
                   <span class="text-sm font-bold text-gray-600">% Ganancia</span>
                 </div>
               </div>
@@ -652,6 +652,6 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=19"></script>
+  <script src="assets/js/app.js?v=20"></script>
 </body>
 </html>

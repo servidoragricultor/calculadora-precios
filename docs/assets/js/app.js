@@ -75,7 +75,7 @@
       Object.keys(normalized.margins).forEach(cat => {
         normalized.margins[cat] = normalized.margins[cat].map(rule => ({
           max: rule.max === null || rule.max === undefined || rule.max === '' ? Infinity : Number(rule.max),
-          m: Number(rule.m) || 0
+          m: Math.min(99, Math.max(0, Number(rule.m) || 0))
         }));
       });
 
@@ -95,8 +95,41 @@
       normalized.volumeConfig = normalized.volumeConfig.map((tier, index) => ({
         label: String(tier.label || DEFAULT_VOLUME_CONFIG[index]?.label || `PRECIO ${index + 1}`),
         qty: index === 3 && [1010, 1020].includes(Number(tier.qty)) ? 1000 : Number(tier.qty) || 0,
-        discount: Number(tier.discount) || 0
+        discount: Number(tier.discount) || 0,
+        ...(tier.smallPresentationBackup && Number.isFinite(Number(tier.smallPresentationBackup.qty)) && Number.isFinite(Number(tier.smallPresentationBackup.discount))
+          ? { smallPresentationBackup: { qty: Number(tier.smallPresentationBackup.qty), discount: Number(tier.smallPresentationBackup.discount) } }
+          : {})
       }));
+
+      const uniqueCategories = [];
+      const categoryByKey = new Map();
+      normalized.categories.forEach(category => {
+        const key = categoryNameKey(category);
+        if (!key) return;
+        const existing = categoryByKey.get(key);
+        if (!existing) {
+          categoryByKey.set(key, category);
+          uniqueCategories.push(category);
+          return;
+        }
+
+        const primaryRules = normalized.margins[existing] || [];
+        const duplicateRules = normalized.margins[category] || [];
+        duplicateRules.forEach(rule => {
+          if (!primaryRules.some(item => item.max === rule.max)) primaryRules.push(rule);
+        });
+        normalized.margins[existing] = primaryRules;
+
+        if (normalized.categoryMetadata[category]) {
+          normalized.categoryMetadata[existing] = {
+            ...normalized.categoryMetadata[category],
+            ...(normalized.categoryMetadata[existing] || {})
+          };
+        }
+        delete normalized.margins[category];
+        delete normalized.categoryMetadata[category];
+      });
+      normalized.categories = uniqueCategories.length ? uniqueCategories : [...CONFIG.DEFAULT_CATS];
 
       return normalized;
     }
@@ -502,6 +535,18 @@
       return Number((referencePrice - 3).toFixed(2));
     }
 
+    function restoreTier1AfterSmallPresentation() {
+      const tier = appState.volumeConfig[0];
+      if (!tier?.smallPresentationBackup) return false;
+      tier.qty = tier.smallPresentationBackup.qty;
+      tier.discount = tier.smallPresentationBackup.discount;
+      delete tier.smallPresentationBackup;
+      saveLocal();
+      updateScales(appState.currentTotalCost, appState.currentPVP);
+      renderVolumeConfig();
+      return true;
+    }
+
     let automaticBulkCurveTimer = null;
     let automaticBulkCurveApplying = false;
 
@@ -536,6 +581,11 @@
       const smallPriceInput = document.getElementById('asstSmallPresentationPrice')?.value;
       const hasSmallQty = String(smallQtyInput || '').trim() !== '';
       const hasSmallPrice = String(smallPriceInput || '').trim() !== '';
+      const smallQty = hasSmallQty ? Number(smallQtyInput) : 0;
+      const smallPrice = hasSmallPrice ? Number(smallPriceInput) : 0;
+      const hasValidSmallPackage = fullQty > 0 && fullPrice > 0 && hasSmallQty && hasSmallPrice &&
+        smallQty > 0 && smallQty < fullQty && smallPrice > 3;
+      if (!hasValidSmallPackage) restoreTier1AfterSmallPresentation();
 
       if (unitPrice <= 0) {
         setPresentationCurveStatus('Ingresa el costo base para obtener el precio unitario y calcular las escalas.');
@@ -546,14 +596,12 @@
         return;
       }
       if (hasSmallQty !== hasSmallPrice) {
-        setPresentationCurveStatus('Para usar Precio 2 especial, completa tanto la cantidad como el precio de la presentación pequeña.', 'info');
+        setPresentationCurveStatus('Completa cantidad y precio del envase pequeño para calcular Precio 1 y ajustar la escala pequeña.', 'info');
         return;
       }
 
-      const smallQty = hasSmallQty ? Number(smallQtyInput) : 0;
-      const smallPrice = hasSmallPrice ? Number(smallPriceInput) : 0;
-      if (hasSmallQty && (smallQty <= 0 || smallPrice <= 5 || smallQty >= fullQty)) {
-        setPresentationCurveStatus('La presentación pequeña debe tener cantidad menor al envase completo y un precio mayor a $5.', 'error');
+      if (hasSmallQty && (smallQty <= 0 || smallPrice <= 3 || smallQty >= fullQty)) {
+        setPresentationCurveStatus('La presentación pequeña debe tener cantidad menor al envase completo y un precio mayor a $3.', 'error');
         return;
       }
 
@@ -602,12 +650,12 @@
       const smallQty = parseFloat(document.getElementById('asstSmallPresentationQty')?.value) || 0;
       const smallPrice = parseFloat(document.getElementById('asstSmallPresentationPrice')?.value) || 0;
       if (smallQty > 0 && smallPrice > 0) {
-        if (smallQty >= qFull || smallPrice <= 5) {
-          setBulkAssistantStatus('La presentación pequeña debe tener cantidad menor al envase completo y precio mayor a $5.', 'error');
+        if (smallQty >= qFull || smallPrice <= 3) {
+          setBulkAssistantStatus('La presentación pequeña debe tener cantidad menor al envase completo y precio mayor a $3.', 'error');
           return false;
         }
         document.getElementById('asstQty2').value = smallQty;
-        document.getElementById('asstTotal2').value = (smallPrice - 5).toFixed(2);
+        if (smallPrice > 5) document.getElementById('asstTotal2').value = (smallPrice - 5).toFixed(2);
       }
       setBulkAssistantStatus('Sugerencias calculadas. Revisa los montos en verde.', 'success');
       return true;
@@ -622,7 +670,13 @@
         setBulkAssistantStatus('Completa la cantidad y el precio de la presentación pequeña, o deja ambos campos vacíos.', 'error');
         return false;
       }
+      const fullQty = parseFloat(document.getElementById('asstFullQty')?.value) || 0;
+      const fullPrice = parseFloat(document.getElementById('asstFullPrice')?.value) || 0;
       if (smallQty > 0 && smallPrice > 0) {
+        if (fullQty <= 0 || fullPrice <= 0 || smallQty >= fullQty) {
+          setBulkAssistantStatus('Completa un envase completo válido y una presentación pequeña menor antes de aplicar Precio 1.', 'error');
+          return false;
+        }
         const smallPackageTotal = calculateTier1SmallPresentationTotal();
         if (smallPackageTotal === null || smallPackageTotal <= 0) {
           setBulkAssistantStatus('Completa una cantidad y un precio válidos para la presentación más pequeña; Precio 1 queda $3 por debajo de esa presentación.', 'error');
@@ -630,13 +684,6 @@
         }
       }
       const basePrice = parseFloat(document.getElementById('asstBasePrice').value) || 1;
-      if (smallQty > 0 && smallPrice > 0 && appState.volumeConfig[0]) {
-        const smallPackageTotal = calculateTier1SmallPresentationTotal();
-        appState.volumeConfig[0].qty = smallQty;
-        const tier1UnitPrice = smallPackageTotal / smallQty;
-        const tier1Discount = (1 - (tier1UnitPrice / basePrice)) * 100;
-        appState.volumeConfig[0].discount = Number(tier1Discount.toFixed(8));
-      }
       const q2 = parseFloat(document.getElementById('asstQty2').value) || 500;
       const t2 = parseFloat(document.getElementById('asstTotal2').value) || 0;
       let d2 = 0;
@@ -655,6 +702,19 @@
       if(t2 === 0 || t3 === 0 || t4 === 0) {
         setBulkAssistantStatus('Primero calcula sugerencias o llena los tres montos.', 'error');
         return false;
+      }
+
+      if (smallQty > 0 && smallPrice > 0 && appState.volumeConfig[0]) {
+        const tier = appState.volumeConfig[0];
+        const smallPackageTotal = calculateTier1SmallPresentationTotal();
+        if (!tier.smallPresentationBackup) {
+          tier.smallPresentationBackup = { qty: tier.qty, discount: tier.discount };
+        }
+        tier.qty = smallQty;
+        const tier1UnitPrice = smallPackageTotal / smallQty;
+        tier.discount = Number(((1 - (tier1UnitPrice / basePrice)) * 100).toFixed(8));
+      } else {
+        restoreTier1AfterSmallPresentation();
       }
 
       if(appState.volumeConfig[1]) { appState.volumeConfig[1].qty = q2; appState.volumeConfig[1].discount = smallQty > 0 && smallPrice > 0 ? parseFloat(d2.toFixed(8)) : Math.max(0, parseFloat(d2.toFixed(2))); }
@@ -882,7 +942,8 @@
 
       let m = 0;
       if(isManual) {
-        m = parseFloat(document.getElementById('calcManualMargin').value) || 0;
+        const manualMargin = Number(document.getElementById('calcManualMargin').value);
+        m = Number.isFinite(manualMargin) ? Math.min(99, Math.max(0, manualMargin)) : 0;
       } else {
         const rules = appState.margins[cat] || [{max: Infinity, m: 20}];
         m = (rules.find(r => totalCost <= r.max) || rules[rules.length-1]).m;
@@ -1009,6 +1070,21 @@
         .replace(/[̀-ͯ]/g, '')
         .toLowerCase()
         .trim();
+    }
+
+    function categoryNameKey(value) {
+      return normalizeText(String(value || '').trim().replace(/\s+/g, ' '));
+    }
+
+    function hasDuplicateCategoryNames(categories = []) {
+      if (!Array.isArray(categories)) return false;
+      const keys = new Set();
+      return categories.some(category => {
+        const key = categoryNameKey(category);
+        if (!key || keys.has(key)) return true;
+        keys.add(key);
+        return false;
+      });
     }
 
     function getFilteredCategories(searchTerm = '') {
@@ -1562,16 +1638,32 @@
       const name = prompt("Nombre:");
       const cleanName = name ? name.trim() : '';
 
-      if (cleanName && !appState.categories.includes(cleanName)) {
-        appState.categories.push(cleanName);
-        appState.margins[cleanName] = [{max: Infinity, m: 20}];
-        sortCategoriesAlphabetically();
+      if (!cleanName) return;
+      if (appState.categories.some(category => categoryNameKey(category) === categoryNameKey(cleanName))) {
+        alert('Ya existe una categoría con ese nombre (sin distinguir mayúsculas, acentos o espacios).');
+        return;
       }
+      appState.categories.push(cleanName);
+      appState.margins[cleanName] = [{max: Infinity, m: 20}];
+      sortCategoriesAlphabetically();
     }
 
     function renameCategory(index, newName) {
       const old = appState.categories[index];
       const cleanName = newName ? newName.trim() : '';
+      if (!cleanName) {
+        renderCategoryManager();
+        return;
+      }
+
+      const conflicts = appState.categories.some((category, categoryIndex) =>
+        categoryIndex !== index && categoryNameKey(category) === categoryNameKey(cleanName)
+      );
+      if (conflicts) {
+        alert('Ya existe otra categoría con ese nombre (sin distinguir mayúsculas, acentos o espacios).');
+        renderCategoryManager();
+        return;
+      }
 
       if (cleanName && old !== cleanName) {
         appState.categories[index] = cleanName;
@@ -1589,6 +1681,10 @@
 
     function removeCategory(index) {
       if (confirm("¿Borrar?")) {
+        if (appState.categories.length <= 1) {
+          alert('Debe conservar al menos una categoría.');
+          return;
+        }
         const name = appState.categories[index];
         appState.categories.splice(index, 1);
         delete appState.margins[name];
@@ -1596,6 +1692,7 @@
         renderCategoryManager();
         renderConfigTables();
         saveLocal();
+        handleCategoryChange();
       }
     }
 
@@ -1656,8 +1753,8 @@
 
         (appState.margins[cat] || []).forEach((rule, idx) => {
           html += `<div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_1.25rem] items-center gap-2">
-            <input type="number" value="${rule.max === Infinity ? '' : Number(rule.max) || 0}" placeholder="Infinito" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'max', this.value)" onkeydown="handleMarginRuleKeydown(event, ${safeCatAction})" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner">
-            <input type="number" value="${Number(rule.m) || 0}" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'm', this.value)" onkeydown="handleMarginRuleKeydown(event, ${safeCatAction})" class="w-full p-2 border rounded-lg font-bold text-xs text-gray-700 bg-gray-50 shadow-inner">
+            <input type="number" min="0" step="any" value="${rule.max === Infinity ? '' : Number(rule.max) || 0}" placeholder="Infinito" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'max', this.value)" onkeydown="handleMarginRuleKeydown(event, ${safeCatAction})" class="w-full p-2 border rounded-lg font-bold text-xs bg-gray-50 shadow-inner">
+            <input type="number" min="0" max="99" step="any" value="${Number(rule.m) || 0}" oninput="updateMarginRule(${safeCatAction}, ${idx}, 'm', this.value)" onkeydown="handleMarginRuleKeydown(event, ${safeCatAction})" class="w-full p-2 border rounded-lg font-bold text-xs text-gray-700 bg-gray-50 shadow-inner">
             <button onclick="removeMarginRow(${safeCatAction}, ${idx})" class="text-red-200 hover:text-red-500"><i data-lucide="x-circle" class="w-4 h-4"></i></button>
           </div>`;
         });
@@ -1717,6 +1814,20 @@
       const lines = String(raw || '').split(/\r?\n/).map(line => line.trim()).filter(Boolean);
       const rules = [];
 
+      const parseLocaleNumber = value => {
+        let text = String(value).replace(/[$%\s]/g, '');
+        const comma = text.lastIndexOf(',');
+        const dot = text.lastIndexOf('.');
+        if (comma >= 0 && dot >= 0) {
+          text = comma > dot
+            ? text.replace(/\./g, '').replace(',', '.')
+            : text.replace(/,/g, '');
+        } else if (comma >= 0) {
+          text = text.replace(',', '.');
+        }
+        return Number(text);
+      };
+
       for (let index = 0; index < lines.length; index += 1) {
         const columns = lines[index].split(/\s+/).map(value => value.trim()).filter(Boolean);
         if (columns.length !== 2) {
@@ -1726,10 +1837,10 @@
         const maxText = columns[0].toLowerCase();
         const max = ['infinito', 'infinity', '∞'].includes(maxText)
           ? Infinity
-          : Number(columns[0].replace(/[$,]/g, ''));
-        const margin = Number(columns[1].replace('%', ''));
+          : parseLocaleNumber(columns[0]);
+        const margin = parseLocaleNumber(columns[1]);
 
-        if ((!Number.isFinite(max) && max !== Infinity) || max < 0 || !Number.isFinite(margin) || margin < 0 || margin > 100) {
+        if ((!Number.isFinite(max) && max !== Infinity) || max < 0 || !Number.isFinite(margin) || margin < 0 || margin > 99) {
           return { error: `La fila ${index + 1} contiene valores inválidos.` };
         }
 
@@ -1758,7 +1869,21 @@
 
     function addMarginRow(cat) { appState.margins[cat].push({max: 2000, m: 15}); saveLocal(); renderConfigTables(); }
     function removeMarginRow(cat, idx) { appState.margins[cat].splice(idx, 1); saveLocal(); renderConfigTables(); }
-    function updateMarginRule(cat, idx, field, val) { appState.margins[cat][idx][field] = val === '' ? Infinity : parseFloat(val); saveLocal(); runCalculations(); }
+    function updateMarginRule(cat, idx, field, val) {
+      const rule = appState.margins[cat]?.[idx];
+      if (!rule) return;
+      if (field === 'max' && String(val).trim() === '') {
+        rule.max = Infinity;
+      } else {
+        const parsed = Number(val);
+        if (!Number.isFinite(parsed)) return;
+        if (field === 'm') rule.m = Math.min(99, Math.max(0, parsed));
+        else if (field === 'max') rule.max = Math.max(0, parsed);
+        else return;
+      }
+      saveLocal();
+      runCalculations();
+    }
 
     function renderVolumeConfig(cost = appState.currentTotalCost, basePVP = appState.currentPVP) {
       const container = document.getElementById('volumeConfigContainer');
@@ -1936,12 +2061,27 @@
       return `cat_${encoded || 'empty'}`;
     }
 
+    function findDuplicateCloudCategoryRecords(records = {}) {
+      const activeRecords = Object.entries(records)
+        .filter(([, record]) => record && !record.deleted && typeof record.name === 'string')
+        .sort((a, b) => (Number(a[1].order) || 0) - (Number(b[1].order) || 0));
+      const seen = new Set();
+      return activeRecords.filter(([, record]) => {
+        const key = categoryNameKey(record.name);
+        if (!key || !seen.has(key)) {
+          seen.add(key);
+          return false;
+        }
+        return true;
+      });
+    }
+
     function cloudCategoryRecord(state, category, modifiedAt = Date.now()) {
-      const order = state.categories.indexOf(category);
+      const order = state.categories?.indexOf(category) ?? -1;
       return {
         name: category,
-        order: order < 0 ? state.categories.length : order,
-        margins: (state.margins[category] || [{ max: null, m: 20 }]).map(rule => ({
+        order: order < 0 ? (state.categories?.length || 0) : order,
+        margins: (state.margins?.[category] || [{ max: null, m: 20 }]).map(rule => ({
           max: rule.max === Infinity ? null : Number(rule.max),
           m: Number(rule.m) || 0
         })),
@@ -1952,7 +2092,7 @@
     }
 
     function cloudCategoryRecordsFromState(state, modifiedAt = Date.now()) {
-      return Object.fromEntries([...new Set(state.categories)].map(category => [
+      return Object.fromEntries([...new Set(state.categories || [])].map(category => [
         categoryCloudId(category), cloudCategoryRecord(state, category, modifiedAt)
       ]));
     }
@@ -2215,7 +2355,7 @@
           throw new Error('Los metadatos de categorías del archivo no son válidos.');
         }
         const categories = isAppState ? imported.categories : Object.keys(imported.margins);
-        if (!categories.length || new Set(categories).size !== categories.length ||
+        if (!categories.length || new Set(categories).size !== categories.length || hasDuplicateCategoryNames(categories) ||
           (isMarginExport && categories.length !== Number(imported.categoryCount)) ||
           categories.some(category => typeof category !== 'string' || !category.trim() || !Object.hasOwn(imported.margins, category))) {
           throw new Error('Las categorías del archivo están vacías, duplicadas o no coinciden con sus márgenes.');
@@ -2225,7 +2365,7 @@
           if (!category.trim() || !Array.isArray(rules) || !rules.length || rules.some(rule => {
             const max = rule.max === null || rule.max === '' ? Infinity : Number(rule.max);
             const margin = Number(rule.m);
-            return (max !== Infinity && (!Number.isFinite(max) || max < 0)) || !Number.isFinite(margin) || margin < 0 || margin > 100;
+            return (max !== Infinity && (!Number.isFinite(max) || max < 0)) || !Number.isFinite(margin) || margin < 0 || margin > 99;
           })) throw new Error(`Hay reglas inválidas en la categoría “${category}”.`);
         }
         if (!confirm(`El archivo contiene ${categories.length} categorías. Se reemplazarán las categorías y márgenes actuales; las imágenes y los ajustes de volumen se conservarán cuando sea posible. Se guardará un respaldo local antes de importar. ¿Continuar?`)) return;
@@ -2741,6 +2881,33 @@
           return;
         }
 
+        const duplicateCategoryRecords = findDuplicateCloudCategoryRecords(remote.categoryRecords || {});
+        if (duplicateCategoryRecords.length) {
+          storeCloudSyncBase(remote);
+          const deduplicatedState = cloudV2ToAppState(remote, appState);
+          const pending = readCloudPending();
+          const modifiedAt = Date.now();
+          const duplicateKeys = new Set(duplicateCategoryRecords.map(([, record]) => categoryNameKey(record.name)));
+          deduplicatedState.categories.forEach(category => {
+            if (!duplicateKeys.has(categoryNameKey(category))) return;
+            const id = categoryCloudId(category);
+            if (pending[id]) return;
+            const record = cloudCategoryRecord(deduplicatedState, category, modifiedAt);
+            pending[id] = { modifiedAt, record };
+          });
+          duplicateCategoryRecords.forEach(([id, record]) => {
+            const tombstoneAt = Math.max(modifiedAt, Number(record.modifiedAt || 0) + 1);
+            pending[id] = {
+              modifiedAt: tombstoneAt,
+              record: { ...record, deleted: true, modifiedAt: tombstoneAt }
+            };
+          });
+          writeCloudPending(pending);
+          cloudReady = true;
+          await syncToCloud(true);
+          return;
+        }
+
         cloudReady = true;
         cloudRevision = remote.updatedAt?.toMillis?.() ?? Date.now();
         if (!readCloudSyncBase() && !hasPendingCloudChanges()) {
@@ -2925,15 +3092,20 @@
     }
 
     window.onload = () => {
-      localStorage.setItem('esquina_visual_theme', 'harvest');
-      applyVisualTheme('harvest');
+      const savedTheme = localStorage.getItem('esquina_visual_theme') || 'harvest';
+      applyVisualTheme(savedTheme);
       showWelcomeQuote();
 
       const local = localStorage.getItem(CONFIG.LS_KEY);
+      let originalLocalState = null;
+      let consolidatedLocalCategories = false;
 
       if (local) {
         try {
-          appState = normalizeAppState(decodeStateFromStorage(local));
+          originalLocalState = decodeStateFromStorage(local);
+          consolidatedLocalCategories = hasDuplicateCategoryNames(originalLocalState.categories || []);
+          if (consolidatedLocalCategories) saveLocalBackup(local, 'Antes de unificar categorías duplicadas');
+          appState = normalizeAppState(originalLocalState);
         } catch (e) {
           console.error(e);
         }
@@ -2959,6 +3131,15 @@
       updateCategoryDropdowns();
       renderVolumeConfig();
       handleCategoryChange();
+      if (consolidatedLocalCategories && originalLocalState) {
+        markLocalCloudChanges(originalLocalState, appState);
+        localStorage.setItem(CONFIG.LS_KEY, encodeStateForStorage(appState));
+        showToast('Categorías duplicadas unificadas; quedó un respaldo de la configuración anterior.');
+        if (auth.currentUser && cloudReady) {
+          clearTimeout(cloudWriteTimer);
+          cloudWriteTimer = setTimeout(() => syncToCloud(true), 100);
+        }
+      }
       window.addEventListener('resize', positionCategorySuggestions);
       window.addEventListener('scroll', positionCategorySuggestions, true);
       window.addEventListener('resize', positionIepsSuggestions);
