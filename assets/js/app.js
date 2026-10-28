@@ -60,6 +60,7 @@
         ...state,
         categories: Array.isArray(state.categories) && state.categories.length > 0 ? state.categories : [...CONFIG.DEFAULT_CATS],
         margins: state.margins && typeof state.margins === 'object' ? state.margins : {},
+        categoryIds: state.categoryIds && typeof state.categoryIds === 'object' ? { ...state.categoryIds } : {},
         volumeConfig: Array.isArray(state.volumeConfig) && state.volumeConfig.length > 0 ? state.volumeConfig : DEFAULT_VOLUME_CONFIG.map(tier => ({ ...tier })),
         categoryMetadata: state.categoryMetadata && typeof state.categoryMetadata === 'object' ? state.categoryMetadata : {},
         currentPVP: Number(state.currentPVP) || 0,
@@ -67,6 +68,7 @@
       };
 
       normalized.categories.forEach(cat => {
+        if (!normalized.categoryIds[cat]) normalized.categoryIds[cat] = categoryCloudId(cat);
         if (!Array.isArray(normalized.margins[cat]) || normalized.margins[cat].length === 0) {
           normalized.margins[cat] = [{ max: Infinity, m: 20 }];
         }
@@ -128,6 +130,7 @@
         }
         delete normalized.margins[category];
         delete normalized.categoryMetadata[category];
+        delete normalized.categoryIds[category];
       });
       normalized.categories = uniqueCategories.length ? uniqueCategories : [...CONFIG.DEFAULT_CATS];
 
@@ -1644,6 +1647,7 @@
         return;
       }
       appState.categories.push(cleanName);
+      appState.categoryIds[cleanName] = createCategoryId();
       appState.margins[cleanName] = [{max: Infinity, m: 20}];
       sortCategoriesAlphabetically();
     }
@@ -1666,6 +1670,8 @@
       }
 
       if (cleanName && old !== cleanName) {
+        appState.categoryIds[cleanName] = getCategoryId(appState, old);
+        delete appState.categoryIds[old];
         appState.categories[index] = cleanName;
         appState.margins[cleanName] = appState.margins[old];
         delete appState.margins[old];
@@ -1687,6 +1693,7 @@
         }
         const name = appState.categories[index];
         appState.categories.splice(index, 1);
+        delete appState.categoryIds[name];
         delete appState.margins[name];
         if (appState.categoryMetadata) delete appState.categoryMetadata[name];
         renderCategoryManager();
@@ -2061,10 +2068,24 @@
       return `cat_${encoded || 'empty'}`;
     }
 
+    function createCategoryId() {
+      if (window.crypto?.randomUUID) return `cat_${window.crypto.randomUUID()}`;
+      return `cat_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 12)}`;
+    }
+
+    function getCategoryId(state, category) {
+      if (!state.categoryIds || typeof state.categoryIds !== 'object') state.categoryIds = {};
+      if (!state.categoryIds[category]) state.categoryIds[category] = categoryCloudId(category);
+      return state.categoryIds[category];
+    }
+
     function findDuplicateCloudCategoryRecords(records = {}) {
       const activeRecords = Object.entries(records)
         .filter(([, record]) => record && !record.deleted && typeof record.name === 'string')
-        .sort((a, b) => (Number(a[1].order) || 0) - (Number(b[1].order) || 0));
+        .sort((a, b) =>
+          (Number(b[1].modifiedAt) || 0) - (Number(a[1].modifiedAt) || 0) ||
+          (Number(a[1].order) || 0) - (Number(b[1].order) || 0)
+        );
       const seen = new Set();
       return activeRecords.filter(([, record]) => {
         const key = categoryNameKey(record.name);
@@ -2093,7 +2114,7 @@
 
     function cloudCategoryRecordsFromState(state, modifiedAt = Date.now()) {
       return Object.fromEntries([...new Set(state.categories || [])].map(category => [
-        categoryCloudId(category), cloudCategoryRecord(state, category, modifiedAt)
+        getCategoryId(state, category), cloudCategoryRecord(state, category, modifiedAt)
       ]));
     }
 
@@ -2200,20 +2221,26 @@
 
     function cloudV2ToAppState(remote, fallbackState = appState) {
       const records = remote?.categoryRecords || {};
-      const activeRecords = Object.values(records)
-        .filter(record => record && !record.deleted && typeof record.name === 'string')
+      const duplicateIds = new Set(findDuplicateCloudCategoryRecords(records).map(([id]) => id));
+      const activeRecords = Object.entries(records)
+        .filter(([, record]) => record && !record.deleted && typeof record.name === 'string')
+        .filter(([id]) => !duplicateIds.has(id))
+        .map(([id, record]) => ({ id, ...record }))
         .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0) || a.name.localeCompare(b.name, 'es'));
       const categories = activeRecords.map(record => record.name);
       const margins = {};
       const categoryMetadata = {};
+      const categoryIds = {};
       activeRecords.forEach(record => {
         margins[record.name] = Array.isArray(record.margins) ? record.margins : [{ max: null, m: 20 }];
+        if (!categoryIds[record.name]) categoryIds[record.name] = record.id;
         if (record.metadata && typeof record.metadata === 'object') categoryMetadata[record.name] = record.metadata;
       });
       return normalizeAppState({
         ...fallbackState,
         categories,
         margins,
+        categoryIds,
         categoryMetadata,
         volumeConfig: remote?.settings?.volumeConfig || fallbackState.volumeConfig
       });
@@ -2826,7 +2853,7 @@
           const cloudNames = new Set(oldState.categories);
           localState.categories.forEach((category, index) => {
             if (!cloudNames.has(category)) {
-              categoryRecords[categoryCloudId(category)] = {
+              categoryRecords[getCategoryId(localState, category)] = {
                 ...cloudCategoryRecord(localState, category, Date.now()),
                 order: oldState.categories.length + index
               };
@@ -2890,7 +2917,7 @@
           const duplicateKeys = new Set(duplicateCategoryRecords.map(([, record]) => categoryNameKey(record.name)));
           deduplicatedState.categories.forEach(category => {
             if (!duplicateKeys.has(categoryNameKey(category))) return;
-            const id = categoryCloudId(category);
+            const id = getCategoryId(deduplicatedState, category);
             if (pending[id]) return;
             const record = cloudCategoryRecord(deduplicatedState, category, modifiedAt);
             pending[id] = { modifiedAt, record };
@@ -2924,7 +2951,7 @@
               localOnlyCategories.forEach(category => {
                 const modifiedAt = Date.now();
                 const record = cloudCategoryRecord(localState, category, modifiedAt);
-                pending[categoryCloudId(category)] = { modifiedAt, record };
+                pending[getCategoryId(localState, category)] = { modifiedAt, record };
               });
               writeCloudPending(pending);
               await syncToCloud(true);
