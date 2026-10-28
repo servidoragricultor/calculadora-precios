@@ -2243,6 +2243,30 @@
       return { ...change.record, modifiedAt };
     }
 
+    function mergeConcurrentCategoryRecord(change, cloudRecord, baselineRecord) {
+      if (!cloudRecord || !baselineRecord || cloudRecord.deleted) return null;
+      const merged = { ...cloudRecord };
+      let localFieldApplied = false;
+      const localIsNewer = Number(change?.modifiedAt) >= Number(cloudRecord.modifiedAt || 0);
+      ['name', 'order', 'margins', 'metadata'].forEach(field => {
+        const valueSignature = (record) => Object.prototype.hasOwnProperty.call(record || {}, field)
+          ? encodeStateForStorage(record[field]) : '__MISSING__';
+        const baselineValue = valueSignature(baselineRecord);
+        const localValue = valueSignature(change.record);
+        const remoteValue = valueSignature(cloudRecord);
+        const localChanged = localValue !== baselineValue;
+        const remoteChanged = remoteValue !== baselineValue;
+        if (localChanged && (!remoteChanged || localIsNewer)) {
+          merged[field] = change.record[field];
+          localFieldApplied = true;
+        }
+      });
+      if (!localFieldApplied) return null;
+      merged.deleted = false;
+      merged.modifiedAt = Math.max(Number(change.modifiedAt) || Date.now(), (Number(cloudRecord.modifiedAt) || 0) + 1);
+      return merged;
+    }
+
     function volumeConfigSignature(volumeConfig) {
       return encodeStateForStorage(Array.isArray(volumeConfig) ? volumeConfig : []);
     }
@@ -3145,8 +3169,19 @@
               const baselineRecord = baseRecords[id];
               // A tombstone is final for this ID: stale clients must not resurrect it.
               // Explicit local deletions also win over concurrent edits to the active record.
-              const localWins = shouldApplyPendingCategoryChange(change, cloudRecord, baselineRecord);
-              if (localWins) {
+              if (cloudRecord?.deleted && !change.record.deleted) return;
+              const remoteChanged = categoryRecordSignature(cloudRecord) !== categoryRecordSignature(baselineRecord);
+              if (change.record.deleted || !cloudRecord || !remoteChanged) {
+                const record = categoryChangeRecordForCloud(change, cloudRecord);
+                categoryUpdates[id] = record;
+                remoteRecords[id] = record;
+              } else if (baselineRecord) {
+                const merged = mergeConcurrentCategoryRecord(change, cloudRecord, baselineRecord);
+                if (merged) {
+                  categoryUpdates[id] = merged;
+                  remoteRecords[id] = merged;
+                }
+              } else if (shouldApplyPendingCategoryChange(change, cloudRecord, baselineRecord)) {
                 const record = categoryChangeRecordForCloud(change, cloudRecord);
                 categoryUpdates[id] = record;
                 remoteRecords[id] = record;
