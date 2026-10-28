@@ -1077,7 +1077,7 @@
 
     function categoryNameKey(value) {
       return normalizeText(String(value || ''))
-        .replace(/\s*\(?\s*pro\s+\d+(?:[.,]\d+)?\s*%\s*\)?\s*$/i, '')
+        .replace(/\s*\(?\s*pro\s*\d+(?:[.,]\d+)?\s*%?\s*\)?\s*$/i, '')
         .replace(/(\d)\s*(?:ml|lt|kg|g|l)\b/gi, '$1')
         .replace(/\b(?:ml|lt|kg|g|l|o|y)\b/gi, ' ')
         .replace(/[^\p{L}\p{N}]+/gu, ' ')
