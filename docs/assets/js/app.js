@@ -2090,14 +2090,26 @@
       return Object.keys(readCloudPending()).length > 0;
     }
 
+    const AUTO_BACKUP_INTERVAL_MS = 5 * 60 * 1000;
+    let lastAutomaticBackupAt = 0;
+
     function saveLocalBackup(raw, reason = 'Respaldo automático') {
       if (!raw) return;
+      const isAutomatic = reason === 'Respaldo automático';
+      const now = Date.now();
+      if (isAutomatic && now - lastAutomaticBackupAt < AUTO_BACKUP_INTERVAL_MS) return;
       try {
-        const backups = JSON.parse(localStorage.getItem(CONFIG.BACKUPS_KEY) || '[]');
+        const backups = JSON.parse(localStorage.getItem(CONFIG.BACKUPS_KEY) || '[]')
+          .sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
+        if (isAutomatic && backups[0]?.data === raw) {
+          lastAutomaticBackupAt = now;
+          return;
+        }
         if (backups[0]?.data === raw) return;
         backups.unshift({ createdAt: new Date().toISOString(), reason, categories: normalizeAppState(decodeStateFromStorage(raw)).categories.length, data: raw });
-        backups.splice(12);
+        backups.splice(1);
         localStorage.setItem(CONFIG.BACKUPS_KEY, JSON.stringify(backups));
+        if (isAutomatic) lastAutomaticBackupAt = now;
         renderLocalBackups();
       } catch (error) {
         console.warn('No se pudo guardar el respaldo local:', error);
@@ -2109,6 +2121,15 @@
       if (!select) return;
       let backups = [];
       try { backups = JSON.parse(localStorage.getItem(CONFIG.BACKUPS_KEY) || '[]'); } catch (_) {}
+      backups.sort((a, b) => (Date.parse(b.createdAt) || 0) - (Date.parse(a.createdAt) || 0));
+      if (backups.length > 1) {
+        backups = backups.slice(0, 1);
+        try { localStorage.setItem(CONFIG.BACKUPS_KEY, JSON.stringify(backups)); } catch (_) {}
+      }
+      const latestAutomaticBackupAt = backups
+        .filter(backup => backup.reason === 'Respaldo automático')
+        .reduce((latest, backup) => Math.max(latest, Date.parse(backup.createdAt) || 0), 0);
+      lastAutomaticBackupAt = Math.max(lastAutomaticBackupAt, latestAutomaticBackupAt);
       const status = document.getElementById('localBackupStatus');
       if (status) {
         const latest = backups[0];
