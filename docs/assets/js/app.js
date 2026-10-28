@@ -2225,6 +2225,24 @@
       });
     }
 
+    function shouldApplyPendingCategoryChange(change, cloudRecord, baselineRecord) {
+      const localDeleted = Boolean(change?.record?.deleted);
+      const cloudDeleted = Boolean(cloudRecord?.deleted);
+      if (cloudDeleted) return localDeleted;
+      if (localDeleted) return true;
+      const remoteChanged = categoryRecordSignature(cloudRecord) !== categoryRecordSignature(baselineRecord);
+      return !cloudRecord || !remoteChanged || Number(change?.modifiedAt) >= Number(cloudRecord.modifiedAt || 0);
+    }
+
+    function categoryChangeRecordForCloud(change, cloudRecord) {
+      const localDeleted = Boolean(change?.record?.deleted);
+      const proposedAt = Number(change?.modifiedAt) || Date.now();
+      const modifiedAt = localDeleted && cloudRecord
+        ? Math.max(proposedAt, (Number(cloudRecord.modifiedAt) || 0) + 1)
+        : proposedAt;
+      return { ...change.record, modifiedAt };
+    }
+
     function volumeConfigSignature(volumeConfig) {
       return encodeStateForStorage(Array.isArray(volumeConfig) ? volumeConfig : []);
     }
@@ -3125,10 +3143,11 @@
               if (id === '__settings' || !change?.record) return;
               const cloudRecord = remoteRecords[id];
               const baselineRecord = baseRecords[id];
-              const remoteChanged = categoryRecordSignature(cloudRecord) !== categoryRecordSignature(baselineRecord);
-              const localWins = !cloudRecord || !remoteChanged || Number(change.modifiedAt) >= Number(cloudRecord.modifiedAt || 0);
+              // A tombstone is final for this ID: stale clients must not resurrect it.
+              // Explicit local deletions also win over concurrent edits to the active record.
+              const localWins = shouldApplyPendingCategoryChange(change, cloudRecord, baselineRecord);
               if (localWins) {
-                const record = { ...change.record, modifiedAt: Number(change.modifiedAt) || Date.now() };
+                const record = categoryChangeRecordForCloud(change, cloudRecord);
                 categoryUpdates[id] = record;
                 remoteRecords[id] = record;
               }
