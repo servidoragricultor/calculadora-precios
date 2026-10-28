@@ -22,9 +22,9 @@
 
   <div class="mx-auto w-[90%] max-w-none py-8">
     <div class="mb-3 flex items-center gap-2">
-      <nav class="flex gap-2 border-b">
-        <button onclick="switchTab('calc')" id="btnTabCalc" class="tab-btn active px-3 py-2 uppercase">Calculadora</button>
-        <button onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-3 py-2 uppercase">Configuración</button>
+      <nav class="flex gap-2 border-b" role="tablist" aria-label="Secciones principales">
+        <button type="button" role="tab" aria-controls="viewCalc" aria-selected="true" onclick="switchTab('calc')" id="btnTabCalc" class="tab-btn active px-3 py-2 uppercase">Calculadora</button>
+        <button type="button" role="tab" aria-controls="viewConfig" aria-selected="false" onclick="switchTab('config')" id="btnTabConfig" class="tab-btn px-3 py-2 uppercase">Configuración</button>
       </nav>
       <button
         type="button"
@@ -654,6 +654,6 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=27"></script>
+  <script src="assets/js/app.js?v=28"></script>
 </body>
 </html>

@@ -1180,9 +1180,11 @@
       getUserConfigDoc()?.get({ source: 'server' }).then(snapshot => {
         if (snapshot.exists) storeCategoryAuditRecords(snapshot.data().categoryRecords || {});
         renderCategoryAudit();
+        showToast('Registro actualizado desde la nube');
       }).catch(error => {
         console.error('No se pudo actualizar el registro de categorías:', error);
         renderCategoryAudit();
+        showToast('No se pudo actualizar el registro; revisa tu conexión e inténtalo otra vez', 'error');
       });
     }
 
@@ -2045,16 +2047,28 @@
       runCalculations();
     }
 
-    function switchTab(view) {
+    function switchTab(view, updateHistory = true) {
+      if (!['calc', 'config'].includes(view)) return;
       document.getElementById('viewCalc').classList.toggle('hidden', view !== 'calc');
       document.getElementById('viewConfig').classList.toggle('hidden', view !== 'config');
-      document.getElementById('btnTabCalc').classList.toggle('active', view === 'calc');
-      document.getElementById('btnTabConfig').classList.toggle('active', view === 'config');
+      const calcTab = document.getElementById('btnTabCalc');
+      const configTab = document.getElementById('btnTabConfig');
+      calcTab.classList.toggle('active', view === 'calc');
+      configTab.classList.toggle('active', view === 'config');
+      calcTab.setAttribute('aria-selected', String(view === 'calc'));
+      configTab.setAttribute('aria-selected', String(view === 'config'));
+      if (updateHistory && window.location.hash !== `#${view}`) {
+        window.history.pushState({ view }, '', `#${view}`);
+      }
       if(view === 'config') {
         renderCategoryManager();
         renderConfigTables();
       }
     }
+
+    window.addEventListener('popstate', () => {
+      switchTab(window.location.hash === '#config' ? 'config' : 'calc', false);
+    });
 
     function toggleCategoryManager() {
       const content = document.getElementById('category-manager-content');
@@ -2269,6 +2283,46 @@
 
     function volumeConfigSignature(volumeConfig) {
       return encodeStateForStorage(Array.isArray(volumeConfig) ? volumeConfig : []);
+    }
+
+    function mergeVolumeConfig(localConfig = [], remoteConfig = [], baselineConfig = [], localModifiedAt = 0, remoteModifiedAt = 0) {
+      const merged = [];
+      let localFieldApplied = false;
+      const localIsNewer = Number(localModifiedAt) >= Number(remoteModifiedAt || 0);
+      const length = Math.max(localConfig.length, remoteConfig.length, baselineConfig.length);
+      for (let index = 0; index < length; index += 1) {
+        const localTier = localConfig[index];
+        const remoteTier = remoteConfig[index];
+        const baselineTier = baselineConfig[index];
+        if (!localTier) {
+          if (remoteTier) merged[index] = { ...remoteTier };
+          continue;
+        }
+        if (!remoteTier || !baselineTier) {
+          merged[index] = localIsNewer || !remoteTier ? { ...localTier } : { ...remoteTier };
+          if (!remoteTier || localIsNewer) localFieldApplied = true;
+          continue;
+        }
+        const result = { ...remoteTier };
+        const fields = new Set([...Object.keys(localTier), ...Object.keys(remoteTier), ...Object.keys(baselineTier)]);
+        fields.forEach(field => {
+          const baselineValue = Object.prototype.hasOwnProperty.call(baselineTier, field)
+            ? encodeStateForStorage(baselineTier[field]) : '__MISSING__';
+          const localValue = Object.prototype.hasOwnProperty.call(localTier, field)
+            ? encodeStateForStorage(localTier[field]) : '__MISSING__';
+          const remoteValue = Object.prototype.hasOwnProperty.call(remoteTier, field)
+            ? encodeStateForStorage(remoteTier[field]) : '__MISSING__';
+          const localChanged = localValue !== baselineValue;
+          const remoteChanged = remoteValue !== baselineValue;
+          if (localChanged && (!remoteChanged || localIsNewer)) {
+            if (Object.prototype.hasOwnProperty.call(localTier, field)) result[field] = localTier[field];
+            else delete result[field];
+            localFieldApplied = true;
+          }
+        });
+        merged[index] = result;
+      }
+      return { volumeConfig: merged.filter(Boolean), localFieldApplied };
     }
 
     function localCloudStateSignature(state) {
@@ -2579,6 +2633,7 @@
       localStorage.setItem(CONFIG.LS_KEY, next);
       if (!applyingCloudState && auth.currentUser && cloudReady) {
         cloudDirty = true;
+        renderCloudState('Sincronizando…');
         clearTimeout(cloudWriteTimer);
         cloudWriteTimer = setTimeout(() => syncToCloud(true), 1500);
       }
@@ -2758,11 +2813,14 @@
       }, 150);
     }
 
-    function updateCategoryDropdowns() {
+    function updateCategoryDropdowns(preserveSearch = false) {
       const select = document.getElementById('calcCategory');
       const input = document.getElementById('calcCategorySearch');
 
       if (!select || !input) return;
+
+      const searchHasFocus = preserveSearch || document.activeElement === input;
+      const currentSearchText = input.value;
 
       const currentSelection = select.value && appState.categories.includes(select.value)
         ? select.value
@@ -2776,7 +2834,9 @@
 
       if (currentSelection) {
         select.value = currentSelection;
-        if (!input.value || !appState.categories.includes(input.value)) {
+        if (searchHasFocus) {
+          input.value = currentSearchText;
+        } else if (!input.value || !appState.categories.includes(input.value)) {
           input.value = String(currentSelection || '').toUpperCase();
         }
         input.dataset.previousValue = currentSelection;
@@ -2785,7 +2845,11 @@
         input.dataset.previousValue = '';
       }
 
-      hideCategorySuggestions();
+      if (searchHasFocus && currentSearchText.trim()) {
+        renderCategorySuggestions(getFilteredCategories(currentSearchText), -1);
+      } else {
+        hideCategorySuggestions();
+      }
     }
 
     function syncCategoryFromSearch(term = '') {
@@ -2886,17 +2950,21 @@
       if (select && select.value) runCalculations();
     }
 
-    function handleCategoryChange() {
+    function handleCategoryChange(preserveSearch = false) {
       const select = document.getElementById('calcCategory');
       const input = document.getElementById('calcCategorySearch');
       if (!select || !select.value) return;
 
       if (input) {
-        input.value = String(select.value || '').toUpperCase();
+        if (!preserveSearch) input.value = String(select.value || '').toUpperCase();
         input.dataset.previousValue = select.value;
       }
 
-      hideCategorySuggestions();
+      if (preserveSearch && input?.value.trim()) {
+        renderCategorySuggestions(getFilteredCategories(input.value), -1);
+      } else {
+        hideCategorySuggestions();
+      }
       runCalculations();
     }
 
@@ -2952,6 +3020,8 @@
     }
 
     function applyCloudData(remote) {
+      const searchInput = document.getElementById('calcCategorySearch');
+      const preserveSearch = Boolean(searchInput && document.activeElement === searchInput);
       const incomingState = cloudV2ToAppState(remote, appState);
       const currentRaw = localStorage.getItem(CONFIG.LS_KEY);
       if (currentRaw) saveLocalBackup(currentRaw, 'Antes de combinar cambios de nube');
@@ -2968,8 +3038,8 @@
       cloudConflict = false;
       renderCategoryManager();
       renderConfigTables();
-      updateCategoryDropdowns();
-      handleCategoryChange();
+      updateCategoryDropdowns(preserveSearch);
+      handleCategoryChange(preserveSearch);
     }
 
     async function migrateLegacyCloudDocument(docRef) {
@@ -3085,7 +3155,10 @@
               .filter(record => record && !record.deleted)
               .map(record => record.name));
             const localOnlyCategories = localState.categories.filter(category => !cloudNames.has(category));
-            if (localOnlyCategories.length) {
+            const shouldMergeLocalCategories = localOnlyCategories.length && confirm(
+              `Esta cuenta de nube no tiene una base de sincronización en este navegador. Se encontraron ${localOnlyCategories.length} categorías solo locales (${localOnlyCategories.slice(0, 5).join(', ')}${localOnlyCategories.length > 5 ? ', …' : ''}). ¿Quieres combinarlas con la cuenta ${auth.currentUser?.email || ''}?`
+            );
+            if (shouldMergeLocalCategories) {
               saveLocalBackup(localRaw, 'Antes de combinar categorías locales nuevas');
               const pending = readCloudPending();
               localOnlyCategories.forEach(category => {
@@ -3097,6 +3170,7 @@
               await syncToCloud(true);
               return;
             }
+            if (localOnlyCategories.length) saveLocalBackup(localRaw, 'Datos locales antes de usar otra cuenta de nube');
           }
         }
         if (hasPendingCloudChanges()) {
@@ -3200,8 +3274,26 @@
             };
           } else if (settingChange) {
             const remoteSettingsChanged = volumeConfigSignature(cloudSettings.volumeConfig) !== volumeConfigSignature(baseSettings?.volumeConfig);
-            const localSettingsWin = !remoteSettingsChanged || Number(settingChange.modifiedAt) >= Number(cloudSettings.modifiedAt || 0);
-            if (localSettingsWin) {
+            if (!remoteSettingsChanged) {
+              settingsUpdate = {
+                volumeConfig: settingChange.volumeConfig,
+                modifiedAt: Number(settingChange.modifiedAt) || Date.now()
+              };
+            } else if (Array.isArray(baseSettings?.volumeConfig)) {
+              const mergedSettings = mergeVolumeConfig(
+                settingChange.volumeConfig,
+                cloudSettings.volumeConfig || [],
+                baseSettings.volumeConfig,
+                settingChange.modifiedAt,
+                cloudSettings.modifiedAt
+              );
+              if (mergedSettings.localFieldApplied && volumeConfigSignature(mergedSettings.volumeConfig) !== volumeConfigSignature(cloudSettings.volumeConfig || [])) {
+                settingsUpdate = {
+                  volumeConfig: mergedSettings.volumeConfig,
+                  modifiedAt: Math.max(Number(settingChange.modifiedAt) || Date.now(), (Number(cloudSettings.modifiedAt) || 0) + 1)
+                };
+              }
+            } else if (Number(settingChange.modifiedAt) >= Number(cloudSettings.modifiedAt || 0)) {
               settingsUpdate = {
                 volumeConfig: settingChange.volumeConfig,
                 modifiedAt: Number(settingChange.modifiedAt) || Date.now()
@@ -3244,7 +3336,9 @@
         }
 
         cloudConflict = false;
-        renderCloudState(transactionResult.wrote ? 'Cambios sincronizados' : 'Sincronizado');
+        renderCloudState(cloudDirty
+          ? 'Hay cambios pendientes…'
+          : transactionResult.wrote ? 'Cambios sincronizados' : 'Sincronizado');
         if (!silent) alert(transactionResult.wrote ? 'Cambios sincronizados; solo se enviaron las categorías o ajustes modificados.' : 'Sin cambios pendientes; se combinaron los datos de la nube.');
       } catch (error) {
         cloudDirty = true;
@@ -3328,5 +3422,6 @@
           hideIepsDropdown();
         }
       });
+      switchTab(window.location.hash === '#config' ? 'config' : 'calc', false);
       lucide.createIcons();
     };
