@@ -480,7 +480,9 @@
           <div class="flex flex-wrap gap-3 mb-6">
             <button onclick="addNewCategory()" class="bg-gray-800 text-white px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-black transition shadow-lg">+ Agregar Categoría</button>
             <button onclick="sortCategoriesAlphabetically()" class="bg-gray-100 text-gray-700 border border-gray-200 px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-gray-200 transition shadow-sm">Ordenar A-Z</button>
+            <button onclick="toggleCategoryAudit()" class="bg-emerald-50 text-emerald-800 border border-emerald-200 px-6 py-3 rounded-xl text-xs font-black uppercase hover:bg-emerald-100 transition shadow-sm">Ver registro y duplicadas</button>
           </div>
+          <div id="categoryAuditPanel" class="hidden mb-6"></div>
           <div id="categoryManager" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
         </div>
       </div>
@@ -652,6 +654,6 @@
     </div>
   </div>
 
-  <script src="assets/js/app.js?v=24"></script>
+  <script src="assets/js/app.js?v=25"></script>
 </body>
 </html>

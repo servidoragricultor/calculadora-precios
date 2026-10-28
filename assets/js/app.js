@@ -1096,6 +1096,96 @@
       });
     }
 
+    function readCategoryAuditRecords() {
+      try {
+        const stored = JSON.parse(localStorage.getItem(cloudStorageKey('esquina_category_audit_v1')) || '[]');
+        if (Array.isArray(stored) && stored.length) return stored;
+      } catch (_) {}
+      return appState.categories.map((name, order) => ({
+        id: getCategoryId(appState, name), name, order, modifiedAt: null, deleted: false
+      }));
+    }
+
+    function storeCategoryAuditRecords(records = {}) {
+      const audit = Object.entries(records).map(([id, record]) => ({
+        id,
+        name: String(record?.name || ''),
+        order: Number(record?.order) || 0,
+        modifiedAt: Number(record?.modifiedAt) || 0,
+        deleted: Boolean(record?.deleted)
+      })).filter(record => record.name);
+      localStorage.setItem(cloudStorageKey('esquina_category_audit_v1'), JSON.stringify(audit));
+    }
+
+    function toggleCategoryAudit() {
+      const panel = document.getElementById('categoryAuditPanel');
+      if (!panel) return;
+      const opening = panel.classList.contains('hidden');
+      panel.classList.toggle('hidden', !opening);
+      if (opening) renderCategoryAudit();
+    }
+
+    function renderCategoryAudit() {
+      const panel = document.getElementById('categoryAuditPanel');
+      if (!panel) return;
+      const records = readCategoryAuditRecords();
+      const activeByKey = new Map();
+      records.filter(record => !record.deleted).forEach(record => {
+        const key = categoryNameKey(record.name);
+        if (!activeByKey.has(key)) activeByKey.set(key, []);
+        activeByKey.get(key).push(record);
+      });
+      const duplicateKeys = new Set([...activeByKey.entries()]
+        .filter(([, group]) => group.length > 1)
+        .map(([key]) => key));
+      const sortedRecords = [...records].sort((a, b) =>
+        categoryNameKey(a.name).localeCompare(categoryNameKey(b.name), 'es') ||
+        (Number(b.modifiedAt) || 0) - (Number(a.modifiedAt) || 0)
+      );
+      const duplicateCount = duplicateKeys.size;
+      panel.innerHTML = `
+        <div class="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4">
+          <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-xs font-black uppercase tracking-wide text-gray-800">Registro de categorías</h3>
+              <p class="mt-1 text-[11px] text-gray-500">${records.length} registros · ${duplicateCount} grupos duplicados activos · ${auth.currentUser ? 'Datos de la nube' : 'Datos locales; inicia sesión para ver el registro completo de la nube'}</p>
+            </div>
+            <button type="button" onclick="refreshCategoryAuditFromCloud()" class="rounded-lg border border-emerald-200 bg-white px-3 py-2 text-[10px] font-black uppercase text-emerald-800">Actualizar registro</button>
+          </div>
+          <div class="max-h-80 overflow-auto rounded-xl border border-gray-100 bg-white">
+            <table class="w-full min-w-[620px] text-left text-[10px]">
+              <thead class="sticky top-0 bg-gray-50 text-gray-400"><tr><th class="p-2">Categoría</th><th class="p-2">Modificada</th><th class="p-2">Estado</th><th class="p-2">ID</th></tr></thead>
+              <tbody>${sortedRecords.map(record => {
+                const key = categoryNameKey(record.name);
+                const activeGroup = (activeByKey.get(key) || []).sort((a, b) =>
+                  (Number(b.modifiedAt) || 0) - (Number(a.modifiedAt) || 0) ||
+                  (Number(a.order) || 0) - (Number(b.order) || 0)
+                );
+                const newest = activeGroup[0] === record;
+                const isDuplicate = duplicateKeys.has(key);
+                const status = record.deleted ? 'Retirada' : isDuplicate ? (newest ? 'Duplicada · más reciente' : 'Duplicada · anterior') : 'Activa';
+                const time = Number(record.modifiedAt) > 0 ? new Date(Number(record.modifiedAt)).toLocaleString('es-MX') : 'Sin fecha registrada';
+                return `<tr class="border-t border-gray-100"><td class="p-2 font-bold text-gray-700">${escapeHtml(record.name)}</td><td class="p-2 text-gray-500">${escapeHtml(time)}</td><td class="p-2 ${record.deleted ? 'text-gray-400' : isDuplicate ? 'font-black text-amber-700' : 'text-emerald-700'}">${status}</td><td class="max-w-[180px] truncate p-2 font-mono text-gray-400" title="${escapeHtmlAttr(record.id)}">${escapeHtml(record.id)}</td></tr>`;
+              }).join('')}</tbody>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    function refreshCategoryAuditFromCloud() {
+      if (!auth.currentUser) {
+        renderCategoryAudit();
+        return;
+      }
+      getUserConfigDoc()?.get({ source: 'server' }).then(snapshot => {
+        if (snapshot.exists) storeCategoryAuditRecords(snapshot.data().categoryRecords || {});
+        renderCategoryAudit();
+      }).catch(error => {
+        console.error('No se pudo actualizar el registro de categorías:', error);
+        renderCategoryAudit();
+      });
+    }
+
     function getFilteredCategories(searchTerm = '') {
       const normalizedTerm = normalizeText(searchTerm);
       if (!normalizedTerm) return [...appState.categories];
@@ -2913,6 +3003,8 @@
           if (migrated.exists) await processSnapshot(migrated);
           return;
         }
+
+        storeCategoryAuditRecords(remote.categoryRecords || {});
 
         const duplicateCategoryRecords = findDuplicateCloudCategoryRecords(remote.categoryRecords || {});
         if (duplicateCategoryRecords.length) {
