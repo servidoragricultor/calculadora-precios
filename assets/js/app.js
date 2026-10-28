@@ -2416,13 +2416,19 @@
       if (!input) return;
 
       setTimeout(() => {
-        hideCategorySuggestions();
+        const typedCategory = appState.categories.find(category =>
+          normalizeText(category) === normalizeText(input.value)
+        );
+        const activeCategory = select?.value;
 
-        if ((input.value || '').trim() === '') {
-          const fallbackValue = input.dataset.previousValue || (select ? select.value : '') || appState.categories[0] || '';
-          input.value = String(fallbackValue || '').toUpperCase();
-          input.dataset.previousValue = fallbackValue;
+        if (typedCategory) {
+          setCurrentCategory(typedCategory, typedCategory !== activeCategory);
+          return;
         }
+
+        const fallbackValue = activeCategory || input.dataset.previousValue || appState.categories[0] || '';
+        if (fallbackValue) setCurrentCategory(fallbackValue, false);
+        else hideCategorySuggestions();
       }, 150);
     }
 
@@ -2463,18 +2469,10 @@
       if (!select || !input) return;
 
       const filteredCategories = getFilteredCategories(term);
-      const exactMatch = appState.categories.find(cat =>
-        normalizeText(cat) === normalizeText(term)
-      );
 
       if (normalizeText(term) === '') {
         hideCategorySuggestions();
         return;
-      }
-
-      if (exactMatch) {
-        select.value = exactMatch;
-        input.dataset.previousValue = exactMatch;
       }
 
       renderCategorySuggestions(filteredCategories, -1);
@@ -2484,7 +2482,7 @@
       const input = document.getElementById('calcCategorySearch');
       if (!input) return;
 
-      const filteredCategories = getFilteredCategories(input.value).slice(0, 30);
+      const filteredCategories = getFilteredCategories(input.value).slice(0, 50);
 
       if (event.key === 'ArrowDown') {
         event.preventDefault();
@@ -2519,9 +2517,9 @@
 
       if (event.key === 'Escape') {
         event.preventDefault();
-        const fallbackValue = input.dataset.previousValue || '';
-        input.value = fallbackValue;
-        hideCategorySuggestions();
+        const fallbackValue = document.getElementById('calcCategory')?.value || input.dataset.previousValue || '';
+        if (fallbackValue) setCurrentCategory(fallbackValue, false);
+        else hideCategorySuggestions();
       }
     }
 
